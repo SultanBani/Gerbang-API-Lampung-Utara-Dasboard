@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex">
+  <div :class="{ 'dark': isDark }" class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased flex transition-colors duration-300">
     <!-- Sidebar -->
     <Sidebar />
 
@@ -35,4 +35,5 @@
 import Sidebar from './components/Sidebar.vue'
 import Header from './components/Header.vue'
 import AiChatWidget from './components/AiChatWidget.vue'
+import { isDark } from './store/themeStore.js'
 </script>
