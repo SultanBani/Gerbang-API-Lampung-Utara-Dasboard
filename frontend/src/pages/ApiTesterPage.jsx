@@ -1,81 +1,94 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useApiGateway } from '../context/ApiGatewayContext'
 import { Send, Loader2 } from 'lucide-react'
+import { gatewayApi } from '../services/api'
 
 export default function ApiTesterPage() {
-  const { applications, apiKeys, addRequestLog } = useApiGateway()
+  const { applications, apiKeys, fetchApplications } = useApiGateway()
 
-  const [selectedAppId, setSelectedAppId] = useState(1)
+  const [selectedAppId, setSelectedAppId] = useState('')
   const [requestMethod, setRequestMethod] = useState('GET')
-  const [requestUrl, setRequestUrl] = useState('/api/pegawai')
-  const [activeTab, setActiveTab] = useState('headers')
-  const [requestBody, setRequestBody] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [requestUrl, setRequestUrl]       = useState('/v1/pegawai')
+  const [activeTab, setActiveTab]         = useState('headers')
+  const [requestBody, setRequestBody]     = useState('')
+  const [loading, setLoading]             = useState(false)
   const [responseResult, setResponseResult] = useState(null)
+  const [responseError, setResponseError]   = useState(null)
 
-  const currentApiKey = useMemo(() => {
-    const k = apiKeys.find(key => key.appId === selectedAppId)
-    return k ? k.key : '3f8c9e2a1b4d7e8f9a0b1c2d3e4f5a6b'
+  useEffect(() => {
+    if (applications.length === 0) fetchApplications()
+  }, [applications.length, fetchApplications])
+
+  // Saat data aplikasi sudah ada, set default selectedAppId ke aplikasi pertama
+  useEffect(() => {
+    if (apiKeys.length > 0 && !selectedAppId) {
+      setSelectedAppId(String(apiKeys[0].appId ?? apiKeys[0].application_id))
+    }
   }, [apiKeys, selectedAppId])
 
-  const handleSendRequest = () => {
+  const currentKey = useMemo(() => {
+    const id = Number(selectedAppId)
+    return apiKeys.find(k => (k.appId === id || k.application_id === id) && k.status === 'active') ?? apiKeys.find(k => k.appId === id || k.application_id === id)
+  }, [apiKeys, selectedAppId])
+
+  const handleSendRequest = async () => {
+    if (!currentKey) {
+      setResponseError('Pilih aplikasi yang memiliki API Key aktif terlebih dahulu.')
+      return
+    }
     setLoading(true)
     setResponseResult(null)
+    setResponseError(null)
 
-    setTimeout(() => {
-      setLoading(false)
-      const url = requestUrl.toLowerCase()
-      let mockData = {}
-      const latency = Math.floor(Math.random() * 80) + 40
+    const startTime = performance.now()
+    // Path untuk gateway: hapus leading slash jika ada, gateway prefix ditambahkan axios
+    const path = requestUrl.startsWith('/') ? requestUrl.substring(1) : requestUrl
 
-      if (url.includes('pegawai')) {
-        mockData = {
-          success: true,
-          message: 'Data pegawai ASN Kabupaten Lampung Utara berhasil diambil',
-          data: [
-            { id: 1, nip: '198001012005011001', nama: 'Ahmad Budi Santoso', jabatan: 'Analis Kepegawaian', opd: 'BKPSDM' },
-            { id: 2, nip: '197505152000032002', nama: 'Siti Rahma Dewi', jabatan: 'Kepala Seksi', opd: 'Diskominfo' }
-          ],
-          meta: { total: 3821, page: 1, per_page: 15 }
-        }
-      } else if (url.includes('opd')) {
-        mockData = {
-          success: true,
-          data: [
-            { id: 1, nama: 'BKPSDM', kepala: 'Drs. H. Slamet' },
-            { id: 2, nama: 'Diskominfo', kepala: 'H. Ahmad Rifa\'i' },
-            { id: 3, nama: 'BPKAD', kepala: 'Drs. Hendra Jaya' }
-          ]
-        }
-      } else {
-        mockData = {
-          success: true,
-          message: `Request ${requestMethod} ke ${requestUrl} berhasil diproses oleh Gerbang API`,
-          timestamp: new Date().toISOString()
-        }
+    try {
+      let body = undefined
+      if (['POST', 'PUT', 'PATCH'].includes(requestMethod) && requestBody.trim()) {
+        body = JSON.parse(requestBody)
       }
 
-      setResponseResult({
-        status: 200,
-        statusText: 'OK',
-        time: latency,
-        data: mockData
+      const res = await gatewayApi.request({
+        method:  requestMethod,
+        url:     `/${path}`,
+        data:    body,
+        headers: {
+          'X-Client-ID':  String(currentKey.appId ?? currentKey.application_id),
+          'X-Secret-Key': currentKey.key,
+          'Accept':       'application/json',
+          'Content-Type': 'application/json',
+        },
       })
 
-      const app = applications.find(a => a.id === selectedAppId)
-      addRequestLog({
-        id: Date.now(),
-        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        appName: app ? app.name : 'SIMPEG',
-        method: requestMethod,
-        url: requestUrl,
-        statusCode: 200,
-        responseTimeMs: latency,
-        ipAddress: '127.0.0.1 (Tester)',
-        aiAnalysis: null
+      const elapsed = Math.round(performance.now() - startTime)
+      setResponseResult({
+        status:     res.status,
+        statusText: res.statusText,
+        time:       elapsed,
+        data:       res.data,
+        headers:    res.headers,
       })
-    }, 700)
+    } catch (err) {
+      const elapsed = Math.round(performance.now() - startTime)
+      if (err.response) {
+        setResponseResult({
+          status:     err.response.status,
+          statusText: err.response.statusText,
+          time:       elapsed,
+          data:       err.response.data,
+          headers:    err.response.headers,
+        })
+      } else {
+        setResponseError(`Network Error: ${err.message}. Pastikan Laravel server berjalan di http://localhost:8000`)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
+
+  const isSuccess = responseResult && responseResult.status < 400
 
   return (
     <div className="space-y-6">
@@ -87,24 +100,31 @@ export default function ApiTesterPage() {
               <span>📤</span> Request API Builder
             </h3>
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full">
-              Environment: Local Server
+              → http://localhost:8000/gateway/
             </span>
           </div>
 
-          {/* App Auto-fill Selector */}
+          {/* App Selector */}
           <div>
             <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Pilih Aplikasi Klien (Auto-fill API Key)</label>
             <select
               value={selectedAppId}
-              onChange={e => setSelectedAppId(Number(e.target.value))}
+              onChange={e => setSelectedAppId(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-sm"
             >
-              {apiKeys.map(appKey => (
-                <option key={appKey.id} value={appKey.appId}>
-                  {appKey.appName} ({appKey.opd}) — Key: {appKey.key.substring(0, 8)}...
+              <option value="">— Pilih Aplikasi —</option>
+              {apiKeys.map(k => (
+                <option key={k.id} value={k.appId ?? k.application_id}>
+                  {k.appName ?? k.application?.name} ({k.opd ?? k.application?.opd}) — Status: {k.status}
                 </option>
               ))}
             </select>
+            {currentKey && (
+              <p className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 mt-1.5">
+                ✓ X-Client-ID: <strong>{currentKey.appId ?? currentKey.application_id}</strong> &nbsp;|&nbsp;
+                X-Secret-Key: <strong>{currentKey.key?.substring(0, 18)}...</strong>
+              </p>
+            )}
           </div>
 
           {/* URL Input Bar */}
@@ -114,28 +134,21 @@ export default function ApiTesterPage() {
               onChange={e => setRequestMethod(e.target.value)}
               className="bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-extrabold font-mono text-xs px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-l-xl border-r-0 focus:outline-none"
             >
-              <option value="GET">GET</option>
-              <option value="POST">POST</option>
-              <option value="PUT">PUT</option>
-              <option value="DELETE">DELETE</option>
+              {['GET','POST','PUT','PATCH','DELETE'].map(m => <option key={m} value={m}>{m}</option>)}
             </select>
             <input
               value={requestUrl}
               onChange={e => setRequestUrl(e.target.value)}
               type="text"
-              placeholder="/api/pegawai"
-              className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 py-2.5 px-3.5 font-mono text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-blue-500"
+              placeholder="/v1/pegawai"
+              className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 py-2.5 px-3.5 font-mono text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500"
             />
             <button
               onClick={handleSendRequest}
-              disabled={loading}
+              disabled={loading || !currentKey}
               className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-extrabold px-5 py-2.5 rounded-r-xl text-xs flex items-center gap-2 shadow-lg shadow-blue-600/25 transition-all cursor-pointer"
             >
-              {loading ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Send className="w-3.5 h-3.5" />
-              )}
+              {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
               <span>Send</span>
             </button>
           </div>
@@ -143,79 +156,50 @@ export default function ApiTesterPage() {
           {/* Request Tabs */}
           <div>
             <div className="flex border-b border-slate-200 dark:border-slate-800 gap-4">
-              <button
-                onClick={() => setActiveTab('headers')}
-                className={`pb-2 text-xs font-bold transition-all border-b-2 cursor-pointer ${
-                  activeTab === 'headers' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400'
-                }`}
-              >
-                Headers (3)
-              </button>
-              <button
-                onClick={() => setActiveTab('body')}
-                className={`pb-2 text-xs font-bold transition-all border-b-2 cursor-pointer ${
-                  activeTab === 'body' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400'
-                }`}
-              >
-                Body (JSON)
-              </button>
-              <button
-                onClick={() => setActiveTab('params')}
-                className={`pb-2 text-xs font-bold transition-all border-b-2 cursor-pointer ${
-                  activeTab === 'params' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400'
-                }`}
-              >
-                Params
-              </button>
+              {['headers', 'body', 'params'].map(tab => (
+                <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-2 text-xs font-bold transition-all border-b-2 cursor-pointer capitalize ${activeTab === tab ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400'}`}>
+                  {tab === 'headers' ? 'Headers (3)' : tab === 'body' ? 'Body (JSON)' : 'Params'}
+                </button>
+              ))}
             </div>
 
-            {/* Headers Content */}
             {activeTab === 'headers' && (
               <div className="py-3 space-y-2 font-mono text-xs">
-                <div className="flex items-center gap-2">
-                  <input type="text" value="Authorization" readOnly className="w-1/3 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-600 dark:text-slate-400" />
-                  <span className="text-slate-400 dark:text-slate-600">:</span>
-                  <input type="text" value={`Bearer ${currentApiKey}`} readOnly className="flex-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-emerald-600 dark:text-emerald-400 font-bold" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="text" value="Accept" readOnly className="w-1/3 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-600 dark:text-slate-400" />
-                  <span className="text-slate-400 dark:text-slate-600">:</span>
-                  <input type="text" value="application/json" readOnly className="flex-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-300" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="text" value="X-App-ID" readOnly className="w-1/3 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-600 dark:text-slate-400" />
-                  <span className="text-slate-400 dark:text-slate-600">:</span>
-                  <input type="text" value={`app-${selectedAppId}`} readOnly className="flex-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-300" />
-                </div>
+                {[
+                  ['X-Client-ID',  String(currentKey?.appId ?? currentKey?.application_id ?? '—'), 'text-blue-600 dark:text-blue-400'],
+                  ['X-Secret-Key', currentKey ? `${currentKey.key?.substring(0, 20)}...` : '—', 'text-emerald-600 dark:text-emerald-400'],
+                  ['Accept',       'application/json', 'text-slate-600 dark:text-slate-300'],
+                ].map(([k, v, cls]) => (
+                  <div key={k} className="flex items-center gap-2">
+                    <input type="text" value={k} readOnly className="w-1/3 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-600 dark:text-slate-400" />
+                    <span className="text-slate-400">:</span>
+                    <input type="text" value={v} readOnly className={`flex-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 font-bold ${cls}`} />
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Body JSON Content */}
             {activeTab === 'body' && (
               <div className="py-3">
                 <textarea
                   value={requestBody}
                   onChange={e => setRequestBody(e.target.value)}
                   rows={6}
-                  placeholder='{\n  "nip": "198001012005011001",\n  "nama": "Ahmad Budi S."\n}'
+                  placeholder={'{\n  "nip": "198001012005011001"\n}'}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 font-mono text-xs text-blue-600 dark:text-blue-300 focus:outline-none focus:border-blue-500"
                 ></textarea>
               </div>
             )}
 
-            {/* Params Content */}
             {activeTab === 'params' && (
               <div className="py-3 space-y-2 font-mono text-xs">
-                <div className="flex items-center gap-2">
-                  <input type="text" value="page" readOnly className="w-1/3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-300" />
-                  <span className="text-slate-400 dark:text-slate-600">=</span>
-                  <input type="text" value="1" readOnly className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-300" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="text" value="per_page" readOnly className="w-1/3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-300" />
-                  <span className="text-slate-400 dark:text-slate-600">=</span>
-                  <input type="text" value="15" readOnly className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-300" />
-                </div>
+                {[['page','1'],['per_page','15']].map(([k, v]) => (
+                  <div key={k} className="flex items-center gap-2">
+                    <input type="text" value={k} readOnly className="w-1/3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-300" />
+                    <span className="text-slate-400">=</span>
+                    <input type="text" value={v} readOnly className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-300" />
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -225,13 +209,10 @@ export default function ApiTesterPage() {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5 shadow-sm dark:shadow-xl min-h-[420px] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-4">
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span>📥</span> Response Payload
-              </h3>
-
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2"><span>📥</span> Response Payload</h3>
               {responseResult && (
                 <div className="flex items-center gap-3 font-mono text-xs">
-                  <span className={`px-2.5 py-0.5 rounded font-bold ${responseResult.status === 200 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30'}`}>
+                  <span className={`px-2.5 py-0.5 rounded font-bold border ${isSuccess ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30'}`}>
                     {responseResult.status} {responseResult.statusText}
                   </span>
                   <span className="text-slate-500 dark:text-slate-400">{responseResult.time}ms</span>
@@ -239,23 +220,28 @@ export default function ApiTesterPage() {
               )}
             </div>
 
-            {/* Empty Placeholder */}
-            {!responseResult && !loading && (
+            {!responseResult && !loading && !responseError && (
               <div className="py-20 text-center text-slate-400 dark:text-slate-500 space-y-2">
                 <div className="text-4xl">📭</div>
-                <p className="text-xs">Klik <strong>Send</strong> untuk melakukan pengujian request API</p>
+                <p className="text-xs">Klik <strong>Send</strong> untuk melakukan pengujian request ke Gateway</p>
+                <p className="text-[10px] text-slate-400">Target: http://localhost:8000/gateway{requestUrl}</p>
               </div>
             )}
 
-            {/* Loading state */}
             {loading && (
               <div className="py-20 text-center text-slate-500 dark:text-slate-400 space-y-3">
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto" />
-                <p className="text-xs font-mono">Mengirim request ke API Gateway...</p>
+                <p className="text-xs font-mono">Mengirim request ke Gateway → {requestUrl}...</p>
               </div>
             )}
 
-            {/* JSON Response Payload Output */}
+            {responseError && !loading && (
+              <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-600 dark:text-red-400 font-mono leading-relaxed">
+                <p className="font-bold mb-1">⚠ Connection Error</p>
+                <p>{responseError}</p>
+              </div>
+            )}
+
             {responseResult && !loading && (
               <div className="relative">
                 <pre className="bg-slate-900 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 font-mono text-xs text-blue-300 overflow-x-auto leading-relaxed max-h-[320px]">
