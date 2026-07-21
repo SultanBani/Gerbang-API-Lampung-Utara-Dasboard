@@ -35,19 +35,25 @@ export default function AiChatWidget() {
       let reply = ''
       const lower = q.toLowerCase()
 
-      if (lower.includes('pegawai') || lower.includes('simpeg')) {
-        reply = 'Untuk mengambil data pegawai SIMPEG:\n\nGunakan endpoint:\nGET /api/pegawai\n\nHeader:\nAuthorization: Bearer {API_KEY}\nAccept: application/json\n\nResponse 200 OK:\n{\n  "success": true,\n  "data": [{ "nip": "19800101...", "nama": "Ahmad..." }]\n}'
-      } else if (lower.includes('403') || lower.includes('forbidden') || lower.includes('error')) {
-        reply = 'Analisis AI Error:\nStatus 403 Forbidden berarti aplikasi Anda tidak memiliki hak akses ke endpoint tersebut.\n\nSolusi: Buka menu "Hak Akses API" pada Dashboard Administrator dan beri centang perizinan untuk aplikasi Anda.'
-      } else if (lower.includes('token') || lower.includes('key') || lower.includes('api key')) {
-        reply = 'Untuk mengelola API Key:\n- Masuk ke menu "Token / API Key"\n- Pilih aplikasi OPD terkait\n- Klik "Generate Baru" atau "Revoke" jika terjadi kebocoran key.'
+      if (lower.includes('403') || lower.includes('forbidden') || lower.includes('izin') || lower.includes('akses')) {
+        reply = `🔒 Solusi Error 403 Forbidden / Hak Akses API:\n\n- Penyebab: Aplikasi OPD Anda belum memiliki izin untuk mengakses endpoint tersebut.\n- Solusi untuk Admin: Buka menu "Hak Akses API", cari nama Aplikasi Anda, lalu centang IZINKAN pada endpoint tujuan.\n- Solusi untuk OPD: Hubungi Admin Diskominfo untuk mengaktifkan izin di Matrix Hak Akses.`
+      } else if (lower.includes('401') || lower.includes('unauthorized') || lower.includes('key') || lower.includes('token') || lower.includes('secret')) {
+        reply = `🔑 Panduan API Key & Autentikasi 401:\n\n- Header Wajib:\n  X-Client-ID: [ID_APLIKASI_ANDA]\n  X-Secret-Key: [API_KEY_OPD_ANDA]\n- Lokasi API Key: OPD dapat melihat API Key resmi pada Portal Instansi OPD.\n- Jika terjadi kebocoran key, Admin Diskominfo dapat mengklik "Generate Key Baru" di menu Token / API Key.`
+      } else if (lower.includes('404') || lower.includes('not found') || lower.includes('endpoint')) {
+        reply = `📍 Panduan Endpoint & Error 404:\n\n- Penyebab 404: Endpoint belum didaftarkan di sistem Gateway atau URL salah.\n- Daftar Endpoint Bawaan:\n  • GET /gateway/dukcapil/penduduk (Validasi NIK Dukcapil)\n  • GET /gateway/kepegawaian/v1/data (Data Pegawai BKD)\n  • GET /gateway/perencanaan/program (RKPD Bappeda)\n  • GET /gateway/keuangan/apbd (Data APBD BPKAD)\n- Solusi: Admin dapat menambah endpoint baru di menu "Endpoint API".`
+      } else if (lower.includes('502') || lower.includes('bad gateway') || lower.includes('down') || lower.includes('mati')) {
+        reply = `⚠️ Analisis 502 Bad Gateway:\n\n- Penyebab: Server internal OPD (Upstream) tidak dapat dijangkau oleh Gateway (Timeout / Offline).\n- Solusi: Pastikan server asal milik OPD tempat API di-hosting dalam kondisi aktif.`
+      } else if (lower.includes('login') || lower.includes('akun') || lower.includes('opd') || lower.includes('dinas') || lower.includes('pass')) {
+        reply = `👥 Manajemen Akun Login Admin & OPD:\n\n- Super Admin Diskominfo: Mengelola penuh aplikasi, endpoint, matrix perizinan, dan akun OPD.\n- Akun Instansi OPD: Khusus login per dinas (seperti Bappeda, Dukcapil, BKD) untuk melihat API Key & Endpoint izin dinasnya.\n- Pendaftaran: Akun baru dibuat oleh Admin di menu "Akun Login OPD" agar terhindar dari penyalahgunaan.`
+      } else if (lower.includes('cara') || lower.includes('integrasi') || lower.includes('panggil') || lower.includes('code') || lower.includes('curl')) {
+        reply = `💻 Contoh Panggilan API Integrasi (cURL):\n\ncurl -X GET "http://localhost:8000/gateway/dukcapil/penduduk" \\\n  -H "X-Client-ID: 1" \\\n  -H "X-Secret-Key: gkp_bappeda_key_2026_x89a" \\\n  -H "Accept: application/json"\n\nAnda juga dapat mencoba interaktif melalui menu API Tester!`
       } else {
-        reply = `Terima kasih atas pertanyaannya: "${q}".\n\nSebagai Asisten AI Gerbang API Diskominfo Lampura, saya siap membantu pengembang OPD mengintegrasikan data SIMPEG, SIAK, E-Office, dan aplikasi daerah lainnya.`
+        reply = `🤖 Asisten AI Gerbang API Lampung Utara\n\nSaya siap membantu Anda! Silakan tanyakan hal berikut:\n- 🔑 API Key & Autentikasi (Error 401)\n- 🔒 Izin Akses & Matrix Permission (Error 403)\n- 📍 Daftar Endpoint API (Error 404)\n- 👥 Informasi Akun Login Admin & OPD\n- 💻 Contoh Kode Integrasi Data`
       }
 
       setMessages(prev => [...prev, { sender: 'ai', text: reply, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }])
       setIsTyping(false)
-    }, 1000)
+    }, 800)
   }
 
   return (
@@ -102,6 +108,31 @@ export default function AiChatWidget() {
             )}
           </div>
 
+          {/* Quick Suggestion Chips */}
+          <div className="px-3 py-1.5 bg-slate-100/60 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto text-[10px]">
+            {[
+              'Error 403 Forbidden',
+              'Format Header API Key',
+              'Contoh Code cURL',
+              'Daftar Endpoint API',
+            ].map((chip, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  setInputQuery(chip)
+                  setTimeout(() => {
+                    const btn = document.getElementById('ai-send-btn')
+                    if (btn) btn.click()
+                  }, 50)
+                }}
+                className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-lg text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap hover:border-blue-500 hover:text-blue-500 transition-all cursor-pointer"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+
           {/* Input Bar */}
           <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 flex gap-2">
             <input
@@ -113,6 +144,7 @@ export default function AiChatWidget() {
               className="flex-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500"
             />
             <button
+              id="ai-send-btn"
               onClick={handleSendMessage}
               className="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-colors shadow cursor-pointer flex items-center justify-center"
             >

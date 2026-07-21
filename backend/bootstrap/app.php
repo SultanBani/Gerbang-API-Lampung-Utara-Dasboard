@@ -29,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Route API Gateway — semua request /gateway/* masuk ke sini
         // apiPrefix: 'gateway' menggantikan prefix default '/api'
         api: __DIR__.'/../routes/api.php',
-        apiPrefix: 'gateway',
+        apiPrefix: '',
 
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
