@@ -116,4 +116,3 @@ class AccessControlController extends Controller
         ]);
     }
 }
-

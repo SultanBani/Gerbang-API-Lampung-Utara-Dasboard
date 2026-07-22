@@ -158,4 +158,3 @@ class RequestLogController extends Controller
         return $total > 0 ? round(($success / $total) * 100, 1) : 0.0;
     }
 }
-
