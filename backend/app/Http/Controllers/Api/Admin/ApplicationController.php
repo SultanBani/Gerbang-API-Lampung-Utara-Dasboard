@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+<<<<<<< HEAD
 use App\Models\ApiKey;
 use App\Models\Application;
 use Illuminate\Http\JsonResponse;
@@ -13,40 +14,43 @@ use Illuminate\Validation\Rule;
 /**
  * ApplicationController
  *
- * Mengelola aplikasi klien OPD di tabel `applications`.
+ * CRUD lengkap untuk manajemen aplikasi klien OPD di tabel `applications`.
  * Setiap aplikasi baru otomatis mendapat API Key pertama saat dibuat.
+ *
+ * Routes:
+ *   GET    /api/admin/applications
+ *   POST   /api/admin/applications
+ *   GET    /api/admin/applications/{id}
+ *   PUT    /api/admin/applications/{id}
+ *   DELETE /api/admin/applications/{id}
+ *   POST   /api/admin/applications/{id}/generate-key
  */
 class ApplicationController extends Controller
 {
     /**
      * GET /api/admin/applications
-     * Daftar semua aplikasi beserta API key aktifnya dan akun user OPD.
+     * Daftar semua aplikasi beserta API key aktifnya.
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Application::with([
-            'apiKeys' => fn ($q) => $q->orderByDesc('created_at'),
-            'users'
-        ])
-        ->withCount(['requestLogs', 'apiKeys']);
+        $query = Application::with(['apiKeys' => fn ($q) => $q->orderByDesc('created_at')])
+            ->withCount(['requestLogs', 'apiKeys']);
 
         // Filter opsional berdasarkan status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Search berdasarkan nama, OPD, atau PIC
+        // Search berdasarkan nama atau OPD
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('opd', 'like', "%{$search}%")
-                  ->orWhere('pic_name', 'like', "%{$search}%");
+                  ->orWhere('opd', 'like', "%{$search}%");
             });
         }
 
-        $perPage = (int) $request->get('per_page', 50);
-        $applications = $query->latest()->paginate($perPage);
+        $applications = $query->latest()->paginate((int) $request->get('per_page', 15));
 
         return response()->json([
             'success' => true,
@@ -62,10 +66,10 @@ class ApplicationController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'opd'         => 'required|string|max:255',
-            'pic_name'    => 'required|string|max:255',
-            'pic_phone'   => 'nullable|string|max:50',
+            'name'        => 'required|string|max:100',
+            'opd'         => 'required|string|max:100',
+            'pic_name'    => 'required|string|max:100',
+            'pic_phone'   => 'nullable|string|max:20',
             'description' => 'nullable|string|max:500',
             'status'      => ['nullable', Rule::in(['active', 'inactive'])],
         ]);
@@ -86,7 +90,7 @@ class ApplicationController extends Controller
             'success' => true,
             'message' => 'Application created successfully. API key has been generated.',
             'data'    => [
-                'application' => $application->load('apiKeys'),
+                'application' => $application,
                 'api_key'     => $apiKey,
             ],
         ], 201);
@@ -94,16 +98,13 @@ class ApplicationController extends Controller
 
     /**
      * GET /api/admin/applications/{id}
-     * Detail satu aplikasi dengan semua API key, user, dan statistiknya.
+     * Detail satu aplikasi dengan semua API key dan statistiknya.
      */
     public function show(int $id): JsonResponse
     {
         $application = Application::with([
-            'apiKeys'        => fn ($q) => $q->orderByDesc('created_at'),
-            'endpoints'      => fn ($q) => $q->withPivot('is_allowed'),
-            'users',
-            'accessControls.endpoint',
-            'requestLogs',
+            'apiKeys'  => fn ($q) => $q->orderByDesc('created_at'),
+            'endpoints' => fn ($q) => $q->withPivot('is_allowed'),
         ])
         ->withCount('requestLogs')
         ->findOrFail($id);
@@ -124,10 +125,10 @@ class ApplicationController extends Controller
         $application = Application::findOrFail($id);
 
         $validated = $request->validate([
-            'name'        => 'sometimes|required|string|max:255',
-            'opd'         => 'sometimes|required|string|max:255',
-            'pic_name'    => 'sometimes|required|string|max:255',
-            'pic_phone'   => 'nullable|string|max:50',
+            'name'        => 'sometimes|required|string|max:100',
+            'opd'         => 'sometimes|required|string|max:100',
+            'pic_name'    => 'sometimes|required|string|max:100',
+            'pic_phone'   => 'nullable|string|max:20',
             'description' => 'nullable|string|max:500',
             'status'      => ['nullable', Rule::in(['active', 'inactive'])],
         ]);
@@ -137,13 +138,13 @@ class ApplicationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Application updated successfully.',
-            'data'    => $application->fresh(['apiKeys', 'users']),
+            'data'    => $application->fresh(),
         ]);
     }
 
     /**
      * DELETE /api/admin/applications/{id}
-     * Hapus aplikasi beserta semua data terkaitnya.
+     * Hapus aplikasi beserta semua data terkaitnya (cascade).
      */
     public function destroy(int $id): JsonResponse
     {
@@ -197,7 +198,135 @@ class ApplicationController extends Controller
             'key'            => $secretKey,
             'status'         => 'active',
             'expires_at'     => now()->addYear(),
+=======
+use App\Models\Application;
+use App\Models\ApiKey;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+class ApplicationController extends Controller
+{
+    public function index(Request $request)
+    {
+        $perPage = $request->query('per_page', 50);
+        $search  = $request->query('search');
+
+        $query = Application::with(['apiKeys', 'users'])->latest();
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhere('opd', 'like', "%{$search}%")
+                  ->orWhere('pic_name', 'like', "%{$search}%");
+        }
+
+        $applications = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $applications
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name'        => 'required|string|max:255',
+            'opd'         => 'required|string|max:255',
+            'pic_name'    => 'required|string|max:255',
+            'pic_phone'   => 'nullable|string|max:50',
+            'description' => 'nullable|string',
+            'status'      => 'nullable|string|in:active,inactive',
+        ]);
+
+        $app = Application::create($validated);
+
+        // Otomatis generate API key pertama
+        $key = 'gkp_' . Str::random(32);
+        $secret = Str::random(64);
+
+        $apiKey = ApiKey::create([
+            'application_id' => $app->id,
+            'key'            => $key,
+            'status'         => 'active',
+        ]);
+
+        $app->load('apiKeys');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Aplikasi OPD berhasil didaftarkan.',
+            'data'    => $app
+        ], 201);
+    }
+
+    public function show($id)
+    {
+        $app = Application::with(['apiKeys', 'accessControls.endpoint', 'requestLogs', 'users'])->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $app
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $app = Application::findOrFail($id);
+
+        $validated = $request->validate([
+            'name'        => 'sometimes|required|string|max:255',
+            'opd'         => 'sometimes|required|string|max:255',
+            'pic_name'    => 'sometimes|required|string|max:255',
+            'pic_phone'   => 'nullable|string|max:50',
+            'description' => 'nullable|string',
+            'status'      => 'nullable|string|in:active,inactive',
+        ]);
+
+        $app->update($validated);
+        $app->load('apiKeys');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data aplikasi OPD berhasil diperbarui.',
+            'data'    => $app
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $app = Application::findOrFail($id);
+        $app->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Aplikasi OPD berhasil dihapus.'
+        ]);
+    }
+
+    public function generateKey($appId)
+    {
+        $app = Application::findOrFail($appId);
+
+        // Revoke key aktif lama
+        ApiKey::where('application_id', $app->id)
+            ->where('status', 'active')
+            ->update(['status' => 'revoked']);
+
+        // Generate key baru
+        $key = 'gkp_' . Str::random(32);
+        $secret = Str::random(64);
+
+        $apiKey = ApiKey::create([
+            'application_id' => $app->id,
+            'key'            => $key,
+            'status'         => 'active',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'API Key baru berhasil digenerate.',
+            'data'    => $apiKey
+>>>>>>> e8c209772a04986bda00d790be2a2f57d087dc1a
         ]);
     }
 }
-

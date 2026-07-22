@@ -13,17 +13,22 @@ import {
   BookOpen, 
   LogOut,
   Users,
-  Building2
+  Building2,
+  X
 } from 'lucide-react'
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { applications, endpoints } = useApiGateway()
-  const { user, logout, isAdmin, isDinas } = useAuth()
+  const { user, logout, isAdmin } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
     logout()
     navigate('/login')
+  }
+
+  const handleNavClick = () => {
+    if (onClose) onClose()
   }
 
   const navItemsUtama = isAdmin
@@ -62,18 +67,30 @@ export default function Sidebar() {
     return name.substring(0, 2).toUpperCase()
   }
 
-  return (
-    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between flex-shrink-0 h-screen sticky top-0 transition-colors duration-300 shadow-sm z-40">
+  const sidebarContent = (
+    <div className="flex flex-col justify-between h-full">
       <div>
         {/* Brand Logo Header */}
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-xl shadow-lg shadow-blue-500/25">
-            🔗
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo.png"
+              alt="Gerbang API Logo"
+              className="w-10 h-10 rounded-xl object-cover shadow-sm border border-slate-200 dark:border-slate-700 bg-white"
+            />
+            <div>
+              <h1 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 tracking-tight leading-none">Gerbang API</h1>
+              <span className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 tracking-widest uppercase block mt-1">Diskominfo Lampung Utara</span>
+            </div>
           </div>
-          <div>
-            <h1 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 tracking-tight leading-none">Gerbang API</h1>
-            <span className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 tracking-widest uppercase block mt-1">Diskominfo Lampung Utara</span>
-          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Navigation Menu Groups */}
@@ -86,6 +103,7 @@ export default function Sidebar() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={handleNavClick}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${
                     isActive
@@ -94,10 +112,10 @@ export default function Sidebar() {
                   }`
                 }
               >
-                <item.icon className="w-4 h-4 text-center" />
-                <span>{item.label}</span>
+                <item.icon className="w-4 h-4 text-center shrink-0" />
+                <span className="truncate">{item.label}</span>
                 {item.badge !== undefined && (
-                  <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border ${item.badgeStyle || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}>
+                  <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${item.badgeStyle || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}>
                     {item.badge}
                   </span>
                 )}
@@ -113,6 +131,7 @@ export default function Sidebar() {
                   <NavLink
                     key={item.to}
                     to={item.to}
+                    onClick={handleNavClick}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${
                         isActive
@@ -121,10 +140,10 @@ export default function Sidebar() {
                       }`
                     }
                   >
-                    <item.icon className="w-4 h-4 text-center" />
-                    <span>{item.label}</span>
+                    <item.icon className="w-4 h-4 text-center shrink-0" />
+                    <span className="truncate">{item.label}</span>
                     {item.badge !== undefined && (
-                      <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border ${item.badgeStyle || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}>
+                      <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${item.badgeStyle || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}>
                         {item.badge}
                       </span>
                     )}
@@ -138,6 +157,7 @@ export default function Sidebar() {
                   <NavLink
                     key={item.to}
                     to={item.to}
+                    onClick={handleNavClick}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${
                         isActive
@@ -146,10 +166,10 @@ export default function Sidebar() {
                       }`
                     }
                   >
-                    <item.icon className="w-4 h-4 text-center" />
-                    <span>{item.label}</span>
+                    <item.icon className="w-4 h-4 text-center shrink-0" />
+                    <span className="truncate">{item.label}</span>
                     {item.badge !== undefined && (
-                      <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border ${item.badgeStyle || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}>
+                      <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${item.badgeStyle || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}>
                         {item.badge}
                       </span>
                     )}
@@ -160,11 +180,12 @@ export default function Sidebar() {
           )}
 
           <div>
-            <span className="px-3 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 tracking-widest uppercase block mb-2">Developer</span>
+            <span className="px-3 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 tracking-widest uppercase block mb-2">Developer Tools</span>
             {navItemsDeveloper.map(item => (
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={handleNavClick}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${
                     isActive
@@ -173,8 +194,8 @@ export default function Sidebar() {
                   }`
                 }
               >
-                <item.icon className="w-4 h-4 text-center" />
-                <span>{item.label}</span>
+                <item.icon className="w-4 h-4 text-center shrink-0" />
+                <span className="truncate">{item.label}</span>
               </NavLink>
             ))}
           </div>
@@ -206,6 +227,30 @@ export default function Sidebar() {
           <LogOut className="w-4 h-4" />
         </button>
       </div>
-    </aside>
+    </div>
+  )
+
+  return (
+    <>
+      {/* Desktop Sidebar (Permanent) */}
+      <aside className="hidden md:flex w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col justify-between flex-shrink-0 h-screen sticky top-0 transition-colors duration-300 shadow-sm z-40">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Drawer (Slide-out Overlay) */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          {/* Backdrop Overlay */}
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300"
+            onClick={onClose}
+          />
+          {/* Mobile Drawer Sidebar */}
+          <aside className="relative w-64 max-w-[80vw] bg-white dark:bg-slate-900 h-full flex flex-col justify-between shadow-2xl z-50 border-r border-slate-200 dark:border-slate-800 animate-in slide-in-from-left duration-300">
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   )
 }
