@@ -126,36 +126,36 @@ class GatewaySeeder extends Seeder
 
         // ── 5. Request Logs (25 sampel, 7 hari terakhir) ─────────────
         $scenarios = [
-            // [app_index, endpoint_index, method, status_code, response_time_ms]
-            [0, 0,  'GET',  200, 87,   '2026-07-21 08:10:00'],
-            [0, 1,  'GET',  200, 102,  '2026-07-21 07:55:00'],
-            [1, 2,  'GET',  200, 145,  '2026-07-21 07:40:00'],
-            [1, 3,  'GET',  200, 98,   '2026-07-21 07:20:00'],
-            [2, 5,  'GET',  200, 210,  '2026-07-21 07:00:00'],
-            [3, 2,  'GET',  200, 130,  '2026-07-21 06:30:00'],
-            [0, 0,  'GET',  401, 31,   '2026-07-21 06:00:00'],  // key expired
-            [1, 4,  'POST', 403, 45,   '2026-07-20 15:30:00'],  // no access
-            [2, 5,  'GET',  200, 189,  '2026-07-20 15:00:00'],
-            [1, 2,  'GET',  200, 77,   '2026-07-20 14:30:00'],
-            [0, 7,  'POST', 200, 210,  '2026-07-20 14:00:00'],
-            [2, 6,  'GET',  200, 160,  '2026-07-20 13:30:00'],
-            [3, 3,  'GET',  502, 2103, '2026-07-20 13:00:00'],  // upstream timeout
-            [1, 3,  'GET',  200, 88,   '2026-07-20 12:30:00'],
-            [4, 7,  'POST', 401, 22,   '2026-07-20 12:00:00'],  // revoked key
-            [0, 1,  'GET',  200, 110,  '2026-07-19 16:00:00'],
-            [1, 2,  'GET',  200, 95,   '2026-07-19 15:00:00'],
-            [2, 5,  'GET',  404, 30,   '2026-07-19 14:00:00'],  // endpoint not found
-            [0, 0,  'GET',  200, 112,  '2026-07-19 13:00:00'],
-            [3, 2,  'GET',  200, 143,  '2026-07-19 12:00:00'],
-            [1, 4,  'POST', 200, 198,  '2026-07-18 11:00:00'],
-            [2, 6,  'GET',  200, 175,  '2026-07-18 10:00:00'],
-            [0, 0,  'GET',  200, 90,   '2026-07-17 16:00:00'],
-            [1, 2,  'GET',  200, 101,  '2026-07-17 15:00:00'],
-            [2, 5,  'GET',  503, 5000, '2026-07-16 14:00:00'],  // upstream down
+            // [app_index, endpoint_index, method, status_code, response_time_ms, offset_hours]
+            [0, 0,  'GET',  200, 87,   0],
+            [0, 1,  'GET',  200, 102,  2],
+            [1, 2,  'GET',  200, 145,  5],
+            [1, 3,  'GET',  200, 98,   8],
+            [2, 5,  'GET',  200, 210,  12],
+            [3, 2,  'GET',  200, 130,  15],
+            [0, 0,  'GET',  401, 31,   20],  // key expired
+            [1, 4,  'POST', 403, 45,   24],  // no access (yesterday)
+            [2, 5,  'GET',  200, 189,  26],
+            [1, 2,  'GET',  200, 77,   30],
+            [0, 7,  'POST', 200, 210,  35],
+            [2, 6,  'GET',  200, 160,  40],
+            [3, 3,  'GET',  502, 2103, 45],  // upstream timeout
+            [1, 3,  'GET',  200, 88,   48],  // 2 days ago
+            [4, 7,  'POST', 401, 22,   50],  // revoked key
+            [0, 1,  'GET',  200, 110,  55],
+            [1, 2,  'GET',  200, 95,   60],
+            [2, 5,  'GET',  404, 30,   72],  // endpoint not found (3 days ago)
+            [0, 0,  'GET',  200, 112,  75],
+            [3, 2,  'GET',  200, 143,  80],
+            [1, 4,  'POST', 200, 198,  96],  // 4 days ago
+            [2, 6,  'GET',  200, 175,  105],
+            [0, 0,  'GET',  200, 90,   120], // 5 days ago
+            [1, 2,  'GET',  200, 101,  130],
+            [2, 5,  'GET',  503, 5000, 144], // upstream down (6 days ago)
         ];
 
         foreach ($scenarios as $scenario) {
-            [$appIdx, $epIdx, $method, $statusCode, $responseTime, $timestamp] = $scenario;
+            [$appIdx, $epIdx, $method, $statusCode, $responseTime, $offsetHours] = $scenario;
 
             $app      = $createdApps[$appIdx];
             $endpoint = $createdEndpoints[$epIdx];
@@ -181,8 +181,8 @@ class GatewaySeeder extends Seeder
                         ? ['success' => true, 'data' => ['sample' => 'response data']]
                         : ['success' => false, 'error' => "HTTP {$statusCode}"]
                 ),
-                'created_at' => Carbon::parse($timestamp),
-                'updated_at' => Carbon::parse($timestamp),
+                'created_at' => now()->subHours($offsetHours),
+                'updated_at' => now()->subHours($offsetHours),
             ]);
         }
     }
