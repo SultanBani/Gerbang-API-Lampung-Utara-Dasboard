@@ -3,7 +3,20 @@ import { Link } from 'react-router-dom'
 import { useApiGateway } from '../context/ApiGatewayContext'
 import { useTheme } from '../context/ThemeContext'
 import { Line, Doughnut } from 'react-chartjs-2'
-import { Loader2 } from 'lucide-react'
+import { 
+  FolderKanban, 
+  Sliders, 
+  Key, 
+  Activity, 
+  AlertTriangle, 
+  Zap, 
+  TrendingUp, 
+  PieChart as PieIcon, 
+  ClipboardList, 
+  ShieldCheck, 
+  Loader2, 
+  ArrowUpRight 
+} from 'lucide-react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -22,7 +35,7 @@ ChartJS.register(
   Title, Tooltip, Legend, ArcElement, Filler
 )
 
-function StatCard({ icon, value, label, hint, hintColor = 'text-emerald-600 dark:text-emerald-400', accentColor = 'blue', loading }) {
+function StatCard({ icon: Icon, value, label, hint, hintColor = 'text-emerald-600 dark:text-emerald-400', accentColor = 'blue', loading }) {
   const colors = {
     blue:   { bg: 'bg-blue-500/10',   text: 'text-blue-600 dark:text-blue-400',   blur: 'bg-blue-500/10 group-hover:bg-blue-500/20',   border: 'hover:border-blue-300' },
     indigo: { bg: 'bg-indigo-500/10', text: 'text-indigo-600 dark:text-indigo-400', blur: 'bg-indigo-500/10 group-hover:bg-indigo-500/20', border: 'hover:border-indigo-300' },
@@ -32,9 +45,11 @@ function StatCard({ icon, value, label, hint, hintColor = 'text-emerald-600 dark
   }
   const c = colors[accentColor] || colors.blue
   return (
-    <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden transition-all duration-300 ${c.border} dark:hover:border-slate-700 shadow-sm dark:shadow-md group`}>
+    <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden transition-all duration-300 ${c.border} dark:hover:border-slate-700 shadow-xs dark:shadow-md group`}>
       <div className={`absolute right-0 top-0 w-20 h-20 rounded-full blur-xl transition-all duration-300 ${c.blur}`}></div>
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg mb-3 ${c.bg} ${c.text}`}>{icon}</div>
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${c.bg} ${c.text}`}>
+        <Icon className="w-5 h-5" />
+      </div>
       {loading
         ? <div className="h-8 flex items-center"><Loader2 className="w-5 h-5 animate-spin text-slate-400" /></div>
         : <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 leading-none mb-1">{value}</p>
@@ -95,7 +110,7 @@ export default function DashboardPage() {
   const statusDist = stats?.status_distribution ?? {}
   const doughnutData = Object.entries(statusDist)
   const doughnutChartData = {
-    labels: doughnutData.map(([code]) => `${code}`),
+    labels: doughnutData.map(([code]) => `HTTP ${code}`),
     datasets: [{
       data: doughnutData.map(([, count]) => count),
       backgroundColor: doughnutData.map(([code]) =>
@@ -122,22 +137,23 @@ export default function DashboardPage() {
   }, [logs])
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 font-sans">
       {/* STATS CARDS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
-        <StatCard icon="🗂️" value={stats?.total_applications ?? '—'} label="Aplikasi Terdaftar" hint="↑ 2 bulan ini" accentColor="blue" loading={isLoading} />
-        <StatCard icon="⚙️" value={stats?.total_endpoints ?? '—'} label="Total Endpoint" hint="↑ 5 baru didaftarkan" accentColor="indigo" loading={isLoading} />
-        <StatCard icon="🗝️" value={stats?.active_keys ?? '—'} label="API Key Aktif" hint="Semua berjalan normal" hintColor="text-slate-500 dark:text-slate-400" accentColor="emerald" loading={isLoading} />
-        <StatCard icon="📥" value={stats?.total_hits_today ?? '—'} label="Request Hari Ini" hint={stats?.failed_hits_today != null ? `${stats.failed_hits_today} gagal` : ''} accentColor="amber" loading={isLoading} />
-        <StatCard icon="⚠️" value={stats?.failed_hits_today ?? '—'} label="Request Gagal" hint="Error terdeteksi" hintColor="text-red-600 dark:text-red-400" accentColor="red" loading={isLoading} />
-        <StatCard icon="⚡" value={stats?.avg_response_time != null ? `${stats.avg_response_time}ms` : '—'} label="Avg Response" hint="Rata-rata latency" accentColor="emerald" loading={isLoading} />
+        <StatCard icon={FolderKanban} value={stats?.total_applications ?? '—'} label="Aplikasi Terdaftar" hint="↑ Aktif terintegrasi" accentColor="blue" loading={isLoading} />
+        <StatCard icon={Sliders} value={stats?.total_endpoints ?? '—'} label="Total Endpoint" hint="↑ Terdaftar di Gateway" accentColor="indigo" loading={isLoading} />
+        <StatCard icon={Key} value={stats?.active_keys ?? '—'} label="API Key Aktif" hint="Status Terverifikasi" hintColor="text-slate-500 dark:text-slate-400" accentColor="emerald" loading={isLoading} />
+        <StatCard icon={Activity} value={stats?.total_hits_today ?? '—'} label="Request Hari Ini" hint={stats?.failed_hits_today != null ? `${stats.failed_hits_today} gagal` : ''} accentColor="amber" loading={isLoading} />
+        <StatCard icon={AlertTriangle} value={stats?.failed_hits_today ?? '—'} label="Request Gagal" hint="Status Log Gateway" hintColor="text-red-600 dark:text-red-400" accentColor="red" loading={isLoading} />
+        <StatCard icon={Zap} value={stats?.avg_response_time != null ? `${stats.avg_response_time}ms` : '—'} label="Avg Latency" hint="Waktu Respon Rata-rata" accentColor="emerald" loading={isLoading} />
       </div>
 
       {/* CHARTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 lg:col-span-2 shadow-sm dark:shadow-lg">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 lg:col-span-2 shadow-xs dark:shadow-lg">
           <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-200 mb-6 flex items-center gap-2">
-            <span>📈</span> Volume Request 7 Hari Terakhir
+            <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span>Volume Request 7 Hari Terakhir</span>
           </h3>
           <div className="h-64">
             {isLoading
@@ -147,9 +163,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-lg">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs dark:shadow-lg">
           <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-200 mb-6 flex items-center gap-2">
-            <span>🍩</span> Distribusi Status Response HTTP
+            <PieIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <span>Distribusi Status Response HTTP</span>
           </h3>
           <div className="h-64 flex items-center justify-center">
             {isLoading
@@ -162,15 +179,19 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* RECENT LOGS & AI ADVISOR */}
+      {/* RECENT LOGS & SYSTEM DIAGNOSTICS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Log Table */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-lg">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs dark:shadow-lg">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-2">
-              <span>📋</span> Log Request Terbaru
+              <ClipboardList className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Log Request Terbaru</span>
             </h3>
-            <Link to="/logs" className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-bold">Semua Log →</Link>
+            <Link to="/logs" className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-bold flex items-center gap-1">
+              <span>Semua Log</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
           <div className="overflow-x-auto">
@@ -223,31 +244,32 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI Security Advisor & Top Usage */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-sm dark:shadow-lg">
+        {/* Security Diagnostics & Top Usage */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xs dark:shadow-lg">
           <div>
             <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-200 mb-6 flex items-center gap-2">
-              <span>💡</span> Analisis Keamanan & Rekomendasi AI
+              <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>Diagnostik Keamanan Gateway</span>
             </h3>
-            <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/5 border border-amber-500/30 mb-6">
+            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 mb-6">
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
-                  <span>🤖</span> AI Security Advisor
+                <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-extrabold text-xs">
+                  <span>Status Keamanan Sistem</span>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">Live Scan</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">Terverifikasi</span>
               </div>
-              <div className="space-y-2.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              <div className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                 <p className="flex items-start gap-2">
-                  <span className="text-amber-500">•</span>
-                  <span>Endpoint <code className="bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded text-amber-700 dark:text-amber-300 font-mono">POST /v1/auth/login</code> belum memiliki Rate Limit ketat.</span>
+                  <span className="text-blue-500">•</span>
+                  <span>Seluruh {stats?.active_keys ?? 0} API Key aktif dilindungi oleh otentikasi header X-Secret-Key.</span>
                 </p>
                 <p className="flex items-start gap-2">
-                  <span className="text-amber-500">•</span>
-                  <span>Periksa API Key yang mendekati masa kedaluwarsa (<strong className="text-slate-900 dark:text-slate-100">{stats?.active_keys ?? 0} aktif</strong>).</span>
+                  <span className="text-blue-500">•</span>
+                  <span>Matrix Hak Akses per-endpoint dikonfigurasi aktif untuk {stats?.total_applications ?? 0} aplikasi OPD.</span>
                 </p>
                 <p className="flex items-start gap-2">
                   <span className="text-emerald-600 dark:text-emerald-400">•</span>
-                  <span>Rekomendasi: Lakukan rotasi API Key berkala untuk seluruh {stats?.total_applications ?? 0} aplikasi yang terdaftar.</span>
+                  <span>Rekomendasi: Lakukan rotasi API Key berkala minimal 1 tahun sekali di menu Token/API Key.</span>
                 </p>
               </div>
             </div>

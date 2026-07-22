@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
-import AiChatWidget from './components/AiChatWidget'
 
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
@@ -92,9 +91,6 @@ export default function App() {
                   </Routes>
                 </main>
               </div>
-
-              {/* AI Assistant Chatbot Floating Widget */}
-              <AiChatWidget />
             </div>
           )
         }
