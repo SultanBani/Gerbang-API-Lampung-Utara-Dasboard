@@ -36,4 +36,9 @@ class Application extends Model
     {
         return $this->hasMany(RequestLog::class);
     }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

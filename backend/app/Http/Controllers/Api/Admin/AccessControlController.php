@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AccessControl;
 use App\Models\Application;
 use App\Models\Endpoint;
+<<<<<<< HEAD
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -47,6 +48,22 @@ class AccessControlController extends Controller
         $matrix = [];
         foreach ($accessControls as $ac) {
             $key          = "{$ac->application_id}:{$ac->endpoint_id}";
+=======
+use Illuminate\Http\Request;
+
+class AccessControlController extends Controller
+{
+    public function index()
+    {
+        $applications = Application::select(['id', 'name', 'opd'])->orderBy('name')->get();
+        $endpoints    = Endpoint::select(['id', 'method', 'url', 'description', 'tag'])->orderBy('url')->get();
+        $controls     = AccessControl::all();
+
+        // Construct permissions matrix format: { "appId:endpointId": { id, is_allowed } }
+        $matrix = [];
+        foreach ($controls as $ac) {
+            $key = "{$ac->application_id}:{$ac->endpoint_id}";
+>>>>>>> e8c209772a04986bda00d790be2a2f57d087dc1a
             $matrix[$key] = [
                 'id'         => $ac->id,
                 'is_allowed' => (bool) $ac->is_allowed,
@@ -55,6 +72,7 @@ class AccessControlController extends Controller
 
         return response()->json([
             'success' => true,
+<<<<<<< HEAD
             'message' => 'Access control matrix retrieved successfully.',
             'data'    => [
                 'applications'    => $applications,
@@ -113,6 +131,45 @@ class AccessControlController extends Controller
                 'application'    => $app?->name,
                 'endpoint'       => $endpoint?->method . ' ' . $endpoint?->url,
             ],
+=======
+            'data'    => [
+                'applications' => $applications,
+                'endpoints'    => $endpoints,
+                'matrix'       => $matrix,
+            ]
+        ]);
+    }
+
+    public function toggle(Request $request)
+    {
+        $validated = $request->validate([
+            'application_id' => 'required|exists:applications,id',
+            'endpoint_id'    => 'required|exists:endpoints,id',
+        ]);
+
+        $ac = AccessControl::where('application_id', $validated['application_id'])
+            ->where('endpoint_id', $validated['endpoint_id'])
+            ->first();
+
+        if ($ac) {
+            $ac->is_allowed = !$ac->is_allowed;
+            $ac->save();
+        } else {
+            $ac = AccessControl::create([
+                'application_id' => $validated['application_id'],
+                'endpoint_id'    => $validated['endpoint_id'],
+                'is_allowed'     => true,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status hak akses berhasil diperbarui.',
+            'data'    => [
+                'id'         => $ac->id,
+                'is_allowed' => (bool) $ac->is_allowed,
+            ]
+>>>>>>> e8c209772a04986bda00d790be2a2f57d087dc1a
         ]);
     }
 }
