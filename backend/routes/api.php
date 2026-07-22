@@ -16,59 +16,57 @@ use Illuminate\Support\Facades\Route;
 | API Routes — Gerbang API Kabupaten Lampung Utara
 |--------------------------------------------------------------------------
 |
-| File ini menangani 3 domain utama:
-|   1. /api/auth/*     → Authentication (Login Admin & Login Dinas OPD)
-|   2. /api/admin/*    → Dashboard & REST API Management (Applications, Endpoints, Access Controls, Logs, Users)
-|   3. /gateway/*      → Dynamic Gateway Proxy (4-layer pipeline via ApiGatewayMiddleware)
+| 1. /api/auth/login        → Publik (tanpa auth)
+| 2. /api/auth/me & logout  → Protected (auth:sanctum)
+| 3. /api/admin/*           → Protected Admin (auth:sanctum)
+| 4. /gateway/*             → Dynamic Gateway Proxy (ApiGatewayMiddleware)
 |
 */
 
 // ─────────────────────────────────────────────────────────────────────────
-// [1] AUTHENTICATION API (/api/auth)
+// [1] PUBLIC — Login (tidak memerlukan token)
 // ─────────────────────────────────────────────────────────────────────────
 Route::prefix('api/auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// [2] ADMIN MANAGEMENT REST API (/api/admin)
+// [2] PROTECTED — Routes yang membutuhkan Sanctum token
 // ─────────────────────────────────────────────────────────────────────────
-Route::prefix('api/admin')->group(function () {
-    // Stats overview
-    Route::get('/stats', [AdminStatsController::class, 'index']);
+Route::middleware('auth:sanctum')->group(function () {
 
-    // Applications & API Keys
-    Route::get('/applications', [ApplicationController::class, 'index']);
-    Route::post('/applications', [ApplicationController::class, 'store']);
-    Route::get('/applications/{id}', [ApplicationController::class, 'show']);
-    Route::put('/applications/{id}', [ApplicationController::class, 'update']);
-    Route::delete('/applications/{id}', [ApplicationController::class, 'destroy']);
-    Route::post('/applications/{id}/generate-key', [ApplicationController::class, 'generateKey']);
+    // Auth endpoints
+    Route::prefix('api/auth')->group(function () {
+        Route::get('/me',       [AuthController::class, 'me']);
+        Route::post('/logout',  [AuthController::class, 'logout']);
+    });
 
-    // Endpoints
-    Route::get('/endpoints', [EndpointController::class, 'index']);
-    Route::post('/endpoints', [EndpointController::class, 'store']);
-    Route::put('/endpoints/{id}', [EndpointController::class, 'update']);
-    Route::delete('/endpoints/{id}', [EndpointController::class, 'destroy']);
+    // Admin Management REST API
+    Route::prefix('api/admin')->group(function () {
+        // Dashboard stats
+        Route::get('/stats', [AdminStatsController::class, 'index']);
 
-    // Access Control Matrix
-    Route::get('/access-controls', [AccessControlController::class, 'index']);
-    Route::post('/access-controls/toggle', [AccessControlController::class, 'toggle']);
+        // Applications & API Keys
+        Route::apiResource('applications', ApplicationController::class);
+        Route::post('/applications/{id}/generate-key', [ApplicationController::class, 'generateKey']);
 
-    // Logs
-    Route::get('/logs', [RequestLogController::class, 'index']);
+        // Endpoints
+        Route::apiResource('endpoints', EndpointController::class);
 
-    // User Management (Admin & Dinas accounts)
-    Route::get('/users', [UserManagementController::class, 'index']);
-    Route::post('/users', [UserManagementController::class, 'store']);
-    Route::put('/users/{id}', [UserManagementController::class, 'update']);
-    Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);
+        // Access Control Matrix
+        Route::get('/access-controls',          [AccessControlController::class, 'index']);
+        Route::post('/access-controls/toggle',  [AccessControlController::class, 'toggle']);
+
+        // Request Logs
+        Route::get('/logs', [RequestLogController::class, 'index']);
+
+        // User Management (admin creates/manages dinas accounts)
+        Route::apiResource('users', UserManagementController::class);
+    });
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// [3] GATEWAY PROXY ROUTES (/gateway)
+// [3] GATEWAY PROXY (/gateway) — ApiGatewayMiddleware pipeline
 // ─────────────────────────────────────────────────────────────────────────
 Route::get('/gateway/health', function () {
     return response()->json([

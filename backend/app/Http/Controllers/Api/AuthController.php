@@ -5,14 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
     /**
      * Handle Login Admin & Dinas (OPD)
+     * POST /api/auth/login
      */
     public function login(Request $request)
     {
@@ -23,7 +22,7 @@ class AuthController extends Controller
 
         $loginInput = $request->input('login');
 
-        // Mencari user berdasarkan Email atau Username
+        // Cari user berdasarkan email atau username
         $user = User::where('email', $loginInput)
             ->orWhere('username', $loginInput)
             ->with('application.apiKeys')
@@ -36,15 +35,16 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Generate token sederhana (session/bearer token)
-        $token = Str::random(64);
+        // Hapus semua token lama, buat token Sanctum baru
+        $user->tokens()->delete();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'success' => true,
             'message' => 'Login berhasil. Selamat datang di Gerbang API Kabupaten Lampung Utara.',
             'data' => [
                 'token' => $token,
-                'user' => [
+                'user'  => [
                     'id'             => $user->id,
                     'name'           => $user->name,
                     'username'       => $user->username,
@@ -53,13 +53,14 @@ class AuthController extends Controller
                     'opd_name'       => $user->opd_name,
                     'application_id' => $user->application_id,
                     'application'    => $user->application,
-                ]
-            ]
+                ],
+            ],
         ]);
     }
 
     /**
      * Get profile user aktif
+     * GET /api/auth/me — protected by auth:sanctum
      */
     public function me(Request $request)
     {
@@ -68,7 +69,7 @@ class AuthController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated',
+                'message' => 'Unauthenticated.',
             ], 401);
         }
 
@@ -76,7 +77,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => [
+            'data'    => [
                 'id'             => $user->id,
                 'name'           => $user->name,
                 'username'       => $user->username,
@@ -85,15 +86,18 @@ class AuthController extends Controller
                 'opd_name'       => $user->opd_name,
                 'application_id' => $user->application_id,
                 'application'    => $user->application,
-            ]
+            ],
         ]);
     }
 
     /**
-     * Logout
+     * Logout — hapus token aktif
+     * POST /api/auth/logout — protected by auth:sanctum
      */
     public function logout(Request $request)
     {
+        $request->user()->currentAccessToken()->delete();
+
         return response()->json([
             'success' => true,
             'message' => 'Berhasil logout.',
