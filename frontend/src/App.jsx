@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
+import AiChatWidget from './components/AiChatWidget'
 
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
@@ -91,6 +92,9 @@ export default function App() {
                   </Routes>
                 </main>
               </div>
+
+              {/* Sleek Enterprise Floating AI Assistant Widget */}
+              <AiChatWidget />
             </div>
           )
         }
