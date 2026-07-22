@@ -3,17 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-<<<<<<< HEAD
-=======
 use App\Models\Application;
 use App\Models\Endpoint;
 use App\Models\ApiKey;
 use App\Models\AccessControl;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
->>>>>>> e8c209772a04986bda00d790be2a2f57d087dc1a
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,19 +17,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-<<<<<<< HEAD
-        // ── Admin User ──────────────────────────────────────────────
-        User::firstOrCreate(
-            ['email' => 'admin@diskominfo.go.id'],
-            [
-                'name'     => 'Admin Diskominfo',
-                'password' => bcrypt('password'),
-            ]
-        );
-
-        // ── Gateway Data: Applications, Endpoints, Keys, ACL, Logs ──
-        $this->call(GatewaySeeder::class);
-=======
         // 1. Seed Applications (OPD Apps)
         $appBappeda = Application::create([
             'name'        => 'SIM-PERENCANAAN (E-PLANNING)',
@@ -202,6 +184,5 @@ class DatabaseSeeder extends Seeder
             'opd_name'       => 'Badan Pengelola Keuangan dan Aset Daerah',
             'application_id' => $appBpkad->id,
         ]);
->>>>>>> e8c209772a04986bda00d790be2a2f57d087dc1a
     }
 }

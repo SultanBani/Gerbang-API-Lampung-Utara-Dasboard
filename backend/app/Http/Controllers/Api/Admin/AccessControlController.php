@@ -6,64 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\AccessControl;
 use App\Models\Application;
 use App\Models\Endpoint;
-<<<<<<< HEAD
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/**
- * AccessControlController
- *
- * Mengelola hak akses antar-aplikasi dan endpoint (tabel `access_controls`).
- * Menyediakan matrix view dan toggle per-kombinasi.
- *
- * Routes:
- *   GET  /api/admin/access-controls         → Matrix izin semua app × endpoint
- *   POST /api/admin/access-controls/toggle  → Toggle izin aplikasi ke endpoint
- */
 class AccessControlController extends Controller
 {
-    /**
-     * GET /api/admin/access-controls
-     *
-     * Mengembalikan matrix hak akses:
-     * - Daftar semua aplikasi
-     * - Daftar semua endpoint
-     * - Map izin: { "app_id:endpoint_id" => is_allowed }
-     */
     public function index(): JsonResponse
     {
-        $applications = Application::select('id', 'name', 'opd', 'status')
+        $applications = Application::select(['id', 'name', 'opd', 'status'])
             ->orderBy('name')
             ->get();
 
-        $endpoints = Endpoint::select('id', 'method', 'url', 'tag', 'description')
+        $endpoints = Endpoint::select(['id', 'method', 'url', 'description', 'tag'])
             ->orderBy('tag')
             ->orderBy('url')
             ->get();
 
-        // Ambil semua record access_control dan bangun lookup map
         $accessControls = AccessControl::all();
 
-        // Map format: { "app_id:endpoint_id" => ["id" => ..., "is_allowed" => ...] }
         $matrix = [];
         foreach ($accessControls as $ac) {
-            $key          = "{$ac->application_id}:{$ac->endpoint_id}";
-=======
-use Illuminate\Http\Request;
-
-class AccessControlController extends Controller
-{
-    public function index()
-    {
-        $applications = Application::select(['id', 'name', 'opd'])->orderBy('name')->get();
-        $endpoints    = Endpoint::select(['id', 'method', 'url', 'description', 'tag'])->orderBy('url')->get();
-        $controls     = AccessControl::all();
-
-        // Construct permissions matrix format: { "appId:endpointId": { id, is_allowed } }
-        $matrix = [];
-        foreach ($controls as $ac) {
             $key = "{$ac->application_id}:{$ac->endpoint_id}";
->>>>>>> e8c209772a04986bda00d790be2a2f57d087dc1a
             $matrix[$key] = [
                 'id'         => $ac->id,
                 'is_allowed' => (bool) $ac->is_allowed,
@@ -72,48 +35,33 @@ class AccessControlController extends Controller
 
         return response()->json([
             'success' => true,
-<<<<<<< HEAD
             'message' => 'Access control matrix retrieved successfully.',
             'data'    => [
-                'applications'    => $applications,
-                'endpoints'       => $endpoints,
-                'matrix'          => $matrix,
-                'total_grants'    => $accessControls->where('is_allowed', true)->count(),
-                'total_denies'    => $accessControls->where('is_allowed', false)->count(),
+                'applications' => $applications,
+                'endpoints'    => $endpoints,
+                'matrix'       => $matrix,
             ],
         ]);
     }
 
-    /**
-     * POST /api/admin/access-controls/toggle
-     *
-     * Toggle izin aplikasi terhadap endpoint tertentu.
-     * - Jika record belum ada → buat dengan is_allowed = true
-     * - Jika record sudah ada → flip nilai is_allowed
-     *
-     * Body: { "application_id": 1, "endpoint_id": 3 }
-     */
     public function toggle(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'application_id' => 'required|integer|exists:applications,id',
-            'endpoint_id'    => 'required|integer|exists:endpoints,id',
+            'application_id' => 'required|exists:applications,id',
+            'endpoint_id'    => 'required|exists:endpoints,id',
         ]);
 
-        // firstOrCreate + toggle
         $access = AccessControl::firstOrCreate(
             [
                 'application_id' => $validated['application_id'],
                 'endpoint_id'    => $validated['endpoint_id'],
             ],
-            ['is_allowed' => false]  // default saat baru dibuat = false, lalu di-flip
+            ['is_allowed' => false]
         );
 
-        // Flip nilai
         $access->is_allowed = ! $access->is_allowed;
         $access->save();
 
-        // Ambil nama untuk pesan yang ramah
         $app      = Application::find($validated['application_id']);
         $endpoint = Endpoint::find($validated['endpoint_id']);
 
@@ -127,49 +75,10 @@ class AccessControlController extends Controller
                 'id'             => $access->id,
                 'application_id' => $access->application_id,
                 'endpoint_id'    => $access->endpoint_id,
-                'is_allowed'     => $access->is_allowed,
+                'is_allowed'     => (bool) $access->is_allowed,
                 'application'    => $app?->name,
                 'endpoint'       => $endpoint?->method . ' ' . $endpoint?->url,
             ],
-=======
-            'data'    => [
-                'applications' => $applications,
-                'endpoints'    => $endpoints,
-                'matrix'       => $matrix,
-            ]
-        ]);
-    }
-
-    public function toggle(Request $request)
-    {
-        $validated = $request->validate([
-            'application_id' => 'required|exists:applications,id',
-            'endpoint_id'    => 'required|exists:endpoints,id',
-        ]);
-
-        $ac = AccessControl::where('application_id', $validated['application_id'])
-            ->where('endpoint_id', $validated['endpoint_id'])
-            ->first();
-
-        if ($ac) {
-            $ac->is_allowed = !$ac->is_allowed;
-            $ac->save();
-        } else {
-            $ac = AccessControl::create([
-                'application_id' => $validated['application_id'],
-                'endpoint_id'    => $validated['endpoint_id'],
-                'is_allowed'     => true,
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Status hak akses berhasil diperbarui.',
-            'data'    => [
-                'id'         => $ac->id,
-                'is_allowed' => (bool) $ac->is_allowed,
-            ]
->>>>>>> e8c209772a04986bda00d790be2a2f57d087dc1a
         ]);
     }
 }

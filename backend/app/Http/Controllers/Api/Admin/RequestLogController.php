@@ -4,27 +4,11 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RequestLog;
-<<<<<<< HEAD
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/**
- * RequestLogController
- *
- * Menampilkan log request yang masuk ke gateway dengan pagination,
- * filter status code, dan pencarian berdasarkan endpoint atau aplikasi.
- *
- * Routes:
- *   GET /api/admin/logs           → Paginated log dengan filter & search
- *   GET /api/admin/logs/{id}      → Detail satu log
- *   DELETE /api/admin/logs/purge  → Hapus log lama (opsional maintenance)
- */
 class RequestLogController extends Controller
 {
-    /**
-     * GET /api/admin/logs
-     * Log dengan pagination 15/halaman, filter, dan search.
-     */
     public function index(Request $request): JsonResponse
     {
         $query = RequestLog::with([
@@ -33,12 +17,10 @@ class RequestLogController extends Controller
             'apiKey:id,key,status',
         ])->latest();
 
-        // ── Filter berdasarkan status_code ────────────────────────────
         if ($request->filled('status_code')) {
             $query->where('status_code', (int) $request->status_code);
         }
 
-        // ── Filter berdasarkan rentang status (misal: 4xx, 5xx) ───────
         if ($request->filled('status_range')) {
             match ($request->status_range) {
                 '2xx'   => $query->whereBetween('status_code', [200, 299]),
@@ -49,17 +31,14 @@ class RequestLogController extends Controller
             };
         }
 
-        // ── Filter berdasarkan method ─────────────────────────────────
         if ($request->filled('method')) {
             $query->whereRaw('UPPER(method) = ?', [strtoupper($request->method_filter ?? $request->method)]);
         }
 
-        // ── Filter berdasarkan tanggal ────────────────────────────────
         if ($request->filled('date')) {
             $query->whereDate('created_at', $request->date);
         }
 
-        // ── Search berdasarkan URL endpoint atau IP ───────────────────
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -69,7 +48,6 @@ class RequestLogController extends Controller
             });
         }
 
-        // ── Filter berdasarkan application_id ────────────────────────
         if ($request->filled('application_id')) {
             $query->where('application_id', (int) $request->application_id);
         }
@@ -77,7 +55,6 @@ class RequestLogController extends Controller
         $perPage = min((int) $request->get('per_page', 15), 100);
         $logs    = $query->paginate($perPage);
 
-        // Hitung ringkasan untuk header dashboard
         $summary = [
             'total_shown'  => $logs->total(),
             'success_rate' => $this->calculateSuccessRate($request),
@@ -91,10 +68,6 @@ class RequestLogController extends Controller
         ]);
     }
 
-    /**
-     * GET /api/admin/logs/{id}
-     * Detail satu log beserta request & response payload.
-     */
     public function show(int $id): JsonResponse
     {
         $log = RequestLog::with([
@@ -103,7 +76,6 @@ class RequestLogController extends Controller
             'apiKey:id,key,status,expires_at',
         ])->findOrFail($id);
 
-        // Decode JSON payload jika ada
         $requestPayload  = $log->request_payload
             ? json_decode($log->request_payload, true) ?? $log->request_payload
             : null;
@@ -122,12 +94,6 @@ class RequestLogController extends Controller
         ]);
     }
 
-    /**
-     * DELETE /api/admin/logs/purge
-     * Hapus log lebih dari N hari yang lalu (maintenance endpoint).
-     *
-     * Body: { "older_than_days": 30 }
-     */
     public function purge(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -144,13 +110,6 @@ class RequestLogController extends Controller
         ]);
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // Private Helpers
-    // ─────────────────────────────────────────────────────────────────
-
-    /**
-     * Hitung persentase success rate dari semua log.
-     */
     private function calculateSuccessRate(Request $request): float
     {
         $total   = RequestLog::count();
@@ -158,35 +117,4 @@ class RequestLogController extends Controller
 
         return $total > 0 ? round(($success / $total) * 100, 1) : 0.0;
     }
-=======
-use Illuminate\Http\Request;
-
-class RequestLogController extends Controller
-{
-    public function index(Request $request)
-    {
-        $perPage = $request->query('per_page', 15);
-        $search  = $request->query('search');
-        $appId   = $request->query('application_id');
-
-        $query = RequestLog::with(['application', 'endpoint'])->latest();
-
-        if ($appId) {
-            $query->where('application_id', $appId);
-        }
-
-        if ($search) {
-            $query->where('path', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhere('status_code', 'like', "%{$search}%");
-        }
-
-        $logs = $query->paginate($perPage);
-
-        return response()->json([
-            'success' => true,
-            'data'    => $logs
-        ]);
-    }
->>>>>>> e8c209772a04986bda00d790be2a2f57d087dc1a
 }
