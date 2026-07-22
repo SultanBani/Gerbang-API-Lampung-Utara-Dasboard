@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { useApiGateway } from '../context/ApiGatewayContext'
 import { Users, UserPlus, KeyRound, Shield, Building2, Trash2, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
@@ -27,7 +27,7 @@ export default function UserManagementPage() {
   const fetchUsers = async () => {
     setLoading(true)
     try {
-      const res = await axios.get('http://localhost:8000/api/admin/users')
+      const res = await api.get('/api/admin/users')
       if (res.data.success) {
         setUsers(res.data.data)
       }
@@ -52,7 +52,7 @@ export default function UserManagementPage() {
       const payload = { ...formData }
       if (!payload.application_id) delete payload.application_id
 
-      const res = await axios.post('http://localhost:8000/api/admin/users', payload)
+      const res = await api.post('/api/admin/users', payload)
       if (res.data.success) {
         setSuccessMsg('Akun pengguna berhasil dibuat.')
         setShowModal(false)
@@ -75,7 +75,7 @@ export default function UserManagementPage() {
   const handleDeleteUser = async (id, name) => {
     if (!window.confirm(`Hapus akun "${name}"?`)) return
     try {
-      await axios.delete(`http://localhost:8000/api/admin/users/${id}`)
+      await api.delete(`/api/admin/users/${id}`)
       setSuccessMsg(`Akun ${name} berhasil dihapus.`)
       fetchUsers()
     } catch (err) {

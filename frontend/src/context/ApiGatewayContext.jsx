@@ -28,7 +28,7 @@ export function ApiGatewayProvider({ children }) {
   const fetchStats = useCallback(async () => {
     setRes('stats', true)
     try {
-      const res = await api.get('/stats')
+      const res = await api.get('/api/admin/stats')
       setStats(res.data.data)
     } catch (e) {
       setError(e.userMessage)
@@ -40,7 +40,7 @@ export function ApiGatewayProvider({ children }) {
   const fetchApplications = useCallback(async (params = {}) => {
     setRes('applications', true)
     try {
-      const res = await api.get('/applications', { params: { per_page: 50, ...params } })
+      const res = await api.get('/api/admin/applications', { params: { per_page: 50, ...params } })
       const items = res.data.data?.data ?? res.data.data ?? []
       setApplications(items)
       // Flatten API keys dari nested aplikasi
@@ -63,7 +63,7 @@ export function ApiGatewayProvider({ children }) {
   const fetchEndpoints = useCallback(async (params = {}) => {
     setRes('endpoints', true)
     try {
-      const res = await api.get('/endpoints', { params: { per_page: 100, ...params } })
+      const res = await api.get('/api/admin/endpoints', { params: { per_page: 100, ...params } })
       setEndpoints(res.data.data?.data ?? res.data.data ?? [])
     } catch (e) {
       setError(e.userMessage)
@@ -75,7 +75,7 @@ export function ApiGatewayProvider({ children }) {
   const fetchAccessControls = useCallback(async () => {
     setRes('accessControls', true)
     try {
-      const res = await api.get('/access-controls')
+      const res = await api.get('/api/admin/access-controls')
       setAccessControls(res.data.data)
     } catch (e) {
       setError(e.userMessage)
@@ -87,7 +87,7 @@ export function ApiGatewayProvider({ children }) {
   const fetchLogs = useCallback(async (params = {}) => {
     setRes('logs', true)
     try {
-      const res = await api.get('/logs', { params: { per_page: 15, ...params } })
+      const res = await api.get('/api/admin/logs', { params: { per_page: 15, ...params } })
       setLogs(res.data.data)
     } catch (e) {
       setError(e.userMessage)
@@ -111,7 +111,7 @@ export function ApiGatewayProvider({ children }) {
         description: formData.description || null,
         status:      formData.status || 'active',
       }
-      const res = await api.post('/applications', payload)
+      const res = await api.post('/api/admin/applications', payload)
       await fetchApplications()
       return res.data
     } catch (e) {
@@ -125,7 +125,7 @@ export function ApiGatewayProvider({ children }) {
   const updateApplication = useCallback(async (id, formData) => {
     setRes('action', true)
     try {
-      const res = await api.put(`/applications/${id}`, formData)
+      const res = await api.put(`/api/admin/applications/${id}`, formData)
       await fetchApplications()
       return res.data
     } catch (e) {
@@ -139,7 +139,7 @@ export function ApiGatewayProvider({ children }) {
   const deleteApplication = useCallback(async (id) => {
     setRes('action', true)
     try {
-      await api.delete(`/applications/${id}`)
+      await api.delete(`/api/admin/applications/${id}`)
       setApplications(prev => prev.filter(a => a.id !== id))
       setApiKeys(prev => prev.filter(k => k.appId !== id))
     } catch (e) {
@@ -153,7 +153,7 @@ export function ApiGatewayProvider({ children }) {
   const generateNewKey = useCallback(async (appId) => {
     setRes('action', true)
     try {
-      const res = await api.post(`/applications/${appId}/generate-key`)
+      const res = await api.post(`/api/admin/applications/${appId}/generate-key`)
       await fetchApplications()
       return res.data
     } catch (e) {
@@ -179,7 +179,7 @@ export function ApiGatewayProvider({ children }) {
         is_auth_required: formData.isAuthRequired ?? true,
         rate_limit:       Number(formData.rateLimit) || 60,
       }
-      const res = await api.post('/endpoints', payload)
+      const res = await api.post('/api/admin/endpoints', payload)
       await fetchEndpoints()
       return res.data
     } catch (e) {
@@ -193,7 +193,7 @@ export function ApiGatewayProvider({ children }) {
   const deleteEndpoint = useCallback(async (id) => {
     setRes('action', true)
     try {
-      await api.delete(`/endpoints/${id}`)
+      await api.delete(`/api/admin/endpoints/${id}`)
       setEndpoints(prev => prev.filter(e => e.id !== id))
     } catch (e) {
       setError(e.userMessage)
@@ -225,7 +225,7 @@ export function ApiGatewayProvider({ children }) {
     })
 
     try {
-      const res = await api.post('/access-controls/toggle', {
+      const res = await api.post('/api/admin/access-controls/toggle', {
         application_id: appId,
         endpoint_id:    endpointId,
       })
