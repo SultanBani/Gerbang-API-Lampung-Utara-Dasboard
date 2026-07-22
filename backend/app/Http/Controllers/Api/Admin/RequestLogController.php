@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RequestLog;
-<<<<<<< HEAD
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -158,35 +157,4 @@ class RequestLogController extends Controller
 
         return $total > 0 ? round(($success / $total) * 100, 1) : 0.0;
     }
-=======
-use Illuminate\Http\Request;
-
-class RequestLogController extends Controller
-{
-    public function index(Request $request)
-    {
-        $perPage = $request->query('per_page', 15);
-        $search  = $request->query('search');
-        $appId   = $request->query('application_id');
-
-        $query = RequestLog::with(['application', 'endpoint'])->latest();
-
-        if ($appId) {
-            $query->where('application_id', $appId);
-        }
-
-        if ($search) {
-            $query->where('path', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhere('status_code', 'like', "%{$search}%");
-        }
-
-        $logs = $query->paginate($perPage);
-
-        return response()->json([
-            'success' => true,
-            'data'    => $logs
-        ]);
-    }
->>>>>>> e8c209772a04986bda00d790be2a2f57d087dc1a
 }
