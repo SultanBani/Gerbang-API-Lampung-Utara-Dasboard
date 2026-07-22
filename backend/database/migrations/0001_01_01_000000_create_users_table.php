@@ -14,7 +14,11 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('username')->unique()->nullable();
             $table->string('email')->unique();
+            $table->string('role')->default('dinas'); // 'admin' atau 'dinas'
+            $table->string('opd_name')->nullable();
+            $table->unsignedBigInteger('application_id')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

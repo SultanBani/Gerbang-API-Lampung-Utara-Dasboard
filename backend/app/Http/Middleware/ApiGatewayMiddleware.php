@@ -49,6 +49,20 @@ class ApiGatewayMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Handle CORS Preflight (OPTIONS request dari browser)
+        if ($request->isMethod('OPTIONS')) {
+            return response()->json(['status' => 'OK'], 200, [
+                'Access-Control-Allow-Origin'  => '*',
+                'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers' => 'X-Client-ID, X-Secret-Key, Content-Type, Accept, Authorization',
+            ]);
+        }
+
+        // Skip middleware jika request bukan untuk proxy gateway (seperti /api/auth, /api/admin, atau /gateway/health)
+        if ($request->is('api/*') || $request->is('gateway/health') || !$request->is('gateway/*')) {
+            return $next($request);
+        }
+
         // ═══════════════════════════════════════════════════════════════
         // LAYER 1 — Autentikasi API Key
         // Validasi header X-Client-ID & X-Secret-Key terhadap tabel api_keys
@@ -118,8 +132,14 @@ class ApiGatewayMiddleware
             $endpointPath = '/';
         }
 
+        $cleanPath = ltrim($endpointPath, '/');
+
         /** @var Endpoint|null $endpoint */
-        $endpoint = Endpoint::where('url', $endpointPath)
+        $endpoint = Endpoint::where(function ($query) use ($endpointPath, $cleanPath) {
+                $query->where('url', $endpointPath)
+                      ->orWhere('url', $cleanPath)
+                      ->orWhere('url', '/' . $cleanPath);
+            })
             ->where(function ($query) use ($request) {
                 $query->whereRaw('UPPER(method) = ?', [strtoupper($request->method())])
                       ->orWhere('method', '*');  // wildcard method
@@ -315,7 +335,75 @@ class ApiGatewayMiddleware
     ): \Illuminate\Http\Client\Response {
         $method = strtolower($request->method());
 
-        // Sertakan query string dari request original jika ada
+        // Jika upstreamUrl bukan URL HTTP/HTTPS lengkap (misal: "dukcapil/penduduk"),
+        // berikan mock data respons terstruktur untuk API Tester & simulasi integrasi.
+        if (!str_starts_with($upstreamUrl, 'http://') && !str_starts_with($upstreamUrl, 'https://')) {
+            $path = ltrim($upstreamUrl, '/');
+
+            if (str_contains($path, 'dukcapil') || str_contains($path, 'penduduk')) {
+                $mockData = [
+                    'status' => 'success',
+                    'layanan' => 'Layanan Kependudukan Disdukcapil Lampung Utara',
+                    'data' => [
+                        'nik' => '1803011508900001',
+                        'nama' => 'Ahmad Subagja',
+                        'jenis_kelamin' => 'Laki-laki',
+                        'tempat_tgl_lahir' => 'Kotabumi, 15-08-1990',
+                        'alamat' => 'Jl. Jend. Sudirman No. 45, Kotabumi',
+                        'kecamatan' => 'Kotabumi',
+                        'kabupaten' => 'Lampung Utara',
+                        'status_kependudukan' => 'AKTIF DAN TERVERIFIKASI',
+                    ],
+                ];
+            } elseif (str_contains($path, 'kepegawaian') || str_contains($path, 'pegawai')) {
+                $mockData = [
+                    'status' => 'success',
+                    'layanan' => 'SIMPEG Badan Kepegawaian Daerah Lampung Utara',
+                    'data' => [
+                        'nip' => '198506122010011005',
+                        'nama_asn' => 'Rina Rahmawati, S.STP.',
+                        'jabatan' => 'Kepala Sub Bagian Umum & Kepegawaian',
+                        'pangkat_golongan' => 'Penata Tk. I (III/d)',
+                        'instansi_opd' => 'Badan Kepegawaian Daerah Lampung Utara',
+                        'status_pegawai' => 'PNS AKTIF',
+                    ],
+                ];
+            } elseif (str_contains($path, 'perencanaan') || str_contains($path, 'program')) {
+                $mockData = [
+                    'status' => 'success',
+                    'layanan' => 'E-PLANNING Bappeda Lampung Utara',
+                    'tahun_anggaran' => '2026',
+                    'program_unggulan' => [
+                        ['id' => 1, 'nama' => 'Peningkatan Infrastruktur Jalan & Jembatan', 'pagu' => 'Rp 45.000.000.000'],
+                        ['id' => 2, 'nama' => 'Digitalisasi SPBE & Gerbang API Daerah', 'pagu' => 'Rp 5.500.000.000'],
+                        ['id' => 3, 'nama' => 'Pengentasan Stunting & Layanan Kesehatan', 'pagu' => 'Rp 18.200.000.000'],
+                    ],
+                ];
+            } elseif (str_contains($path, 'keuangan') || str_contains($path, 'apbd')) {
+                $mockData = [
+                    'status' => 'success',
+                    'layanan' => 'SIPKD BPKAD Kabupaten Lampung Utara',
+                    'tahun_anggaran' => '2026',
+                    'pendapatan_daerah' => 'Rp 1.850.400.000.000',
+                    'belanja_daerah' => 'Rp 1.890.200.000.000',
+                    'realisasi_persentase' => '68.4%',
+                    'status_verifikasi' => 'TERVERIFIKASI BPKAD',
+                ];
+            } else {
+                $mockData = [
+                    'status' => 'success',
+                    'message' => 'Response Mocking Gateway Berhasil',
+                    'path' => $upstreamUrl,
+                    'timestamp' => now()->toIso8601String(),
+                ];
+            }
+
+            return new \Illuminate\Http\Client\Response(
+                new \GuzzleHttp\Psr7\Response(200, ['Content-Type' => 'application/json'], json_encode($mockData, JSON_UNESCAPED_UNICODE))
+            );
+        }
+
+        // Forward ke Upstream URL Eksternal yang sesungguhnya (http:// atau https://)
         $targetUrl = rtrim($upstreamUrl, '/');
         if ($request->getQueryString()) {
             $targetUrl .= '?' . $request->getQueryString();
@@ -325,21 +413,10 @@ class ApiGatewayMiddleware
 
         return match ($method) {
             'get'    => $pending->get($targetUrl),
-
-            'post'   => $pending
-                ->withBody($request->getContent(), $request->header('Content-Type', 'application/json'))
-                ->post($targetUrl),
-
-            'put'    => $pending
-                ->withBody($request->getContent(), $request->header('Content-Type', 'application/json'))
-                ->put($targetUrl),
-
-            'patch'  => $pending
-                ->withBody($request->getContent(), $request->header('Content-Type', 'application/json'))
-                ->patch($targetUrl),
-
+            'post'   => $pending->withBody($request->getContent(), $request->header('Content-Type', 'application/json'))->post($targetUrl),
+            'put'    => $pending->withBody($request->getContent(), $request->header('Content-Type', 'application/json'))->put($targetUrl),
+            'patch'  => $pending->withBody($request->getContent(), $request->header('Content-Type', 'application/json'))->patch($targetUrl),
             'delete' => $pending->delete($targetUrl),
-
             default  => $pending->get($targetUrl),
         };
     }
@@ -399,7 +476,11 @@ class ApiGatewayMiddleware
             'response_time_ms'  => $responseTimeMs,
             'x_request_id'     => $requestId,
             'data'              => $data,
-        ], $httpStatus);
+        ], $httpStatus, [
+            'Access-Control-Allow-Origin'  => '*',
+            'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers' => 'X-Client-ID, X-Secret-Key, Content-Type, Accept, Authorization',
+        ]);
     }
 
     /**
@@ -414,6 +495,10 @@ class ApiGatewayMiddleware
             'success' => false,
             'message' => $message,
             'data'    => null,
-        ], $status);
+        ], $status, [
+            'Access-Control-Allow-Origin'  => '*',
+            'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers' => 'X-Client-ID, X-Secret-Key, Content-Type, Accept, Authorization',
+        ]);
     }
 }

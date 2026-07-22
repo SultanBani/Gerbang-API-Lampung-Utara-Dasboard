@@ -8,12 +8,19 @@ export default function ApiTesterPage() {
 
   const [selectedAppId, setSelectedAppId] = useState('')
   const [requestMethod, setRequestMethod] = useState('GET')
-  const [requestUrl, setRequestUrl]       = useState('/v1/pegawai')
+  const [requestUrl, setRequestUrl]       = useState('/dukcapil/penduduk')
   const [activeTab, setActiveTab]         = useState('headers')
   const [requestBody, setRequestBody]     = useState('')
   const [loading, setLoading]             = useState(false)
   const [responseResult, setResponseResult] = useState(null)
   const [responseError, setResponseError]   = useState(null)
+
+  const quickEndpoints = [
+    { label: 'Dukcapil NIK', path: '/dukcapil/penduduk', method: 'GET' },
+    { label: 'BKD Kepegawaian', path: '/kepegawaian/v1/data', method: 'GET' },
+    { label: 'Bappeda Program', path: '/perencanaan/program', method: 'GET' },
+    { label: 'BPKAD APBD', path: '/keuangan/apbd', method: 'GET' },
+  ]
 
   useEffect(() => {
     if (applications.length === 0) fetchApplications()
@@ -128,29 +135,49 @@ export default function ApiTesterPage() {
           </div>
 
           {/* URL Input Bar */}
-          <div className="flex items-center">
-            <select
-              value={requestMethod}
-              onChange={e => setRequestMethod(e.target.value)}
-              className="bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-extrabold font-mono text-xs px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-l-xl border-r-0 focus:outline-none"
-            >
-              {['GET','POST','PUT','PATCH','DELETE'].map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-            <input
-              value={requestUrl}
-              onChange={e => setRequestUrl(e.target.value)}
-              type="text"
-              placeholder="/v1/pegawai"
-              className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 py-2.5 px-3.5 font-mono text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500"
-            />
-            <button
-              onClick={handleSendRequest}
-              disabled={loading || !currentKey}
-              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-extrabold px-5 py-2.5 rounded-r-xl text-xs flex items-center gap-2 shadow-lg shadow-blue-600/25 transition-all cursor-pointer"
-            >
-              {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-              <span>Send</span>
-            </button>
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <select
+                value={requestMethod}
+                onChange={e => setRequestMethod(e.target.value)}
+                className="bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-extrabold font-mono text-xs px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-l-xl border-r-0 focus:outline-none"
+              >
+                {['GET','POST','PUT','PATCH','DELETE'].map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <input
+                value={requestUrl}
+                onChange={e => setRequestUrl(e.target.value)}
+                type="text"
+                placeholder="/dukcapil/penduduk"
+                className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 py-2.5 px-3.5 font-mono text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+              />
+              <button
+                onClick={handleSendRequest}
+                disabled={loading || !currentKey}
+                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-extrabold px-5 py-2.5 rounded-r-xl text-xs flex items-center gap-2 shadow-lg shadow-blue-600/25 transition-all cursor-pointer"
+              >
+                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                <span>Send</span>
+              </button>
+            </div>
+
+            {/* Quick Endpoint Selection Chips */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-1">
+              <span className="text-[10px] text-slate-400 font-semibold">Pilih Route Contoh:</span>
+              {quickEndpoints.map((ep, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setRequestMethod(ep.method)
+                    setRequestUrl(ep.path)
+                  }}
+                  className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-md text-[10px] font-mono text-slate-600 dark:text-slate-300 transition-all cursor-pointer"
+                >
+                  {ep.label} ({ep.path})
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Request Tabs */}

@@ -24,13 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web:      __DIR__.'/../routes/web.php',
         api:      __DIR__.'/../routes/api.php',
-        apiPrefix: 'gateway',
-
+        apiPrefix: '',
         commands: __DIR__.'/../routes/console.php',
         health:   '/up',
 
         // Route Admin didaftarkan di 'then' agar bebas dari ApiGatewayMiddleware.
-        // Menggunakan middleware group 'admin-api' yang TIDAK berisi gateway middleware.
+        // Menggunakan middleware group 'admin-api' yang TIDAK berisi gateway MW.
         then: function (): void {
             Route::middleware('admin-api')
                 ->prefix('api/admin')
