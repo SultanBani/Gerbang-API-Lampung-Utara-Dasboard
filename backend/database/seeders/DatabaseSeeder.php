@@ -14,8 +14,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // ── 1. Gateway Data: Applications, Endpoints, Keys, ACL, Logs ──
-        $this->call(GatewaySeeder::class);
+        // ── 1. Import Data dari Dump SQL Resmi (gerbang_api_lampung_utara.sql) ──
+        $this->call(SqlDumpSeeder::class);
 
         // ── 2. Users (Super Admin Diskominfo & Akun Per-Dinas OPD) ──────
         $admin = User::updateOrCreate(
