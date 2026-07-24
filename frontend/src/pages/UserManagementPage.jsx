@@ -27,7 +27,7 @@ export default function UserManagementPage() {
   const fetchUsers = async () => {
     setLoading(true)
     try {
-      const res = await api.get('/users')
+      const res = await api.get('/api/admin/users')
       if (res.data.success) {
         setUsers(res.data.data)
       }
@@ -52,7 +52,7 @@ export default function UserManagementPage() {
       const payload = { ...formData }
       if (!payload.application_id) delete payload.application_id
 
-      const res = await api.post('/users', payload)
+      const res = await api.post('/api/admin/users', payload)
       if (res.data.success) {
         setSuccessMsg('Akun pengguna berhasil dibuat.')
         setShowModal(false)
@@ -75,7 +75,7 @@ export default function UserManagementPage() {
   const handleDeleteUser = async (id, name) => {
     if (!window.confirm(`Hapus akun "${name}"?`)) return
     try {
-      await api.delete(`/users/${id}`)
+      await api.delete(`/api/admin/users/${id}`)
       setSuccessMsg(`Akun ${name} berhasil dihapus.`)
       fetchUsers()
     } catch (err) {
