@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
+import api from '../services/api'
 
 const AuthContext = createContext()
 
@@ -63,12 +64,20 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const logout = useCallback(() => {
-    setUser(null)
-    setToken(null)
-    localStorage.removeItem('gkp_user')
-    localStorage.removeItem('gkp_token')
-  }, [])
+  const logout = useCallback(async () => {
+    try {
+      if (token) {
+        await api.post('/api/auth/logout')
+      }
+    } catch (err) {
+      console.error('Logout error:', err)
+    } finally {
+      setUser(null)
+      setToken(null)
+      localStorage.removeItem('gkp_user')
+      localStorage.removeItem('gkp_token')
+    }
+  }, [token])
 
   const isAdmin = user?.role === 'admin'
   const isDinas = user?.role === 'dinas'
