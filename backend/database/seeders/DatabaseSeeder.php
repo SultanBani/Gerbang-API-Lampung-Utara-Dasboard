@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call(GatewaySeeder::class);
 
         // ── 2. Users (Super Admin Diskominfo & Akun Per-Dinas OPD) ──────
-        User::firstOrCreate(
+        $admin = User::updateOrCreate(
             ['username' => 'admin'],
             [
                 'name'           => 'Admin Super Diskominfo',
@@ -30,44 +30,78 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $bappedaApp  = Application::where('opd', 'Bappeda')->first();
-        $dukcapilApp = Application::where('opd', 'Disdukcapil')->first();
-        $bkdApp      = Application::where('opd', 'BKPSDM')->first();
-
-        User::firstOrCreate(
-            ['username' => 'bappeda'],
+        $opdAccounts = [
             [
-                'name'           => 'Dinas Perencanaan (Bappeda)',
-                'email'          => 'bappeda@lampungutarakab.go.id',
-                'password'       => Hash::make('DinasPerencanaan2026!'),
-                'role'           => 'dinas',
-                'opd_name'       => 'Badan Perencanaan Pembangunan Daerah',
-                'application_id' => $bappedaApp?->id,
-            ]
-        );
-
-        User::firstOrCreate(
-            ['username' => 'disdukcapil'],
+                'username'  => 'disdukcapil',
+                'name'      => 'Dinas Kependudukan & Capil',
+                'email'     => 'disdukcapil@lampungutarakab.go.id',
+                'password'  => 'Disdukcapil2026!',
+                'opd_name'  => 'Dinas Kependudukan dan Pencatatan Sipil',
+                'opd_query' => 'Dinas Kependudukan dan Pencatatan Sipil',
+            ],
             [
-                'name'           => 'Dinas Kependudukan & Capil',
-                'email'          => 'disdukcapil@lampungutarakab.go.id',
-                'password'       => Hash::make('Disdukcapil2026!'),
-                'role'           => 'dinas',
-                'opd_name'       => 'Dinas Kependudukan dan Pencatatan Sipil',
-                'application_id' => $dukcapilApp?->id,
-            ]
-        );
-
-        User::firstOrCreate(
-            ['username' => 'bkd'],
+                'username'  => 'bkd',
+                'name'      => 'Badan Kepegawaian Daerah',
+                'email'     => 'bkd@lampungutarakab.go.id',
+                'password'  => 'BkdLampura2026!',
+                'opd_name'  => 'Badan Kepegawaian & Pengembangan SDM (BKD)',
+                'opd_query' => 'Badan Kepegawaian & Pengembangan SDM (BKD)',
+            ],
             [
-                'name'           => 'Badan Kepegawaian Daerah',
-                'email'          => 'bkd@lampungutarakab.go.id',
-                'password'       => Hash::make('BkdLampura2026!'),
-                'role'           => 'dinas',
-                'opd_name'       => 'Badan Kepegawaian Daerah',
-                'application_id' => $bkdApp?->id,
-            ]
-        );
+                'username'  => 'bappeda',
+                'name'      => 'Dinas Perencanaan (Bappeda)',
+                'email'     => 'bappeda@lampungutarakab.go.id',
+                'password'  => 'DinasPerencanaan2026!',
+                'opd_name'  => 'Badan Perencanaan Pembangunan Daerah (Bappeda)',
+                'opd_query' => 'Badan Perencanaan Pembangunan Daerah (Bappeda)',
+            ],
+            [
+                'username'  => 'bpkad',
+                'name'      => 'Badan Pengelola Keuangan Daerah',
+                'email'     => 'bpkad@lampungutarakab.go.id',
+                'password'  => 'BpkadLampura2026!',
+                'opd_name'  => 'Badan Pengelola Keuangan dan Aset Daerah (BPKAD)',
+                'opd_query' => 'Badan Pengelola Keuangan dan Aset Daerah (BPKAD)',
+            ],
+            [
+                'username'  => 'dinkes',
+                'name'      => 'Dinas Kesehatan Lampung Utara',
+                'email'     => 'dinkes@lampungutarakab.go.id',
+                'password'  => 'DinkesLampura2026!',
+                'opd_name'  => 'Dinas Kesehatan',
+                'opd_query' => 'Dinas Kesehatan',
+            ],
+            [
+                'username'  => 'disdik',
+                'name'      => 'Dinas Pendidikan & Kebudayaan',
+                'email'     => 'disdik@lampungutarakab.go.id',
+                'password'  => 'DisdikLampura2026!',
+                'opd_name'  => 'Dinas Pendidikan dan Kebudayaan',
+                'opd_query' => 'Dinas Pendidikan dan Kebudayaan',
+            ],
+            [
+                'username'  => 'dinsos',
+                'name'      => 'Dinas Sosial Lampung Utara',
+                'email'     => 'dinsos@lampungutarakab.go.id',
+                'password'  => 'DinsosLampura2026!',
+                'opd_name'  => 'Dinas Sosial',
+                'opd_query' => 'Dinas Sosial',
+            ],
+        ];
+
+        foreach ($opdAccounts as $acc) {
+            $app = Application::where('opd', $acc['opd_query'])->first();
+            User::updateOrCreate(
+                ['username' => $acc['username']],
+                [
+                    'name'           => $acc['name'],
+                    'email'          => $acc['email'],
+                    'password'       => Hash::make($acc['password']),
+                    'role'           => 'dinas',
+                    'opd_name'       => $acc['opd_name'],
+                    'application_id' => $app?->id,
+                ]
+            );
+        }
     }
 }
