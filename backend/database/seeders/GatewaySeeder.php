@@ -16,47 +16,87 @@ class GatewaySeeder extends Seeder
 {
     public function run(): void
     {
-        // ── 1. Applications ──────────────────────────────────────────
+        // ── 1. Applications (OPD Kabupaten Lampung Utara) ────────────────
         $apps = [
             [
-                'name'        => 'SIAK Disdukcapil',
-                'opd'         => 'Disdukcapil',
-                'pic_name'    => 'Siti Rahma',
-                'pic_phone'   => '0813-9876-5432',
-                'description' => 'Integrasi data kependudukan dan NIK warga Kabupaten Lampung Utara.',
+                'name'        => 'SIAK Integrasi Dukcapil',
+                'opd'         => 'Dinas Kependudukan dan Pencatatan Sipil',
+                'pic_name'    => 'Drs. Hendra Saputra',
+                'pic_phone'   => '0813-6655-4433',
+                'description' => 'Layanan validasi NIK dan data kependudukan Kabupaten Lampung Utara.',
                 'status'      => 'active',
             ],
             [
-                'name'        => 'SIMPEG BKPSDM',
-                'opd'         => 'BKPSDM',
-                'pic_name'    => 'Budi Santoso',
-                'pic_phone'   => '0812-3456-7890',
-                'description' => 'Sistem Informasi Kepegawaian ASN Kabupaten Lampung Utara.',
+                'name'        => 'SIMPEG Kepegawaian',
+                'opd'         => 'Badan Kepegawaian & Pengembangan SDM (BKD)',
+                'pic_name'    => 'Rina Rahmawati, S.STP.',
+                'pic_phone'   => '0852-1122-3344',
+                'description' => 'Manajemen profil, pangkat, dan data ASN Pemkab Lampung Utara.',
                 'status'      => 'active',
             ],
             [
-                'name'        => 'SIPD Bappeda',
-                'opd'         => 'Bappeda',
-                'pic_name'    => 'Rina Dewi',
-                'pic_phone'   => '0821-4455-6677',
-                'description' => 'Sistem Informasi Perencanaan dan Pembangunan Daerah.',
+                'name'        => 'SIPD E-Planning',
+                'opd'         => 'Badan Perencanaan Pembangunan Daerah (Bappeda)',
+                'pic_name'    => 'Ir. H. Ahmad Fauzi, M.T.',
+                'pic_phone'   => '0812-7788-9900',
+                'description' => 'Sistem perencanaan pembangunan daerah & RKPD Kabupaten Lampung Utara.',
                 'status'      => 'active',
             ],
             [
-                'name'        => 'E-Kinerja BKPSDM',
-                'opd'         => 'BKPSDM',
-                'pic_name'    => 'Yuli Andini',
-                'pic_phone'   => '0823-1122-4455',
-                'description' => 'Manajemen penilaian SKP dan capaian kinerja ASN.',
+                'name'        => 'SIPKD Keuangan Daerah',
+                'opd'         => 'Badan Pengelola Keuangan dan Aset Daerah (BPKAD)',
+                'pic_name'    => 'Bambang Irawan, S.E., M.Si.',
+                'pic_phone'   => '0819-8877-6655',
+                'description' => 'Integrasi realisasi anggaran APBD dan kas daerah Lampura.',
                 'status'      => 'active',
             ],
             [
-                'name'        => 'PPDB Dinas Pendidikan',
-                'opd'         => 'Dinas Pendidikan',
-                'pic_name'    => 'Hendra W.',
-                'pic_phone'   => '0819-3344-5566',
-                'description' => 'Penerimaan Peserta Didik Baru tingkat SD dan SMP.',
-                'status'      => 'inactive',
+                'name'        => 'SIMPUS E-Puskesmas',
+                'opd'         => 'Dinas Kesehatan',
+                'pic_name'    => 'dr. Maya Kartika',
+                'pic_phone'   => '0812-3344-5566',
+                'description' => 'Sistem informasi pelayanan kesehatan dan faskes Kabupaten Lampung Utara.',
+                'status'      => 'active',
+            ],
+            [
+                'name'        => 'SIMDIK & PPDB Online',
+                'opd'         => 'Dinas Pendidikan dan Kebudayaan',
+                'pic_name'    => 'Drs. Supriyadi, M.Pd.',
+                'pic_phone'   => '0813-7788-1122',
+                'description' => 'Penerimaan peserta didik baru dan pendataan sekolah daerah.',
+                'status'      => 'active',
+            ],
+            [
+                'name'        => 'E-Bansos DTKS',
+                'opd'         => 'Dinas Sosial',
+                'pic_name'    => 'Ahmad Zulkarnain, S.Sos.',
+                'pic_phone'   => '0853-9900-1122',
+                'description' => 'Verifikasi dan validasi penerima bantuan sosial masyarakat miskin.',
+                'status'      => 'active',
+            ],
+            [
+                'name'        => 'SiCantik E-Perizinan',
+                'opd'         => 'Dinas PMPTSP',
+                'pic_name'    => 'Dewi Lestari, S.H.',
+                'pic_phone'   => '0821-6677-8899',
+                'description' => 'Pelayanan perizinan dan penanaman modal terpadu Kabupaten Lampung Utara.',
+                'status'      => 'active',
+            ],
+            [
+                'name'        => 'Portal Satu Data Lampura',
+                'opd'         => 'Dinas Komunikasi dan Informatika',
+                'pic_name'    => 'Tim Teknis Diskominfo',
+                'pic_phone'   => '0724-21001',
+                'description' => 'Portal agregator data sektoral dan statistik daerah Lampung Utara.',
+                'status'      => 'active',
+            ],
+            [
+                'name'        => 'SIMRS RSUD Ryacudu Kotabumi',
+                'opd'         => 'RSUD Mayjend HM Ryacudu',
+                'pic_name'    => 'dr. Arief Rahman',
+                'pic_phone'   => '0724-22334',
+                'description' => 'Sistem manajemen pelayanan rumah sakit daerah Kotabumi.',
+                'status'      => 'active',
             ],
         ];
 
@@ -65,17 +105,19 @@ class GatewaySeeder extends Seeder
             $createdApps[] = Application::create($appData);
         }
 
-        // ── 2. Endpoints ─────────────────────────────────────────────
+        // ── 2. Endpoints Gateway ─────────────────────────────────────────
         $endpoints = [
-            ['method' => 'GET',    'url' => '/v1/penduduk',        'description' => 'Ambil daftar data kependudukan',                   'tag' => 'Kependudukan', 'is_auth_required' => true,  'rate_limit' => 100],
-            ['method' => 'GET',    'url' => '/v1/penduduk/{nik}',   'description' => 'Ambil detail penduduk berdasarkan NIK',            'tag' => 'Kependudukan', 'is_auth_required' => true,  'rate_limit' => 50],
-            ['method' => 'GET',    'url' => '/v1/pegawai',          'description' => 'Daftar seluruh data ASN aktif',                    'tag' => 'Kepegawaian',  'is_auth_required' => true,  'rate_limit' => 100],
-            ['method' => 'GET',    'url' => '/v1/pegawai/{nip}',    'description' => 'Detail profil ASN berdasarkan NIP',               'tag' => 'Kepegawaian',  'is_auth_required' => true,  'rate_limit' => 100],
-            ['method' => 'POST',   'url' => '/v1/pegawai',          'description' => 'Tambah data pegawai baru',                        'tag' => 'Kepegawaian',  'is_auth_required' => true,  'rate_limit' => 20],
-            ['method' => 'GET',    'url' => '/v1/anggaran',         'description' => 'Data realisasi anggaran tahunan daerah',          'tag' => 'Perencanaan',  'is_auth_required' => true,  'rate_limit' => 60],
-            ['method' => 'GET',    'url' => '/v1/program-kerja',    'description' => 'Daftar program kerja OPD aktif',                  'tag' => 'Perencanaan',  'is_auth_required' => true,  'rate_limit' => 60],
-            ['method' => 'POST',   'url' => '/v1/auth/login',       'description' => 'Autentikasi dan generate token sesi',             'tag' => 'Auth',         'is_auth_required' => false, 'rate_limit' => 10],
-            ['method' => 'POST',   'url' => '/v1/auth/logout',      'description' => 'Invalidasi token sesi aktif',                     'tag' => 'Auth',         'is_auth_required' => true,  'rate_limit' => 10],
+            ['method' => 'GET',  'url' => 'dukcapil/penduduk',        'description' => 'Validasi data kependudukan berbasis NIK',           'tag' => 'Kependudukan', 'is_auth_required' => true,  'rate_limit' => 100],
+            ['method' => 'GET',  'url' => 'dukcapil/keluarga',        'description' => 'Pencarian kartu keluarga & data keluarga',           'tag' => 'Kependudukan', 'is_auth_required' => true,  'rate_limit' => 60],
+            ['method' => 'GET',  'url' => 'kepegawaian/v1/data',      'description' => 'Data profil & riwayat jabatan ASN berbasis NIP',   'tag' => 'Kepegawaian',  'is_auth_required' => true,  'rate_limit' => 100],
+            ['method' => 'GET',  'url' => 'kepegawaian/v1/kinerja',   'description' => 'Capaian SKP dan nilai kinerja ASN bulanan',         'tag' => 'Kepegawaian',  'is_auth_required' => true,  'rate_limit' => 60],
+            ['method' => 'GET',  'url' => 'perencanaan/program',      'description' => 'Daftar program kerja & kegiatan RKPD daerah',       'tag' => 'Perencanaan',  'is_auth_required' => true,  'rate_limit' => 60],
+            ['method' => 'GET',  'url' => 'perencanaan/usulan-musrenbang', 'description' => 'Daftar usulan pembangunan desa & kecamatan',   'tag' => 'Perencanaan',  'is_auth_required' => true,  'rate_limit' => 40],
+            ['method' => 'GET',  'url' => 'keuangan/apbd',            'description' => 'Realisasi anggaran pendapatan & belanja APBD',      'tag' => 'Keuangan',     'is_auth_required' => true,  'rate_limit' => 30],
+            ['method' => 'GET',  'url' => 'kesehatan/faskes',         'description' => 'Daftar Puskesmas & faskes di Kotabumi & sekitarnya', 'tag' => 'Kesehatan',   'is_auth_required' => true,  'rate_limit' => 60],
+            ['method' => 'GET',  'url' => 'pendidikan/sekolah',       'description' => 'Data profil SD & SMP se-Kabupaten Lampung Utara',  'tag' => 'Pendidikan',   'is_auth_required' => true,  'rate_limit' => 60],
+            ['method' => 'GET',  'url' => 'dinsos/dtks',              'description' => 'Verifikasi data warga penerima bantuan DTKS',        'tag' => 'Sosial',       'is_auth_required' => true,  'rate_limit' => 80],
+            ['method' => 'GET',  'url' => 'perizinan/izin-aktif',     'description' => 'Daftar izin usaha & non-usaha yang terbit',         'tag' => 'Perizinan',    'is_auth_required' => true,  'rate_limit' => 50],
         ];
 
         $createdEndpoints = [];
@@ -83,106 +125,59 @@ class GatewaySeeder extends Seeder
             $createdEndpoints[] = Endpoint::create($epData);
         }
 
-        // ── 3. API Keys ───────────────────────────────────────────────
+        // ── 3. API Keys ──────────────────────────────────────────────────
         $createdKeys = [];
         foreach ($createdApps as $app) {
-            $slugOpd = strtoupper(Str::slug($app->opd, ''));
-            $key     = "LAMPURA-{$slugOpd}-" . Str::random(32);
+            $slugOpd = strtoupper(Str::slug(substr($app->opd, 0, 10), ''));
+            $key     = "LAMPURA-{$slugOpd}-" . Str::random(24);
 
             $createdKeys[$app->id] = ApiKey::create([
                 'application_id' => $app->id,
-                'key'            => $key,
-                'status'         => $app->status === 'active' ? 'active' : 'revoked',
+                'key'            => strtolower($key),
+                'status'         => 'active',
                 'expires_at'     => now()->addYear(),
             ]);
         }
 
-        // ── 4. Access Controls ────────────────────────────────────────
-        // Definisi hak akses: [app_index => [endpoint_indices...]]
-        // App 0 = SIAK   → akses endpoint Kependudukan + Auth
-        // App 1 = SIMPEG → akses endpoint Kepegawaian + Auth
-        // App 2 = Bappeda→ akses endpoint Perencanaan + Kepegawaian (read) + Auth
-        // App 3 = E-Kinerja → akses Kepegawaian
-        // App 4 = PPDB   → akses Auth saja (inactive)
-        $accessMatrix = [
-            0 => [0, 1, 7, 8],           // SIAK: penduduk, penduduk/{nik}, login, logout
-            1 => [2, 3, 4, 7, 8],        // SIMPEG: pegawai (all), login, logout
-            2 => [2, 3, 5, 6, 7, 8],     // Bappeda: pegawai (read), anggaran, program, login, logout
-            3 => [2, 3, 7, 8],           // E-Kinerja: pegawai (read), login, logout
-            4 => [7],                    // PPDB: hanya login
-        ];
-
-        foreach ($accessMatrix as $appIndex => $endpointIndices) {
-            $app = $createdApps[$appIndex];
-            foreach ($endpointIndices as $epIndex) {
-                $endpoint = $createdEndpoints[$epIndex];
+        // ── 4. Access Controls Matrix (Hak Akses) ────────────────────────
+        foreach ($createdApps as $app) {
+            foreach ($createdEndpoints as $ep) {
+                // Berikan akses terstruktur
                 AccessControl::create([
                     'application_id' => $app->id,
-                    'endpoint_id'    => $endpoint->id,
+                    'endpoint_id'    => $ep->id,
                     'is_allowed'     => true,
                 ]);
             }
         }
 
-        // ── 5. Request Logs (25 sampel, 7 hari terakhir) ─────────────
-        $scenarios = [
-            // [app_index, endpoint_index, method, status_code, response_time_ms, offset_hours]
-            [0, 0,  'GET',  200, 87,   0],
-            [0, 1,  'GET',  200, 102,  2],
-            [1, 2,  'GET',  200, 145,  5],
-            [1, 3,  'GET',  200, 98,   8],
-            [2, 5,  'GET',  200, 210,  12],
-            [3, 2,  'GET',  200, 130,  15],
-            [0, 0,  'GET',  401, 31,   20],  // key expired
-            [1, 4,  'POST', 403, 45,   24],  // no access (yesterday)
-            [2, 5,  'GET',  200, 189,  26],
-            [1, 2,  'GET',  200, 77,   30],
-            [0, 7,  'POST', 200, 210,  35],
-            [2, 6,  'GET',  200, 160,  40],
-            [3, 3,  'GET',  502, 2103, 45],  // upstream timeout
-            [1, 3,  'GET',  200, 88,   48],  // 2 days ago
-            [4, 7,  'POST', 401, 22,   50],  // revoked key
-            [0, 1,  'GET',  200, 110,  55],
-            [1, 2,  'GET',  200, 95,   60],
-            [2, 5,  'GET',  404, 30,   72],  // endpoint not found (3 days ago)
-            [0, 0,  'GET',  200, 112,  75],
-            [3, 2,  'GET',  200, 143,  80],
-            [1, 4,  'POST', 200, 198,  96],  // 4 days ago
-            [2, 6,  'GET',  200, 175,  105],
-            [0, 0,  'GET',  200, 90,   120], // 5 days ago
-            [1, 2,  'GET',  200, 101,  130],
-            [2, 5,  'GET',  503, 5000, 144], // upstream down (6 days ago)
-        ];
-
-        foreach ($scenarios as $scenario) {
-            [$appIdx, $epIdx, $method, $statusCode, $responseTime, $offsetHours] = $scenario;
-
-            $app      = $createdApps[$appIdx];
-            $endpoint = $createdEndpoints[$epIdx];
+        // ── 5. Sample Request Logs (7 hari terakhir) ─────────────────────
+        for ($i = 0; $i < 30; $i++) {
+            $app      = $createdApps[array_rand($createdApps)];
+            $endpoint = $createdEndpoints[array_rand($createdEndpoints)];
             $apiKey   = $createdKeys[$app->id] ?? null;
+
+            $statusCodes = [200, 200, 200, 200, 200, 401, 403, 500];
+            $statusCode  = $statusCodes[array_rand($statusCodes)];
+            $hoursAgo    = rand(0, 168); // 7 hari = 168 jam
 
             RequestLog::create([
                 'api_key_id'       => $apiKey?->id,
                 'application_id'   => $app->id,
                 'endpoint_id'      => $endpoint->id,
-                'method'           => $method,
+                'method'           => $endpoint->method,
                 'url'              => $endpoint->url,
                 'status_code'      => $statusCode,
-                'response_time_ms' => $responseTime,
-                'ip_address'       => '172.16.0.' . rand(10, 50),
-                'request_payload'  => json_encode([
-                    'method' => $method,
-                    'path'   => $endpoint->url,
-                    'query'  => null,
-                    'body'   => null,
-                ]),
+                'response_time_ms' => rand(45, 350),
+                'ip_address'       => '192.168.3.' . rand(10, 90),
+                'request_payload'  => json_encode(['path' => $endpoint->url, 'timestamp' => now()->subHours($hoursAgo)]),
                 'response_payload' => json_encode(
-                    $statusCode >= 200 && $statusCode < 300
-                        ? ['success' => true, 'data' => ['sample' => 'response data']]
+                    $statusCode === 200
+                        ? ['success' => true, 'message' => 'Data berhasil diambil']
                         : ['success' => false, 'error' => "HTTP {$statusCode}"]
                 ),
-                'created_at' => now()->subHours($offsetHours),
-                'updated_at' => now()->subHours($offsetHours),
+                'created_at' => now()->subHours($hoursAgo),
+                'updated_at' => now()->subHours($hoursAgo),
             ]);
         }
     }
