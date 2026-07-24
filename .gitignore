@@ -59,3 +59,12 @@ Thumbs.db
 .vscode/
 .zed/
 node_modules
+
+# ========================
+# LEGACY ROOT FOLDERS (sisa monolith lama)
+# ========================
+/vendor/
+/storage/
+/public/
+/bootstrap/
+/_old_monolith_archive/
