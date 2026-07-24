@@ -37,7 +37,8 @@ export function AuthProvider({ children }) {
     setLoading(true)
     setAuthError(null)
     try {
-      const response = await axios.post('http://localhost:8000/api/auth/login', {
+      const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+      const response = await axios.post(`http://${host}:8000/api/auth/login`, {
         login: loginInput,
         password: password,
       })

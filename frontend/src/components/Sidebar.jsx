@@ -2,15 +2,15 @@ import React from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useApiGateway } from '../context/ApiGatewayContext'
 import { useAuth } from '../context/AuthContext'
-import { 
-  BarChart3, 
-  FolderKanban, 
-  Sliders, 
-  Lock, 
-  Key, 
-  ClipboardList, 
-  TestTube, 
-  BookOpen, 
+import {
+  BarChart3,
+  FolderKanban,
+  Sliders,
+  Lock,
+  Key,
+  ClipboardList,
+  TestTube,
+  BookOpen,
   LogOut,
   Users,
   Building2,
@@ -33,26 +33,26 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const navItemsUtama = isAdmin
     ? [
-        { to: '/dashboard', label: 'Dashboard', icon: BarChart3 },
-        { to: '/aplikasi', label: 'Aplikasi Terdaftar', icon: FolderKanban, badge: applications.length },
-        { to: '/users', label: 'Akun Login OPD', icon: Users }
-      ]
+      { to: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+      { to: '/aplikasi', label: 'Aplikasi Terdaftar', icon: FolderKanban, badge: applications.length },
+      { to: '/users', label: 'Akun Login OPD', icon: Users }
+    ]
     : [
-        { to: '/portal-dinas', label: 'Portal Instansi OPD', icon: Building2 }
-      ]
+      { to: '/portal-dinas', label: 'Portal Instansi OPD', icon: Building2 }
+    ]
 
   const navItemsManajemen = isAdmin
     ? [
-        { to: '/endpoints', label: 'Endpoint API', icon: Sliders, badge: endpoints.length, badgeStyle: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border-indigo-500/20' },
-        { to: '/hak-akses', label: 'Hak Akses API', icon: Lock },
-        { to: '/api-keys', label: 'Token / API Key', icon: Key }
-      ]
+      { to: '/endpoints', label: 'Endpoint API', icon: Sliders, badge: endpoints.length, badgeStyle: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border-indigo-500/20' },
+      { to: '/hak-akses', label: 'Hak Akses API', icon: Lock },
+      { to: '/api-keys', label: 'Token / API Key', icon: Key }
+    ]
     : []
 
   const navItemsMonitoring = isAdmin
     ? [
-        { to: '/logs', label: 'Log Request', icon: ClipboardList, badge: 'Live', badgeStyle: 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/20' }
-      ]
+      { to: '/logs', label: 'Log Request', icon: ClipboardList, badge: 'Live', badgeStyle: 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/20' }
+    ]
     : []
 
   const navItemsDeveloper = [
@@ -80,7 +80,7 @@ export default function Sidebar({ isOpen, onClose }) {
             />
             <div>
               <h1 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 tracking-tight leading-none">Gerbang API</h1>
-              <span className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 tracking-widest uppercase block mt-1">Diskominfo Lampung Utara</span>
+              <span className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 tracking-widest uppercase block mt-1">Lampung Utara</span>
             </div>
           </div>
           {onClose && (
@@ -105,10 +105,9 @@ export default function Sidebar({ isOpen, onClose }) {
                 to={item.to}
                 onClick={handleNavClick}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${
-                    isActive
-                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border-l-2 border-blue-600 dark:border-blue-500 pl-3 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
+                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${isActive
+                    ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border-l-2 border-blue-600 dark:border-blue-500 pl-3 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
                   }`
                 }
               >
@@ -133,10 +132,9 @@ export default function Sidebar({ isOpen, onClose }) {
                     to={item.to}
                     onClick={handleNavClick}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${
-                        isActive
-                          ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border-l-2 border-blue-600 dark:border-blue-500 pl-3 shadow-sm'
-                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
+                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${isActive
+                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border-l-2 border-blue-600 dark:border-blue-500 pl-3 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
                       }`
                     }
                   >
@@ -159,10 +157,9 @@ export default function Sidebar({ isOpen, onClose }) {
                     to={item.to}
                     onClick={handleNavClick}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${
-                        isActive
-                          ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border-l-2 border-blue-600 dark:border-blue-500 pl-3 shadow-sm'
-                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
+                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${isActive
+                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border-l-2 border-blue-600 dark:border-blue-500 pl-3 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
                       }`
                     }
                   >
@@ -187,10 +184,9 @@ export default function Sidebar({ isOpen, onClose }) {
                 to={item.to}
                 onClick={handleNavClick}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${
-                    isActive
-                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border-l-2 border-blue-600 dark:border-blue-500 pl-3 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
+                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 mb-1 relative ${isActive
+                    ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border-l-2 border-blue-600 dark:border-blue-500 pl-3 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
                   }`
                 }
               >
