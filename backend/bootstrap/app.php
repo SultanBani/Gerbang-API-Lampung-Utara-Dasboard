@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,14 +13,10 @@ use Illuminate\Http\Request;
 |--------------------------------------------------------------------------
 |
 | URL Pattern yang dilayani:
-|   /api/auth/*   → Authentication (Login, Me, Logout via AuthController)
-|   /api/admin/*  → Admin REST API (protected by auth:sanctum)
 |   /gateway/*    → API Gateway Proxy (routes/api.php via ApiGatewayMiddleware)
+|   /api/admin/*  → Admin REST API (routes/admin.php) — bebas dari gateway MW
 |   /             → Web routes standar (routes/web.php)
-|   /up           → Health check bawaan Laravel
-|
-| Seluruh routing API (auth, admin, gateway) didefinisikan di routes/api.php.
-| Tidak ada lagi pendaftaran ganda via 'then:'.
+|   /up            → Health check bawaan Laravel
 |
 */
 
@@ -28,25 +25,44 @@ return Application::configure(basePath: dirname(__DIR__))
         web:      __DIR__.'/../routes/web.php',
         api:      __DIR__.'/../routes/api.php',
         apiPrefix: '',
+
         commands: __DIR__.'/../routes/console.php',
         health:   '/up',
+
+        // Route Admin didaftarkan di 'then' agar bebas dari ApiGatewayMiddleware.
+        // Menggunakan middleware group 'admin-api' yang TIDAK berisi gateway middleware.
+        then: function (): void {
+            Route::middleware('admin-api')
+                ->prefix('api/admin')
+                ->group(base_path('routes/admin.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
-        // ─── CORS ─────────────────────────────────────────────────────────
-        // HandleCors di semua group agar preflight OPTIONS dari frontend
-        // React (localhost:5173) dijawab dengan benar.
+        // ─── CORS ────────────────────────────────────────────────────────
+        // Tambahkan HandleCors di kedua group agar preflight OPTIONS
+        // dari frontend React (localhost:5173) dijawab dengan benar.
         $middleware->appendToGroup('web', [
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
 
-        $middleware->appendToGroup('api', [
+        // ─── Buat group 'admin-api' — tanpa ApiGatewayMiddleware ─────────
+        // Group ini mewarisi perilaku dasar JSON API tapi tidak mengandung
+        // middleware proxy gateway.
+        $middleware->appendToGroup('admin-api', [
             \Illuminate\Http\Middleware\HandleCors::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
 
-        // ─── Alias ────────────────────────────────────────────────────────
+        // ─── Alias ─────────────────────────────────────────────────────
         $middleware->alias([
             'api.gateway' => ApiGatewayMiddleware::class,
+        ]);
+
+        // ─── Lampirkan ApiGatewayMiddleware HANYA ke grup 'api' ─────────
+        // Grup 'api' dipakai oleh routes/api.php (gateway proxy).
+        $middleware->appendToGroup('api', [
+            ApiGatewayMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -121,8 +121,10 @@ export default function AplikasiPage() {
                         <div className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{app.name}</div>
                         {app.description && <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 max-w-[200px] truncate">{app.description}</div>}
                       </td>
-                      <td className="py-4 px-5">
-                        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700/60">{app.opd}</span>
+                      <td className="py-4 px-5 max-w-[240px]">
+                        <div className="font-bold text-slate-800 dark:text-slate-200 text-xs leading-snug break-words">
+                          {app.opd}
+                        </div>
                       </td>
                       <td className="py-4 px-5">
                         <div className="font-semibold text-slate-800 dark:text-slate-200">{app.pic_name}</div>

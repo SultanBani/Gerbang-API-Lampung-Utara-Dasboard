@@ -93,7 +93,7 @@ export default function App() {
                 </main>
               </div>
 
-              {/* AI Assistant Chatbot Floating Widget */}
+              {/* Sleek Enterprise Floating AI Assistant Widget */}
               <AiChatWidget />
             </div>
           )

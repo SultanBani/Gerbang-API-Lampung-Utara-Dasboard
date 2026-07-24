@@ -86,9 +86,9 @@ export default function ApiKeyPage() {
               {/* App Title & Status */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-extrabold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
+                  <div className="font-extrabold text-slate-900 dark:text-slate-100 text-sm flex flex-wrap items-center gap-2">
                     <span>{keyObj.appName ?? keyObj.application?.name}</span>
-                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 max-w-full break-words leading-tight">
                       {keyObj.opd ?? keyObj.application?.opd}
                     </span>
                   </div>
