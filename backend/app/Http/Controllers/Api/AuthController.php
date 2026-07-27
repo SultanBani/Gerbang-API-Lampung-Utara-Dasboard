@@ -25,7 +25,7 @@ class AuthController extends Controller
         // Cari user berdasarkan email atau username
         $user = User::where('email', $loginInput)
             ->orWhere('username', $loginInput)
-            ->with('application.apiKeys')
+            ->with('opd')
             ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -50,9 +50,8 @@ class AuthController extends Controller
                     'username'       => $user->username,
                     'email'          => $user->email,
                     'role'           => $user->role,
-                    'opd_name'       => $user->opd_name,
-                    'application_id' => $user->application_id,
-                    'application'    => $user->application,
+                    'opd_id'         => $user->opd_id,
+                    'opd'            => $user->opd,
                 ],
             ],
         ]);
@@ -73,7 +72,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user->load('application.apiKeys');
+        $user->load('opd');
 
         return response()->json([
             'success' => true,
@@ -83,9 +82,8 @@ class AuthController extends Controller
                 'username'       => $user->username,
                 'email'          => $user->email,
                 'role'           => $user->role,
-                'opd_name'       => $user->opd_name,
-                'application_id' => $user->application_id,
-                'application'    => $user->application,
+                'opd_id'         => $user->opd_id,
+                'opd'            => $user->opd,
             ],
         ]);
     }
