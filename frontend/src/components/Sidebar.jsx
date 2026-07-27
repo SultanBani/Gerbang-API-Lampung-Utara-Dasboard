@@ -42,9 +42,9 @@ export default function Sidebar({ isOpen, onClose }) {
     ]
     : [
       { to: '/portal-opd', label: 'Dashboard OPD', icon: Building2 },
-      { to: '/portal-opd?tab=catalog', label: 'Katalog API', icon: Globe },
-      { to: '/portal-opd?tab=manage', label: 'Kelola API Saya', icon: Shield },
-      { to: '/portal-opd?tab=my-requests', label: 'Status Pengajuan', icon: Send },
+      { to: '/portal-opd/catalog', label: 'Katalog API', icon: Globe },
+      { to: '/portal-opd/manage', label: 'Kelola API Saya', icon: Shield },
+      { to: '/portal-opd/requests', label: 'Status Pengajuan', icon: Send },
     ]
 
   const navItemsManajemen = isAdmin

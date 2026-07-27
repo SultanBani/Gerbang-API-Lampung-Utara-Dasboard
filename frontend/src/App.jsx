@@ -15,6 +15,9 @@ import LogRequestPage from './pages/LogRequestPage'
 import ApiTesterPage from './pages/ApiTesterPage'
 import DokumentasiPage from './pages/DokumentasiPage'
 import OpdDashboardPage from './pages/OpdDashboardPage'
+import OpdCatalogPage from './pages/OpdCatalogPage'
+import OpdManageApiPage from './pages/OpdManageApiPage'
+import OpdRequestsPage from './pages/OpdRequestsPage'
 import UserManagementPage from './pages/UserManagementPage'
 
 export default function App() {
@@ -72,7 +75,12 @@ export default function App() {
 
                     {/* Dinas OPD Only Routes */}
                     {!isAdmin && (
-                      <Route path="/portal-opd" element={<OpdDashboardPage />} />
+                      <>
+                        <Route path="/portal-opd" element={<OpdDashboardPage />} />
+                        <Route path="/portal-opd/catalog" element={<OpdCatalogPage />} />
+                        <Route path="/portal-opd/manage" element={<OpdManageApiPage />} />
+                        <Route path="/portal-opd/requests" element={<OpdRequestsPage />} />
+                      </>
                     )}
 
                     {/* Shared Routes */}

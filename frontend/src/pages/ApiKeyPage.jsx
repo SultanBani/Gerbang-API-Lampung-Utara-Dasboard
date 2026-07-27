@@ -73,16 +73,16 @@ export default function ApiKeyPage() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md text-white">
+      <div className="bg-gradient-to-r from-indigo-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md text-slate-900 dark:text-white">
         <div>
-          <h3 className="font-extrabold text-base flex items-center gap-2"><Key className="w-5 h-5 text-indigo-400" /> Token Akses OPD (API Keys)</h3>
-          <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+          <h3 className="font-extrabold text-base flex items-center gap-2"><Key className="w-5 h-5 text-indigo-500 dark:text-indigo-400" /> Token Akses OPD (API Keys)</h3>
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
             Daftar API Key yang otomatis di-generate ketika hak akses OPD ke sebuah Endpoint disetujui.
-            Setiap aplikasi OPD menggunakan header <code className="bg-white dark:bg-slate-950 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono">X-API-KEY</code> untuk autentikasi ke Gateway.
+            Setiap aplikasi OPD menggunakan header <code className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono">X-API-KEY</code> untuk autentikasi ke Gateway.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-emerald-400 font-bold bg-emerald-500/20 border border-emerald-500/40 px-3 py-1.5 rounded-xl">
+          <span className="text-xs text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/40 px-3 py-1.5 rounded-xl">
             ✓ {activeCount} API Key Aktif
           </span>
         </div>

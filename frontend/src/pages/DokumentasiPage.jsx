@@ -29,23 +29,23 @@ export default function DokumentasiPage() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-md dark:shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-white">
+      <div className="bg-gradient-to-r from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-md dark:shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-slate-900 dark:text-white">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-bold text-[10px]">
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 font-bold text-[10px]">
               ● OpenAPI Specification 3.0
             </span>
-            <span className="text-xs text-slate-300 dark:text-slate-400 font-mono">v1.0.0</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">v1.0.0</span>
           </div>
           <h3 className="font-extrabold text-base">Dokumentasi API Gateway Lampung Utara</h3>
-          <p className="text-xs text-slate-300 dark:text-slate-400 mt-1">
-            Base URL Server Publik: <code className="bg-white dark:bg-slate-950 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono">https://api.lampungutarakab.go.id</code>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+            Base URL Server Publik: <code className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono">https://api.lampungutarakab.go.id</code>
           </p>
         </div>
 
         {/* Tag Filter */}
         <div className="flex items-center gap-2">
-          <label className="text-xs font-bold text-slate-300 dark:text-slate-400">Tag:</label>
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-400">Tag:</label>
           <select
             value={selectedTag}
             onChange={e => setSelectedTag(e.target.value)}
@@ -61,7 +61,7 @@ export default function DokumentasiPage() {
       </div>
 
       {/* AI Documentation Assistant Banner */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-900/20 via-indigo-900/10 to-slate-900 border border-blue-500/30 shadow-sm dark:shadow-xl space-y-3">
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50 to-white dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-slate-900 border border-blue-200 dark:border-blue-500/30 shadow-sm dark:shadow-xl space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg">
             🤖
@@ -135,7 +135,7 @@ export default function DokumentasiPage() {
                     <div className="space-y-4">
                       <div>
                         <h5 className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider mb-2">📌 Headers Wajib</h5>
-                        <div className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl p-3 font-mono text-xs text-blue-400 dark:text-blue-300 leading-relaxed">
+                        <div className="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-3 font-mono text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
                           <div>Authorization: Bearer &#123;API_KEY&#125;</div>
                           <div>Accept: application/json</div>
                         </div>
@@ -170,7 +170,7 @@ export default function DokumentasiPage() {
                     {/* Right: Response JSON 200 OK */}
                     <div>
                       <h5 className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider mb-2">✅ Response 200 OK</h5>
-                      <pre className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl p-4 font-mono text-xs text-emerald-400 leading-relaxed overflow-x-auto">
+                      <pre className="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-4 font-mono text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed overflow-x-auto">
                         <code>{`{\n  "success": true,\n  "message": "Request berhasil diproses",\n  "data": [\n    {\n      "id": 1,\n      "nama": "Ahmad Budi S.",\n      "opd": "BKPSDM"\n    }\n  ]\n}`}</code>
                       </pre>
                     </div>
@@ -179,11 +179,11 @@ export default function DokumentasiPage() {
                   {/* Code Snippets Tab */}
                   <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
                     <h5 className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">💻 Contoh Kode Implementasi Klien</h5>
-                    <div className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl p-4 font-mono text-xs text-cyan-300 leading-relaxed overflow-x-auto">
-                      <div>// Example in PHP Laravel (Http Client)</div>
-                      <div className="text-slate-300 mt-1">
-                        $response = Http::withToken('<span className="text-amber-300">API_KEY_ANDA</span>')<br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;-&gt;get('<span className="text-emerald-300">https://api.lampungutarakab.go.id{ep.url}</span>');<br />
+                    <div className="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-4 font-mono text-xs text-cyan-700 dark:text-cyan-300 leading-relaxed overflow-x-auto">
+                      <div className="text-slate-500 dark:text-slate-400">// Example in PHP Laravel (Http Client)</div>
+                      <div className="text-slate-800 dark:text-slate-300 mt-1">
+                        $response = Http::withToken('<span className="text-amber-600 dark:text-amber-300">API_KEY_ANDA</span>')<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;-&gt;get('<span className="text-emerald-600 dark:text-emerald-300">https://api.lampungutarakab.go.id{ep.url}</span>');<br />
                         $data = $response-&gt;json();
                       </div>
                     </div>
