@@ -1,13 +1,7 @@
 import axios from 'axios'
 
-const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
-
-/**
- * Axios instance untuk Admin & Auth API Laravel
- * Base URL: http://<host>:8000
- */
 const api = axios.create({
-  baseURL: `http://${host}:8000`,
+  baseURL: '/',
   headers: {
     'Content-Type': 'application/json',
     'Accept':       'application/json',
@@ -17,10 +11,10 @@ const api = axios.create({
 
 /**
  * Axios instance untuk Gateway Proxy (APIGATELU)
- * Base URL: http://<host>:8000/APIGATELU
+ * Base URL: /APIGATELU
  */
 export const gatewayApi = axios.create({
-  baseURL: `http://${host}:8000/APIGATELU`,
+  baseURL: `/APIGATELU`,
   timeout: 30000,
 })
 
