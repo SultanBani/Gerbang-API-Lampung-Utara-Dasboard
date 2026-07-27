@@ -71,9 +71,12 @@ class NotificationController extends Controller
             $random['color']
         ));
 
+        // Return current unread notifications count as well for debugging
         return response()->json([
             'success' => true,
-            'message' => 'Test notification triggered successfully!'
+            'message' => 'Test notification triggered successfully!',
+            'unread_count' => $user->unreadNotifications()->count(),
+            'raw_data' => \Illuminate\Support\Facades\DB::table('notifications')->get()
         ]);
     }
 }
