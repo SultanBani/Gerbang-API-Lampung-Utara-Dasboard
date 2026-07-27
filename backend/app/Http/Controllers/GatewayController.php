@@ -6,37 +6,43 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * GatewayController
+ * GatewayController — Gerbang API Lampung Utara
  *
- * Controller tipis (thin controller) yang berfungsi sebagai titik masuk
- * untuk semua request dinamis gateway. Logic utama ada di ApiGatewayMiddleware.
+ * Controller proxy yang menerima request setelah ApiGatewayMiddleware
+ * selesai memvalidasi autentikasi, resolusi endpoint, dan kontrol akses.
  *
- * Controller ini dipanggil SETELAH middleware selesai memvalidasi dan
- * mem-proxy request. Dalam skenario normal, middleware mengembalikan
- * response lebih awal (sebelum mencapai controller ini) menggunakan
- * return response()->json(...).
+ * Dalam arsitektur ini, middleware melakukan short-circuit dan langsung
+ * mengembalikan response setelah proxy selesai. Controller ini berfungsi
+ * sebagai fallback jika middleware tidak mengembalikan response.
  *
- * Method `handle()` di sini berperan sebagai fallback / "pass-through"
- * jika dikonfigurasi dalam mode yang berbeda di masa mendatang.
+ * URL Pattern: /APIGATELU/{opd_code}/{endpoint_slug}
  */
 class GatewayController extends Controller
 {
     /**
-     * Titik masuk tunggal untuk semua request proxy gateway.
+     * Handle proxy request ke upstream service.
      *
-     * Karena ApiGatewayMiddleware mengembalikan response secara langsung
-     * (short-circuit) setelah proxy selesai, method ini hanya dipanggil
-     * jika terjadi kondisi tak terduga di luar pipeline middleware.
+     * Method ini hanya dipanggil jika middleware TIDAK melakukan short-circuit.
+     * Dalam operasi normal, ApiGatewayMiddleware sudah mengembalikan response
+     * sebelum sampai ke sini.
+     *
+     * @param Request $request
+     * @param string  $opd_code       Kode OPD dari URL (e.g. 'diskominfo')
+     * @param string  $endpoint_slug  Slug endpoint dari URL (e.g. 'data-pegawai')
      */
-    public function handle(Request $request, string $path = ''): Response
+    public function handle(Request $request, string $opd_code, string $endpoint_slug): Response
     {
         // Middleware seharusnya sudah menangani dan me-return response.
         // Jika sampai di sini, ada kemungkinan middleware di-bypass atau
         // konfigurasi routing ada yang salah.
         return response()->json([
             'success' => false,
-            'message' => 'Gateway Error: Request was not processed by the middleware pipeline.',
-            'path'    => $path,
+            'message' => 'Gateway Error: Request tidak diproses oleh middleware pipeline.',
+            'meta'    => [
+                'opd_code'      => $opd_code,
+                'endpoint_slug' => $endpoint_slug,
+                'method'        => $request->method(),
+            ],
         ], 500);
     }
 }

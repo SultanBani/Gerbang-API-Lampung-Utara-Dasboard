@@ -80,7 +80,7 @@ export function AuthProvider({ children }) {
   }, [token])
 
   const isAdmin = user?.role === 'admin'
-  const isDinas = user?.role === 'dinas'
+  const isOpd = user?.role === 'opd'
 
   return (
     <AuthContext.Provider
@@ -92,7 +92,7 @@ export function AuthProvider({ children }) {
         login,
         logout,
         isAdmin,
-        isDinas,
+        isOpd,
         setAuthError,
       }}
     >

@@ -14,6 +14,9 @@ import {
   LogOut,
   Users,
   Building2,
+  Globe,
+  Shield,
+  Send,
   X
 } from 'lucide-react'
 
@@ -38,7 +41,10 @@ export default function Sidebar({ isOpen, onClose }) {
       { to: '/users', label: 'Akun Login OPD', icon: Users }
     ]
     : [
-      { to: '/portal-dinas', label: 'Portal Instansi OPD', icon: Building2 }
+      { to: '/portal-opd', label: 'Dashboard OPD', icon: Building2 },
+      { to: '/portal-opd?tab=catalog', label: 'Katalog API', icon: Globe },
+      { to: '/portal-opd?tab=manage', label: 'Kelola API Saya', icon: Shield },
+      { to: '/portal-opd?tab=my-requests', label: 'Status Pengajuan', icon: Send },
     ]
 
   const navItemsManajemen = isAdmin
@@ -210,7 +216,7 @@ export default function Sidebar({ isOpen, onClose }) {
           <div className="leading-tight truncate">
             <p className="text-xs font-extrabold text-slate-900 dark:text-slate-200 truncate">{user?.name || 'Pengguna'}</p>
             <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium capitalize block truncate">
-              {user?.role === 'admin' ? 'Super Administrator' : user?.opd_name || 'Instansi OPD'}
+              {user?.role === 'admin' ? 'Super Administrator' : user?.opd?.name || 'Instansi OPD'}
             </span>
           </div>
         </div>

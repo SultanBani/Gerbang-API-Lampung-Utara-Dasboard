@@ -8,7 +8,6 @@ use App\Http\Controllers\Api\Admin\AccessControlController;
 use App\Http\Controllers\Api\Admin\RequestLogController;
 use App\Http\Controllers\Api\Admin\UserManagementController;
 use App\Http\Controllers\GatewayController;
-use App\Http\Middleware\ApiGatewayMiddleware;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 | 1. /api/auth/login        → Publik (tanpa auth)
 | 2. /api/auth/me & logout  → Protected (auth:sanctum)
 | 3. /api/admin/*           → Protected Admin (auth:sanctum)
-| 4. /gateway/*             → Dynamic Gateway Proxy (ApiGatewayMiddleware)
+| 4. /APIGATELU/{opd}/{slug}→ Dynamic Gateway Proxy (ApiGatewayMiddleware)
 |
 */
 
@@ -46,7 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Dashboard stats
         Route::get('/stats', [AdminStatsController::class, 'index']);
 
-        // Applications & API Keys
+        // Applications & API Keys (legacy — akan dihapus)
         Route::apiResource('applications', ApplicationController::class);
         Route::post('/applications/{id}/generate-key', [ApplicationController::class, 'generateKey']);
 
@@ -60,25 +59,27 @@ Route::middleware('auth:sanctum')->group(function () {
         // Request Logs
         Route::get('/logs', [RequestLogController::class, 'index']);
 
-        // User Management (admin creates/manages dinas accounts)
+        // User Management (admin creates/manages OPD accounts)
         Route::apiResource('users', UserManagementController::class);
     });
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// [3] GATEWAY PROXY (/gateway) — ApiGatewayMiddleware pipeline
+// [3] GATEWAY PROXY — /APIGATELU/{opd_code}/{endpoint_slug}
+//     ApiGatewayMiddleware melakukan validasi API Key, resolve endpoint,
+//     cek method permission, lalu proxy pass ke upstream target_url.
 // ─────────────────────────────────────────────────────────────────────────
-Route::get('/gateway/health', function () {
+Route::get('/APIGATELU/health', function () {
     return response()->json([
         'success' => true,
         'service' => 'Gerbang API Lampung Utara',
-        'version' => '1.0.0',
+        'version' => '2.0.0',
         'status'  => 'operational',
         'time'    => now()->toIso8601String(),
     ]);
 })->name('gateway.health');
 
-Route::any('/gateway/{path}', [GatewayController::class, 'handle'])
-    ->where('path', '.*')
+Route::any('/APIGATELU/{opd_code}/{endpoint_slug}', [GatewayController::class, 'handle'])
     ->middleware('api.gateway')
     ->name('gateway.proxy');
+

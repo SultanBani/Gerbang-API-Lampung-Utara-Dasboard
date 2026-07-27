@@ -13,7 +13,7 @@ const routeTitles = {
   '/tester': 'API Tester',
   '/dokumentasi': 'Dokumentasi API',
   '/users': 'Manajemen Akun OPD',
-  '/portal-dinas': 'Portal Instansi OPD'
+  '/portal-opd': 'Dashboard OPD'
 }
 
 export default function Header({ onToggleSidebar }) {

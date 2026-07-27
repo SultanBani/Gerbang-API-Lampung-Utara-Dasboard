@@ -19,7 +19,7 @@ export default function LoginPage() {
       if (loggedUser.role === 'admin') {
         navigate('/')
       } else {
-        navigate('/portal-dinas')
+        navigate('/portal-opd')
       }
     } catch (err) {
       // Error handled in AuthContext

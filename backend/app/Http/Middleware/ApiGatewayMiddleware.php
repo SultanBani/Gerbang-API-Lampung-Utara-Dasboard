@@ -2,43 +2,40 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\AccessControl;
-use App\Models\ApiKey;
+use App\Models\AccessRequest;
 use App\Models\Endpoint;
+use App\Models\Opd;
 use App\Models\RequestLog;
 use Closure;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * ApiGatewayMiddleware — Gerbang API Lampung Utara
+ * ApiGatewayMiddleware — Gerbang API Lampung Utara (Multi-Tenant OPD)
  *
- * Middleware ini adalah "otak" utama gateway yang menjadi satu-satunya
- * pintu masuk semua request sebelum diteruskan ke instansi tujuan.
+ * Middleware utama yang memvalidasi setiap request masuk ke gateway
+ * sebelum di-proxy ke upstream service milik OPD tujuan.
  *
- * Pipeline 4-Layer (berurutan & wajib semua lulus):
- * ┌─────────────────────────────────────────────────────────────────┐
- * │  L1: Auth API Key      → 401 jika key tidak valid/expired       │
- * │  L2: Resolve Endpoint  → 404 jika path tidak terdaftar          │
- * │  L3: Access Control    → 403 jika aplikasi tidak punya hak akses│
- * │  L4: Proxy + Logging   → Forward ke upstream, catat di DB       │
- * └─────────────────────────────────────────────────────────────────┘
+ * URL Pattern: /APIGATELU/{opd_code}/{endpoint_slug}
+ *
+ * Pipeline 4-Layer:
+ * ┌────────────────────────────────────────────────────────────────────┐
+ * │  L1: Resolve OPD & Endpoint  → 404 jika OPD/slug tidak ditemukan │
+ * │  L2: Auth API Key            → 401 jika key tidak valid/expired   │
+ * │  L3: Method Permission       → 405 jika HTTP method tidak diizin  │
+ * │  L4: Proxy + Logging         → Forward ke upstream, catat di DB   │
+ * └────────────────────────────────────────────────────────────────────┘
  */
 class ApiGatewayMiddleware
 {
-    // Prefix yang distrip dari path request sebelum di-match ke tabel endpoints
-    private const GATEWAY_PREFIX = '/gateway';
-
-    // Header yang TIDAK diteruskan ke upstream (header internal gateway)
+    // Header internal yang TIDAK diteruskan ke upstream
     private const STRIPPED_HEADERS = [
         'host',
-        'x-client-id',
-        'x-secret-key',
+        'x-api-key',
         'content-length',
         'transfer-encoding',
         'connection',
@@ -51,128 +48,111 @@ class ApiGatewayMiddleware
     {
         // Handle CORS Preflight (OPTIONS request dari browser)
         if ($request->isMethod('OPTIONS')) {
-            return response()->json(['status' => 'OK'], 200, [
-                'Access-Control-Allow-Origin'  => '*',
-                'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers' => 'X-Client-ID, X-Secret-Key, Content-Type, Accept, Authorization',
-            ]);
-        }
-
-        // Skip middleware jika request bukan untuk proxy gateway (seperti /api/auth, /api/admin, atau /gateway/health)
-        if ($request->is('api/*') || $request->is('gateway/health') || !$request->is('gateway/*')) {
-            return $next($request);
+            return response()->json(['status' => 'OK'], 200, $this->corsHeaders());
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // LAYER 1 — Autentikasi API Key
-        // Validasi header X-Client-ID & X-Secret-Key terhadap tabel api_keys
+        // LAYER 1 — Resolve OPD & Endpoint dari URL segments
+        // URL: /APIGATELU/{opd_code}/{endpoint_slug}
         // ═══════════════════════════════════════════════════════════════
-        $clientId  = $request->header('X-Client-ID');
-        $secretKey = $request->header('X-Secret-Key');
+        $opdCode      = $request->route('opd_code');
+        $endpointSlug = $request->route('endpoint_slug');
 
-        if (! $clientId || ! $secretKey) {
+        if (! $opdCode || ! $endpointSlug) {
             return $this->errorResponse(
-                'Unauthorized: X-Client-ID and X-Secret-Key headers are required.',
-                401
+                'Bad Request: Parameter opd_code dan endpoint_slug wajib diisi.',
+                400
             );
         }
 
-        /** @var ApiKey|null $apiKey */
-        $apiKey = ApiKey::with('application')
-            ->where('key', $secretKey)
-            ->first();
+        /** @var Opd|null $opd */
+        $opd = Opd::where('code', $opdCode)->first();
 
-        // Validasi: key harus ada, application_id harus cocok dengan X-Client-ID
-        if (! $apiKey || (string) $apiKey->application_id !== (string) $clientId) {
+        if (! $opd) {
             return $this->errorResponse(
-                'Unauthorized: Invalid API Key or Client ID.',
-                401
-            );
-        }
-
-        // Validasi: status harus 'active'
-        if ($apiKey->status !== 'active') {
-            return $this->errorResponse(
-                sprintf('Unauthorized: API Key is %s.', $apiKey->status),
-                401
-            );
-        }
-
-        // Validasi: belum melewati batas waktu kedaluwarsa
-        if ($apiKey->expires_at && $apiKey->expires_at->isPast()) {
-            return $this->errorResponse(
-                'Unauthorized: API Key has expired.',
-                401
-            );
-        }
-
-        $application = $apiKey->application;
-
-        // Pastikan entitas Application-nya juga masih aktif
-        if (! $application || $application->status !== 'active') {
-            return $this->errorResponse(
-                'Unauthorized: The application associated with this key is inactive.',
-                401
-            );
-        }
-
-        // ═══════════════════════════════════════════════════════════════
-        // LAYER 2 — Resolusi Endpoint
-        // Strip prefix /gateway dari path, lalu cocokkan ke tabel endpoints
-        // ═══════════════════════════════════════════════════════════════
-
-        // Normalisasi path: /gateway/dukcapil/penduduk → /dukcapil/penduduk
-        $fullPath     = '/' . ltrim($request->path(), '/');
-        $endpointPath = str_starts_with($fullPath, self::GATEWAY_PREFIX)
-            ? '/' . ltrim(substr($fullPath, strlen(self::GATEWAY_PREFIX)), '/')
-            : $fullPath;
-
-        // Jika path kosong setelah strip prefix, jadikan "/"
-        if (empty($endpointPath)) {
-            $endpointPath = '/';
-        }
-
-        $cleanPath = ltrim($endpointPath, '/');
-
-        /** @var Endpoint|null $endpoint */
-        $endpoint = Endpoint::where(function ($query) use ($endpointPath, $cleanPath) {
-                $query->where('url', $endpointPath)
-                      ->orWhere('url', $cleanPath)
-                      ->orWhere('url', '/' . $cleanPath);
-            })
-            ->where(function ($query) use ($request) {
-                $query->whereRaw('UPPER(method) = ?', [strtoupper($request->method())])
-                      ->orWhere('method', '*');  // wildcard method
-            })
-            ->first();
-
-        if (! $endpoint) {
-            return $this->errorResponse(
-                sprintf(
-                    'Not Found: Endpoint path [%s] with method [%s] is not registered in the gateway.',
-                    $endpointPath,
-                    strtoupper($request->method())
-                ),
+                sprintf('Not Found: OPD dengan kode "%s" tidak ditemukan.', $opdCode),
                 404
             );
         }
 
+        /** @var Endpoint|null $endpoint */
+        $endpoint = Endpoint::where('opd_id', $opd->id)
+            ->where('slug', $endpointSlug)
+            ->first();
+
+        if (! $endpoint) {
+            return $this->errorResponse(
+                sprintf('Not Found: Endpoint "%s" tidak ditemukan pada OPD "%s".', $endpointSlug, $opd->name),
+                404
+            );
+        }
+
+        // Cek apakah endpoint aktif
+        if (! $endpoint->is_active) {
+            return $this->errorResponse(
+                sprintf('Service Unavailable: Endpoint "%s" sedang tidak aktif.', $endpoint->title),
+                503
+            );
+        }
+
         // ═══════════════════════════════════════════════════════════════
-        // LAYER 3 — Kontrol Akses (Access Control)
-        // Pastikan kombinasi application_id + endpoint_id ada dan diizinkan
+        // LAYER 2 — Autentikasi API Key
+        // Ambil dari header X-API-KEY atau query parameter ?api_key=
         // ═══════════════════════════════════════════════════════════════
-        /** @var AccessControl|null $access */
-        $access = AccessControl::where('application_id', $application->id)
+        $apiKey = $request->header('X-API-KEY')
+                ?? $request->query('api_key');
+
+        if (! $apiKey) {
+            return $this->errorResponse(
+                'Unauthorized: API Key diperlukan. Kirim via header "X-API-KEY" atau query parameter "api_key".',
+                401
+            );
+        }
+
+        /** @var AccessRequest|null $accessRequest */
+        $accessRequest = AccessRequest::with('requestorOpd')
+            ->where('api_key', $apiKey)
             ->where('endpoint_id', $endpoint->id)
             ->first();
 
-        if (! $access || ! $access->is_allowed) {
+        if (! $accessRequest) {
+            return $this->errorResponse(
+                'Unauthorized: API Key tidak valid atau tidak memiliki izin untuk endpoint ini.',
+                401
+            );
+        }
+
+        // Validasi: status harus 'approved'
+        if (! $accessRequest->isApproved()) {
+            return $this->errorResponse(
+                sprintf('Forbidden: Permintaan akses berstatus "%s", belum disetujui.', $accessRequest->status),
+                403
+            );
+        }
+
+        // Validasi: belum kedaluwarsa
+        if ($accessRequest->isExpired()) {
+            return $this->errorResponse(
+                'Unauthorized: API Key sudah kedaluwarsa. Silakan ajukan perpanjangan.',
+                401
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // LAYER 3 — Validasi HTTP Method
+        // Cek apakah method request diizinkan di requested_methods
+        // ═══════════════════════════════════════════════════════════════
+        $requestMethod    = strtoupper($request->method());
+        $allowedMethods   = array_map('strtoupper', $accessRequest->requested_methods ?? []);
+
+        if (! in_array($requestMethod, $allowedMethods, true)) {
             return $this->errorResponse(
                 sprintf(
-                    'Forbidden: Application "%s" does not have permission to access this endpoint.',
-                    $application->name
+                    'Method Not Allowed: HTTP %s tidak diizinkan. Method yang diizinkan: %s.',
+                    $requestMethod,
+                    implode(', ', $allowedMethods)
                 ),
-                403
+                405
             );
         }
 
@@ -180,105 +160,85 @@ class ApiGatewayMiddleware
         // LAYER 4 — Proxy Request ke Upstream & Request Logging
         // ═══════════════════════════════════════════════════════════════
 
-        // [4.1] Catat timestamp awal untuk menghitung response time
         $startTime = microtime(true);
-
-        // [4.2] Buat X-Request-ID unik untuk tracing di sisi upstream
         $requestId = (string) Str::uuid();
 
-        // [4.3] Siapkan headers yang akan diteruskan ke upstream
-        //       Hapus header sensitif internal gateway, tambah header forwarding
-        $upstreamHeaders = $this->buildUpstreamHeaders($request, $application->name, $requestId);
+        // Siapkan headers upstream
+        $upstreamHeaders = $this->buildUpstreamHeaders(
+            $request,
+            $accessRequest->requestorOpd->name ?? 'Unknown',
+            $requestId
+        );
 
-        // [4.4] Capture payload request untuk logging
-        $requestBody = $request->isJson()
-            ? $request->json()->all()
-            : ($request->all() ?: null);
-
+        // Capture payload request untuk logging
         $requestPayload = [
-            'method' => strtoupper($request->method()),
-            'path'   => $endpointPath,
+            'method' => $requestMethod,
+            'opd'    => $opdCode,
+            'slug'   => $endpointSlug,
             'query'  => $request->query() ?: null,
-            'body'   => $requestBody,
+            'body'   => $request->isJson() ? $request->json()->all() : ($request->all() ?: null),
         ];
 
-        // [4.5] Inisialisasi variabel response
+        // Inisialisasi variabel response
         $httpStatus      = 500;
         $responsePayload = null;
-        $upstreamError   = null;
 
         try {
-            $proxyResponse = $this->forwardRequest(
-                $request,
-                $endpoint->url,
-                $upstreamHeaders
-            );
+            $proxyResponse = $this->forwardRequest($request, $endpoint->target_url, $upstreamHeaders);
 
             $httpStatus      = $proxyResponse->status();
             $responsePayload = $proxyResponse->json() ?? $proxyResponse->body();
 
         } catch (ConnectionException $e) {
-            // Upstream tidak dapat dijangkau (timeout, refused connection, dll)
-            $upstreamError = $e->getMessage();
-            $httpStatus    = 502;
+            $httpStatus = 502;
             $responsePayload = [
-                'error'   => 'Bad Gateway: The upstream service is unreachable or timed out.',
-                'details' => $upstreamError,
+                'error'   => 'Bad Gateway: Upstream service tidak dapat dijangkau atau timeout.',
+                'details' => $e->getMessage(),
             ];
 
             Log::warning('[ApiGateway] Upstream connection failed', [
                 'request_id'   => $requestId,
-                'upstream_url' => $endpoint->url,
-                'application'  => $application->name,
-                'error'        => $upstreamError,
+                'upstream_url' => $endpoint->target_url,
+                'opd'          => $opdCode,
+                'error'        => $e->getMessage(),
             ]);
 
         } catch (\Throwable $e) {
-            // Error tak terduga lainnya saat mem-proxy request
-            $upstreamError = $e->getMessage();
-            $httpStatus    = 502;
+            $httpStatus = 502;
             $responsePayload = [
-                'error'   => 'Bad Gateway: An unexpected error occurred while forwarding the request.',
-                'details' => $upstreamError,
+                'error'   => 'Bad Gateway: Terjadi kesalahan tidak terduga saat meneruskan request.',
+                'details' => $e->getMessage(),
             ];
 
             Log::error('[ApiGateway] Unexpected proxy error', [
                 'request_id'   => $requestId,
-                'upstream_url' => $endpoint->url,
-                'application'  => $application->name,
-                'error'        => $upstreamError,
+                'upstream_url' => $endpoint->target_url,
+                'opd'          => $opdCode,
+                'error'        => $e->getMessage(),
                 'trace'        => $e->getTraceAsString(),
             ]);
         }
 
-        // [4.6] Hitung waktu eksekusi dalam milidetik
+        // Hitung waktu eksekusi
         $responseTimeMs = (int) round((microtime(true) - $startTime) * 1000);
 
-        // [4.7] Simpan ke tabel request_logs
-        //       Payload request/response SELALU dilog untuk monitoring.
-        //       Jika respons sukses (2xx), response_payload bisa di-null
-        //       untuk menghemat storage (konfigurasi opsional).
+        // Simpan log ke request_logs
         $this->writeLog([
-            'api_key_id'       => $apiKey->id,
-            'application_id'   => $application->id,
-            'endpoint_id'      => $endpoint->id,
-            'method'           => strtoupper($request->method()),
-            'url'              => $endpointPath,
-            'status_code'      => $httpStatus,
-            'response_time_ms' => $responseTimeMs,
-            'ip_address'       => $request->ip(),
-            // Selalu simpan request payload
-            'request_payload'  => json_encode($requestPayload, JSON_UNESCAPED_UNICODE),
-            // Simpan response payload SELALU (untuk monitoring & debugging 5xx)
-            'response_payload' => is_array($responsePayload)
+            'access_request_id' => $accessRequest->id,
+            'endpoint_id'       => $endpoint->id,
+            'opd_id'            => $accessRequest->requestor_opd_id,
+            'method'            => $requestMethod,
+            'url'               => sprintf('/APIGATELU/%s/%s', $opdCode, $endpointSlug),
+            'status_code'       => $httpStatus,
+            'response_time_ms'  => $responseTimeMs,
+            'ip_address'        => $request->ip(),
+            'request_payload'   => json_encode($requestPayload, JSON_UNESCAPED_UNICODE),
+            'response_payload'  => is_array($responsePayload)
                 ? json_encode($responsePayload, JSON_UNESCAPED_UNICODE)
                 : (string) $responsePayload,
         ]);
 
-        // [4.8] Update timestamp penggunaan terakhir API Key
-        $this->touchApiKey($apiKey);
-
-        // [4.9] Kembalikan response ke klien dengan envelope gateway
+        // Kembalikan response ke klien
         return $this->gatewayResponse($responsePayload, $httpStatus, $responseTimeMs, $requestId);
     }
 
@@ -287,31 +247,23 @@ class ApiGatewayMiddleware
     // ─────────────────────────────────────────────────────────────────
 
     /**
-     * Bangun array headers untuk diteruskan ke upstream.
-     * Strip header internal gateway dan tambah header forwarding.
-     *
-     * @param Request $request
-     * @param string  $appName    Nama aplikasi klien
-     * @param string  $requestId  UUID unik untuk request ini
-     * @return array<string, string>
+     * Bangun headers untuk diteruskan ke upstream.
      */
-    private function buildUpstreamHeaders(Request $request, string $appName, string $requestId): array
+    private function buildUpstreamHeaders(Request $request, string $opdName, string $requestId): array
     {
         $headers = [];
 
         foreach ($request->headers->all() as $name => $values) {
-            // Skip header yang tidak boleh diteruskan
             if (in_array(strtolower($name), self::STRIPPED_HEADERS, true)) {
                 continue;
             }
-            // Ambil nilai pertama dari array header
             $headers[$name] = $values[0] ?? '';
         }
 
-        // Tambah/override header forwarding gateway
+        // Header forwarding gateway
         $headers['X-Forwarded-For']  = $request->ip();
         $headers['X-Forwarded-Host'] = $request->getHost();
-        $headers['X-Gateway-App']    = $appName;
+        $headers['X-Gateway-OPD']    = $opdName;
         $headers['X-Request-ID']     = $requestId;
         $headers['Accept']           = 'application/json';
 
@@ -320,13 +272,6 @@ class ApiGatewayMiddleware
 
     /**
      * Forward request ke upstream URL menggunakan Laravel HTTP Client.
-     * Mendukung GET, POST, PUT, PATCH, DELETE.
-     *
-     * @param Request              $request
-     * @param string               $upstreamUrl  URL sumber asli instansi tujuan
-     * @param array<string,string> $headers
-     * @return \Illuminate\Http\Client\Response
-     * @throws ConnectionException|\Throwable
      */
     private function forwardRequest(
         Request $request,
@@ -335,75 +280,6 @@ class ApiGatewayMiddleware
     ): \Illuminate\Http\Client\Response {
         $method = strtolower($request->method());
 
-        // Jika upstreamUrl bukan URL HTTP/HTTPS lengkap (misal: "dukcapil/penduduk"),
-        // berikan mock data respons terstruktur untuk API Tester & simulasi integrasi.
-        if (!str_starts_with($upstreamUrl, 'http://') && !str_starts_with($upstreamUrl, 'https://')) {
-            $path = ltrim($upstreamUrl, '/');
-
-            if (str_contains($path, 'dukcapil') || str_contains($path, 'penduduk')) {
-                $mockData = [
-                    'status' => 'success',
-                    'layanan' => 'Layanan Kependudukan Disdukcapil Lampung Utara',
-                    'data' => [
-                        'nik' => '1803011508900001',
-                        'nama' => 'Ahmad Subagja',
-                        'jenis_kelamin' => 'Laki-laki',
-                        'tempat_tgl_lahir' => 'Kotabumi, 15-08-1990',
-                        'alamat' => 'Jl. Jend. Sudirman No. 45, Kotabumi',
-                        'kecamatan' => 'Kotabumi',
-                        'kabupaten' => 'Lampung Utara',
-                        'status_kependudukan' => 'AKTIF DAN TERVERIFIKASI',
-                    ],
-                ];
-            } elseif (str_contains($path, 'kepegawaian') || str_contains($path, 'pegawai')) {
-                $mockData = [
-                    'status' => 'success',
-                    'layanan' => 'SIMPEG Badan Kepegawaian Daerah Lampung Utara',
-                    'data' => [
-                        'nip' => '198506122010011005',
-                        'nama_asn' => 'Rina Rahmawati, S.STP.',
-                        'jabatan' => 'Kepala Sub Bagian Umum & Kepegawaian',
-                        'pangkat_golongan' => 'Penata Tk. I (III/d)',
-                        'instansi_opd' => 'Badan Kepegawaian Daerah Lampung Utara',
-                        'status_pegawai' => 'PNS AKTIF',
-                    ],
-                ];
-            } elseif (str_contains($path, 'perencanaan') || str_contains($path, 'program')) {
-                $mockData = [
-                    'status' => 'success',
-                    'layanan' => 'E-PLANNING Bappeda Lampung Utara',
-                    'tahun_anggaran' => '2026',
-                    'program_unggulan' => [
-                        ['id' => 1, 'nama' => 'Peningkatan Infrastruktur Jalan & Jembatan', 'pagu' => 'Rp 45.000.000.000'],
-                        ['id' => 2, 'nama' => 'Digitalisasi SPBE & Gerbang API Daerah', 'pagu' => 'Rp 5.500.000.000'],
-                        ['id' => 3, 'nama' => 'Pengentasan Stunting & Layanan Kesehatan', 'pagu' => 'Rp 18.200.000.000'],
-                    ],
-                ];
-            } elseif (str_contains($path, 'keuangan') || str_contains($path, 'apbd')) {
-                $mockData = [
-                    'status' => 'success',
-                    'layanan' => 'SIPKD BPKAD Kabupaten Lampung Utara',
-                    'tahun_anggaran' => '2026',
-                    'pendapatan_daerah' => 'Rp 1.850.400.000.000',
-                    'belanja_daerah' => 'Rp 1.890.200.000.000',
-                    'realisasi_persentase' => '68.4%',
-                    'status_verifikasi' => 'TERVERIFIKASI BPKAD',
-                ];
-            } else {
-                $mockData = [
-                    'status' => 'success',
-                    'message' => 'Response Mocking Gateway Berhasil',
-                    'path' => $upstreamUrl,
-                    'timestamp' => now()->toIso8601String(),
-                ];
-            }
-
-            return new \Illuminate\Http\Client\Response(
-                new \GuzzleHttp\Psr7\Response(200, ['Content-Type' => 'application/json'], json_encode($mockData, JSON_UNESCAPED_UNICODE))
-            );
-        }
-
-        // Forward ke Upstream URL Eksternal yang sesungguhnya (http:// atau https://)
         $targetUrl = rtrim($upstreamUrl, '/');
         if ($request->getQueryString()) {
             $targetUrl .= '?' . $request->getQueryString();
@@ -423,44 +299,21 @@ class ApiGatewayMiddleware
 
     /**
      * Simpan entri ke tabel request_logs secara aman.
-     * Kegagalan logging TIDAK boleh menggagalkan response ke klien.
-     *
-     * @param array<string, mixed> $data
      */
     private function writeLog(array $data): void
     {
         try {
             RequestLog::create($data);
         } catch (\Throwable $e) {
-            Log::error('[ApiGateway] Failed to write request log to database', [
+            Log::error('[ApiGateway] Failed to write request log', [
                 'error' => $e->getMessage(),
-                'data'  => Arr::except($data, ['request_payload', 'response_payload']),
+                'data'  => \Illuminate\Support\Arr::except($data, ['request_payload', 'response_payload']),
             ]);
         }
     }
 
     /**
-     * Update kolom last_used_at pada ApiKey secara aman.
-     */
-    private function touchApiKey(ApiKey $apiKey): void
-    {
-        try {
-            $apiKey->update(['last_used_at' => now()]);
-        } catch (\Throwable $e) {
-            Log::warning('[ApiGateway] Failed to update api_key last_used_at', [
-                'api_key_id' => $apiKey->id,
-                'error'      => $e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * Buat response JSON standar gateway untuk kasus sukses / upstream error.
-     *
-     * @param mixed  $data           Payload response dari upstream
-     * @param int    $httpStatus     HTTP status code
-     * @param int    $responseTimeMs Waktu eksekusi dalam ms
-     * @param string $requestId      UUID request untuk tracing
+     * Response JSON standar gateway (sukses / upstream error).
      */
     private function gatewayResponse(
         mixed  $data,
@@ -471,23 +324,16 @@ class ApiGatewayMiddleware
         $success = $httpStatus >= 200 && $httpStatus < 300;
 
         return response()->json([
-            'success'           => $success,
-            'gateway_status'    => $httpStatus,
-            'response_time_ms'  => $responseTimeMs,
+            'success'          => $success,
+            'gateway_status'   => $httpStatus,
+            'response_time_ms' => $responseTimeMs,
             'x_request_id'     => $requestId,
-            'data'              => $data,
-        ], $httpStatus, [
-            'Access-Control-Allow-Origin'  => '*',
-            'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers' => 'X-Client-ID, X-Secret-Key, Content-Type, Accept, Authorization',
-        ]);
+            'data'             => $data,
+        ], $httpStatus, $this->corsHeaders());
     }
 
     /**
-     * Buat response JSON standar untuk error validasi gateway (4xx).
-     *
-     * @param string $message  Pesan error yang ramah untuk klien
-     * @param int    $status   HTTP status code (401 / 403 / 404)
+     * Response JSON standar untuk error validasi gateway.
      */
     private function errorResponse(string $message, int $status): Response
     {
@@ -495,10 +341,18 @@ class ApiGatewayMiddleware
             'success' => false,
             'message' => $message,
             'data'    => null,
-        ], $status, [
+        ], $status, $this->corsHeaders());
+    }
+
+    /**
+     * CORS headers yang ditambahkan ke setiap response.
+     */
+    private function corsHeaders(): array
+    {
+        return [
             'Access-Control-Allow-Origin'  => '*',
             'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers' => 'X-Client-ID, X-Secret-Key, Content-Type, Accept, Authorization',
-        ]);
+            'Access-Control-Allow-Headers' => 'X-API-KEY, Content-Type, Accept, Authorization',
+        ];
     }
 }

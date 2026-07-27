@@ -16,11 +16,11 @@ const api = axios.create({
 })
 
 /**
- * Axios instance untuk Gateway Proxy (API Tester)
- * Base URL: http://<host>:8000/gateway
+ * Axios instance untuk Gateway Proxy (APIGATELU)
+ * Base URL: http://<host>:8000/APIGATELU
  */
 export const gatewayApi = axios.create({
-  baseURL: `http://${host}:8000/gateway`,
+  baseURL: `http://${host}:8000/APIGATELU`,
   timeout: 30000,
 })
 

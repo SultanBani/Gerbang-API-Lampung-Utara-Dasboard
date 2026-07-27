@@ -12,14 +12,13 @@ use Illuminate\Http\Request;
 |--------------------------------------------------------------------------
 |
 | URL Pattern yang dilayani:
-|   /api/auth/*   → Authentication (Login, Me, Logout via AuthController)
-|   /api/admin/*  → Admin REST API (protected by auth:sanctum)
-|   /gateway/*    → API Gateway Proxy (routes/api.php via ApiGatewayMiddleware)
-|   /             → Web routes standar (routes/web.php)
-|   /up           → Health check bawaan Laravel
+|   /api/auth/*              → Authentication (Login, Me, Logout via AuthController)
+|   /api/admin/*             → Admin REST API (protected by auth:sanctum)
+|   /APIGATELU/{opd}/{slug}  → API Gateway Proxy (ApiGatewayMiddleware)
+|   /                        → Web routes standar (routes/web.php)
+|   /up                      → Health check bawaan Laravel
 |
 | Seluruh routing API (auth, admin, gateway) didefinisikan di routes/api.php.
-| Tidak ada lagi pendaftaran ganda via 'then:'.
 |
 */
 
@@ -51,7 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('gateway/*') || $request->is('api/*'),
+            fn (Request $request) => $request->is('APIGATELU/*') || $request->is('api/*'),
         );
     })
     ->create();

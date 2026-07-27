@@ -14,7 +14,7 @@ import ApiKeyPage from './pages/ApiKeyPage'
 import LogRequestPage from './pages/LogRequestPage'
 import ApiTesterPage from './pages/ApiTesterPage'
 import DokumentasiPage from './pages/DokumentasiPage'
-import DinasDashboardPage from './pages/DinasDashboardPage'
+import OpdDashboardPage from './pages/OpdDashboardPage'
 import UserManagementPage from './pages/UserManagementPage'
 
 export default function App() {
@@ -52,7 +52,7 @@ export default function App() {
                         isAdmin ? (
                           <Navigate to="/dashboard" replace />
                         ) : (
-                          <Navigate to="/portal-dinas" replace />
+                          <Navigate to="/portal-opd" replace />
                         )
                       }
                     />
@@ -72,7 +72,7 @@ export default function App() {
 
                     {/* Dinas OPD Only Routes */}
                     {!isAdmin && (
-                      <Route path="/portal-dinas" element={<DinasDashboardPage />} />
+                      <Route path="/portal-opd" element={<OpdDashboardPage />} />
                     )}
 
                     {/* Shared Routes */}
@@ -84,7 +84,7 @@ export default function App() {
                       path="*"
                       element={
                         <Navigate
-                          to={isAdmin ? "/dashboard" : "/portal-dinas"}
+                          to={isAdmin ? "/dashboard" : "/portal-opd"}
                           replace
                         />
                       }
