@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
 import { Sun, Moon, Bell, ShieldAlert, KeyRound, ServerOff, Menu, X } from 'lucide-react'
 
 const routeTitles = {
