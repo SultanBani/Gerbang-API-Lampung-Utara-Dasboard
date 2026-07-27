@@ -30,36 +30,57 @@ export default function Header({ onToggleSidebar }) {
     day: 'numeric'
   })
 
-  // Contoh Notifikasi Real-time Gateway
-  const notifications = [
-    {
-      id: 1,
-      title: 'Peringatan Keamanan API Key',
-      desc: 'API Key SIMPEG BKD mendekati masa rotasi tahunan.',
-      time: '10 menit lalu',
-      type: 'warning',
-      icon: KeyRound,
-      color: 'text-amber-500 bg-amber-500/10'
-    },
-    {
-      id: 2,
-      title: 'Deteksi High Request Traffic',
-      desc: 'SIAK Dukcapil mencatat 1.200 request/jam pada endpoint /penduduk.',
-      time: '1 jam lalu',
-      type: 'info',
-      icon: ShieldAlert,
-      color: 'text-blue-500 bg-blue-500/10'
-    },
-    {
-      id: 3,
-      title: 'Upstream Server Offline',
-      desc: 'Server SIPKD BPKAD sempat mengalami kendala koneksi (Status 502).',
-      time: '3 jam lalu',
-      type: 'error',
-      icon: ServerOff,
-      color: 'text-red-500 bg-red-500/10'
+  const { user } = useAuth()
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  // Fetch initial notifications
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get('/api/admin/notifications')
+      setNotifications(res.data?.data || [])
+      setUnreadCount(res.data?.data?.length || 0)
+    } catch (err) {
+      console.error('Gagal memuat notifikasi:', err)
     }
-  ]
+  }
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      fetchNotifications()
+
+      // Listen ke private channel user admin
+      import('../services/echo').then(({ default: echo }) => {
+        echo.private(`App.Models.User.${user.id}`)
+          .notification((notification) => {
+            // Ketika ada notifikasi baru datang dari WebSocket
+            setNotifications(prev => [notification, ...prev])
+            setUnreadCount(prev => prev + 1)
+            
+            // Opsional: mainkan suara 'ting'
+            // new Audio('/notification.mp3').play().catch(e => {})
+          })
+      }).catch(err => console.error('Echo load error:', err))
+    }
+  }, [user])
+
+  const handleMarkAllRead = async () => {
+    try {
+      await api.post('/api/admin/notifications/mark-all-read')
+      setNotifications([])
+      setUnreadCount(0)
+    } catch (err) {
+      console.error('Gagal menandai notifikasi dibaca', err)
+    }
+  }
+
+  const handleTestTrigger = async () => {
+    try {
+      await api.post('/api/admin/notifications/test-trigger')
+    } catch (err) {
+      console.error('Gagal trigger notifikasi', err)
+    }
+  }
 
   return (
     <header className="h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 md:px-8 flex-shrink-0 sticky top-0 z-30 transition-colors duration-300">
@@ -112,7 +133,9 @@ export default function Header({ onToggleSidebar }) {
           >
             <Bell className="w-4 h-4" />
             <span className="hidden sm:inline">Notifikasi</span>
-            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">3</span>
+            {unreadCount > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">{unreadCount}</span>
+            )}
           </button>
 
           {/* Popover Dropdown Notifikasi */}
@@ -132,8 +155,14 @@ export default function Header({ onToggleSidebar }) {
               </div>
 
               <div className="space-y-2 max-h-72 overflow-y-auto">
-                {notifications.map((item) => {
-                  const IconComp = item.icon
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-slate-500 text-xs font-semibold">Tidak ada notifikasi baru.</div>
+                ) : notifications.map((item) => {
+                  let IconComp = Bell
+                  if (item.icon === 'KeyRound') IconComp = KeyRound
+                  else if (item.icon === 'ShieldAlert') IconComp = ShieldAlert
+                  else if (item.icon === 'ServerOff') IconComp = ServerOff
+
                   return (
                     <div
                       key={item.id}
@@ -154,10 +183,15 @@ export default function Header({ onToggleSidebar }) {
                 })}
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
-                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                  Tandai Semua Sudah Dibaca ✓
-                </span>
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between px-2">
+                <button onClick={handleTestTrigger} className="text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                  + Tes Trigger
+                </button>
+                {notifications.length > 0 && (
+                  <button onClick={handleMarkAllRead} className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                    Tandai Semua Dibaca ✓
+                  </button>
+                )}
               </div>
             </div>
           )}

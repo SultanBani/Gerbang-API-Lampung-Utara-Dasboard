@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Admin\AdminStatsController;
+use App\Http\Controllers\Api\Admin\NotificationController;
 use App\Http\Controllers\Api\Admin\EndpointController;
 use App\Http\Controllers\Api\Admin\AccessControlController;
 use App\Http\Controllers\Api\Admin\RequestLogController;
@@ -53,6 +54,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Endpoint Management
         Route::apiResource('endpoints', EndpointController::class);
+        Route::post('endpoints/{id}/status', [EndpointController::class, 'updateStatus']);
+
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'getUnread']);
+        Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/notifications/test-trigger', [NotificationController::class, 'triggerTestNotification']);
 
         // Access Control (melalui AccessRequest)
         Route::get('/access-controls',          [AccessControlController::class, 'index']);
