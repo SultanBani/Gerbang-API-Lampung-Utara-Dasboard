@@ -248,7 +248,7 @@ export default function OpdDashboardPage() {
       </div>
 
       {/* ─── Tab Navigation ──────────────────────────────────── */}
-      <div className="flex gap-1 p-1 bg-slate-900/60 rounded-xl border border-slate-800 w-fit">
+      <div className="flex gap-1 p-1 bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 w-fit shadow-sm">
         {[
           { key: 'catalog', label: 'Katalog API', icon: Globe, count: catalogEndpoints.length },
           { key: 'manage', label: 'Kelola API Saya', icon: Shield, count: myEndpoints.length },
@@ -260,14 +260,14 @@ export default function OpdDashboardPage() {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
               activeTab === tab.key
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
             }`}
           >
             <tab.icon className="w-3.5 h-3.5" />
             {tab.label}
             {tab.count > 0 && (
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                activeTab === tab.key ? 'bg-white/20' : 'bg-slate-800'
+                activeTab === tab.key ? 'bg-white/20' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
               }`}>{tab.count}</span>
             )}
           </button>
@@ -294,7 +294,7 @@ export default function OpdDashboardPage() {
                   placeholder="Cari endpoint atau nama OPD..."
                   value={searchCatalog}
                   onChange={e => setSearchCatalog(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700/60 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700/60 text-sm text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm"
                 />
               </div>
 
@@ -302,11 +302,11 @@ export default function OpdDashboardPage() {
               {filteredCatalog.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {filteredCatalog.map(ep => (
-                    <div key={ep.id} className="group bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue-900/10 flex flex-col justify-between">
+                    <div key={ep.id} className="group bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue-900/10 flex flex-col justify-between">
                       <div className="space-y-3">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h4 className="text-sm font-bold text-white group-hover:text-blue-300 transition-colors">{ep.title}</h4>
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">{ep.title}</h4>
                             <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
                               <Building2 className="w-3 h-3" />
                               {ep.opd?.name || 'OPD'}
@@ -359,9 +359,9 @@ export default function OpdDashboardPage() {
             <div className="space-y-6">
 
               {/* ── Form Tambah/Edit Endpoint ──────────────── */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
+              <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Plus className="w-4 h-4 text-blue-400" />
                     {showEndpointForm ? (editingEndpoint ? 'Edit Endpoint' : 'Tambah Endpoint Baru') : 'Endpoint API Milik OPD Anda'}
                   </h3>
@@ -388,7 +388,7 @@ export default function OpdDashboardPage() {
                           value={epForm.title}
                           onChange={e => setEpForm(p => ({ ...p, title: e.target.value }))}
                           placeholder="e.g. Data Pegawai"
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700/60 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                         />
                       </div>
                       <div>
@@ -397,7 +397,7 @@ export default function OpdDashboardPage() {
                           value={epForm.slug}
                           onChange={e => setEpForm(p => ({ ...p, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))}
                           placeholder="e.g. data-pegawai"
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700/60 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono"
                         />
                       </div>
                     </div>
@@ -407,7 +407,7 @@ export default function OpdDashboardPage() {
                         value={epForm.target_url}
                         onChange={e => setEpForm(p => ({ ...p, target_url: e.target.value }))}
                         placeholder="e.g. https://simpeg.lampungutarakab.go.id/api/pegawai"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700/60 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono"
                       />
                     </div>
                     <div>
@@ -462,7 +462,7 @@ export default function OpdDashboardPage() {
                 {!showEndpointForm && (
                   <div className="space-y-3">
                     {myEndpoints.length > 0 ? myEndpoints.map(ep => (
-                      <div key={ep.id} className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 transition-all">
+                      <div key={ep.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
@@ -501,8 +501,8 @@ export default function OpdDashboardPage() {
               </div>
 
               {/* ── Permintaan Akses Masuk ─────────────────── */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4">
+              <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
                   <AlertTriangle className="w-4 h-4 text-amber-400" />
                   Permintaan Akses Masuk
                   {incomingRequests.filter(r => r.status === 'pending').length > 0 && (
@@ -515,7 +515,7 @@ export default function OpdDashboardPage() {
                 {incomingRequests.length > 0 ? (
                   <div className="space-y-3">
                     {incomingRequests.map(req => (
-                      <div key={req.id} className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+                      <div key={req.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -582,7 +582,7 @@ export default function OpdDashboardPage() {
           {activeTab === 'my-requests' && (
             <div className="space-y-4">
               {myAccessRequests.length > 0 ? myAccessRequests.map(req => (
-                <div key={req.id} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-all">
+                <div key={req.id} className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm">
                   <div className="flex flex-col gap-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1.5">
@@ -695,11 +695,11 @@ export default function OpdDashboardPage() {
       {/* ═══════════════════════════════════════════════════════ */}
       {showRequestModal && selectedEndpoint && (
         <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowRequestModal(false)} />
-          <div className="relative bg-slate-900 border border-slate-700/60 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowRequestModal(false)} />
+          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Send className="w-4 h-4 text-blue-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Send className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 Ajukan Akses API
               </h3>
               <button onClick={() => setShowRequestModal(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer">

@@ -82,7 +82,7 @@ export default function Sidebar({ isOpen, onClose }) {
             <img
               src="/logo.png"
               alt="Gerbang API Logo"
-              className="w-10 h-10 rounded-xl object-cover shadow-sm border border-slate-200 dark:border-slate-700 bg-white"
+              className="w-10 h-10 rounded-xl object-cover shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
             />
             <div>
               <h1 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 tracking-tight leading-none">Gerbang API</h1>
@@ -92,7 +92,7 @@ export default function Sidebar({ isOpen, onClose }) {
           {onClose && (
             <button
               onClick={onClose}
-              className="md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg transition-colors cursor-pointer"
+              className="md:hidden text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 p-1.5 rounded-lg transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -244,7 +244,7 @@ export default function Sidebar({ isOpen, onClose }) {
         <div className="fixed inset-0 z-50 md:hidden flex">
           {/* Backdrop Overlay */}
           <div
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300"
+            className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300"
             onClick={onClose}
           />
           {/* Mobile Drawer Sidebar */}

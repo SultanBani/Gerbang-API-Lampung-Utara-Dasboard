@@ -70,13 +70,13 @@ export default function EndpointPage() {
           <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} type="text" placeholder="Cari URL endpoint atau deskripsi..."
-              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors shadow-sm" />
+              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors shadow-sm" />
           </div>
-          <select value={filterMethod} onChange={e => setFilterMethod(e.target.value)} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-500 shadow-sm">
+          <select value={filterMethod} onChange={e => setFilterMethod(e.target.value)} className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-500 shadow-sm">
             <option value="all">Semua Method</option>
             {['GET','POST','PUT','PATCH','DELETE'].map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <select value={filterTag} onChange={e => setFilterTag(e.target.value)} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-500 shadow-sm">
+          <select value={filterTag} onChange={e => setFilterTag(e.target.value)} className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-indigo-500 shadow-sm">
             <option value="all">Semua Tag</option>
             {tagList.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
@@ -91,7 +91,7 @@ export default function EndpointPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+              <tr className="bg-slate-100 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
                 <th className="py-3.5 px-5">#</th>
                 <th className="py-3.5 px-5">Method</th>
                 <th className="py-3.5 px-5">URL Endpoint</th>
@@ -102,11 +102,11 @@ export default function EndpointPage() {
                 <th className="py-3.5 px-5 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
               {loading.endpoints
                 ? <tr><td colSpan="8" className="py-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" /></td></tr>
                 : filteredEndpoints.map((ep, index) => (
-                    <tr key={ep.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <tr key={ep.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="py-4 px-5 text-slate-400 font-mono font-bold">{index + 1}</td>
                       <td className="py-4 px-5">
                         <span className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold font-mono border ${
@@ -146,9 +146,9 @@ export default function EndpointPage() {
 
       {/* Modal Form Tambah Endpoint */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/40">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
               <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">⚙️ Registrasi Endpoint API Baru</h3>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X className="w-4 h-4" /></button>
             </div>
@@ -166,30 +166,30 @@ export default function EndpointPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Method *</label>
-                  <select value={newForm.method} onChange={e => setNewForm(p => ({ ...p, method: e.target.value }))} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200">
+                  <select value={newForm.method} onChange={e => setNewForm(p => ({ ...p, method: e.target.value }))} className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200">
                     {['GET','POST','PUT','PATCH','DELETE'].map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">URL Endpoint *</label>
-                  <input value={newForm.url} onChange={e => setNewForm(p => ({ ...p, url: e.target.value }))} required type="text" placeholder="/v1/nama-fitur" className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200" />
+                  <input value={newForm.url} onChange={e => setNewForm(p => ({ ...p, url: e.target.value }))} required type="text" placeholder="/v1/nama-fitur" className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Tag Group</label>
-                  <input value={newForm.tag} onChange={e => setNewForm(p => ({ ...p, tag: e.target.value }))} type="text" placeholder="Kepegawaian / Auth" className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200" />
+                  <input value={newForm.tag} onChange={e => setNewForm(p => ({ ...p, tag: e.target.value }))} type="text" placeholder="Kepegawaian / Auth" className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Rate Limit (req/mnt)</label>
-                  <input value={newForm.rateLimit} onChange={e => setNewForm(p => ({ ...p, rateLimit: Number(e.target.value) }))} type="number" placeholder="60" className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200" />
+                  <input value={newForm.rateLimit} onChange={e => setNewForm(p => ({ ...p, rateLimit: Number(e.target.value) }))} type="number" placeholder="60" className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200" />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Deskripsi Fitur</label>
-                <textarea value={newForm.description} onChange={e => setNewForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Deskripsikan fungsi endpoint ini..." className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200"></textarea>
+                <textarea value={newForm.description} onChange={e => setNewForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Deskripsikan fungsi endpoint ini..." className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-xs focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200"></textarea>
               </div>
 
               <div className="flex items-center gap-2">

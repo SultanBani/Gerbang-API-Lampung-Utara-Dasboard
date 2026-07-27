@@ -42,7 +42,7 @@ export default function HakAksesPage() {
           <select
             value={selectedAppId}
             onChange={e => setSelectedAppId(e.target.value)}
-            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-sm"
+            className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-sm"
           >
             <option value="all">Tampilkan Semua Aplikasi</option>
             {applications.map(app => (
@@ -60,7 +60,7 @@ export default function HakAksesPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                  <tr className="bg-slate-100 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
                     <th className="py-4 px-6 min-w-[240px]">Endpoint API</th>
                     {displayedApps.map(app => (
                       <th key={app.id} className="py-4 px-4 text-center min-w-[110px]">
@@ -70,9 +70,9 @@ export default function HakAksesPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                   {endpoints.map(ep => (
-                    <tr key={ep.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <tr key={ep.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="py-3.5 px-6">
                         <div className="flex items-center gap-2">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
@@ -112,7 +112,7 @@ export default function HakAksesPage() {
           )
         }
 
-        <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-600 dark:text-slate-400 gap-2">
+        <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-600 dark:text-slate-400 gap-2">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-600 inline-block"></span><span>Diizinkan (200 OK)</span></div>
             <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-800 border border-slate-400 dark:border-slate-700 inline-block"></span><span>Ditolak (403 Forbidden)</span></div>

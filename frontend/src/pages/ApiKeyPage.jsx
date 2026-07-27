@@ -58,7 +58,7 @@ export default function ApiKeyPage() {
         <div>
           <h3 className="font-extrabold text-base flex items-center gap-2">🗝️ Manajemen Token & API Key Aplikasi</h3>
           <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-            Setiap aplikasi OPD menggunakan header <code className="bg-slate-950 px-1.5 py-0.5 rounded text-blue-400 font-mono">X-Client-ID</code> dan <code className="bg-slate-950 px-1.5 py-0.5 rounded text-blue-400 font-mono">X-Secret-Key</code> untuk autentikasi ke Gateway.
+            Setiap aplikasi OPD menggunakan header <code className="bg-white dark:bg-slate-950 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono">X-Client-ID</code> dan <code className="bg-white dark:bg-slate-950 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono">X-Secret-Key</code> untuk autentikasi ke Gateway.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -109,7 +109,7 @@ export default function ApiKeyPage() {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">X-Secret-Key (API Key)</label>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 font-mono text-xs text-blue-400 dark:text-blue-300 font-bold tracking-wider overflow-x-auto select-all">
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 font-mono text-xs text-blue-500 dark:text-blue-300 font-bold tracking-wider overflow-x-auto select-all">
                     🔒 {visibleKeys[keyObj.id] ? keyObj.key : maskKey(keyObj.key)}
                   </div>
                   <button onClick={() => toggleVisibility(keyObj.id)} className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer">

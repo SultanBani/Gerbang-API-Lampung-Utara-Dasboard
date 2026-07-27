@@ -39,7 +39,7 @@ export default function DokumentasiPage() {
           </div>
           <h3 className="font-extrabold text-base">Dokumentasi API Gateway Lampung Utara</h3>
           <p className="text-xs text-slate-300 dark:text-slate-400 mt-1">
-            Base URL Server Publik: <code className="bg-slate-950 px-2 py-0.5 rounded text-blue-400 font-mono">https://api.lampungutarakab.go.id</code>
+            Base URL Server Publik: <code className="bg-white dark:bg-slate-950 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono">https://api.lampungutarakab.go.id</code>
           </p>
         </div>
 
@@ -49,7 +49,7 @@ export default function DokumentasiPage() {
           <select
             value={selectedTag}
             onChange={e => setSelectedTag(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
+            className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-sm"
           >
             <option value="all">Semua Tag Group</option>
             <option value="Pegawai">Pegawai</option>
@@ -78,7 +78,7 @@ export default function DokumentasiPage() {
             onKeyUp={e => e.key === 'Enter' && handleAskAiDocs()}
             type="text"
             placeholder='Contoh: "Bagaimana cara mengambil data pegawai SIMPEG?"'
-            className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 shadow-sm"
+            className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 shadow-sm"
           />
           <button
             onClick={handleAskAiDocs}
@@ -129,13 +129,13 @@ export default function DokumentasiPage() {
 
               {/* Card Expanded Content */}
               {isExpanded && (
-                <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-6">
+                <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Left: Parameters & Headers */}
                     <div className="space-y-4">
                       <div>
                         <h5 className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider mb-2">📌 Headers Wajib</h5>
-                        <div className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-3 font-mono text-xs text-blue-400 dark:text-blue-300 leading-relaxed">
+                        <div className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl p-3 font-mono text-xs text-blue-400 dark:text-blue-300 leading-relaxed">
                           <div>Authorization: Bearer &#123;API_KEY&#125;</div>
                           <div>Accept: application/json</div>
                         </div>
@@ -170,7 +170,7 @@ export default function DokumentasiPage() {
                     {/* Right: Response JSON 200 OK */}
                     <div>
                       <h5 className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider mb-2">✅ Response 200 OK</h5>
-                      <pre className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-4 font-mono text-xs text-emerald-400 leading-relaxed overflow-x-auto">
+                      <pre className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl p-4 font-mono text-xs text-emerald-400 leading-relaxed overflow-x-auto">
                         <code>{`{\n  "success": true,\n  "message": "Request berhasil diproses",\n  "data": [\n    {\n      "id": 1,\n      "nama": "Ahmad Budi S.",\n      "opd": "BKPSDM"\n    }\n  ]\n}`}</code>
                       </pre>
                     </div>
@@ -179,7 +179,7 @@ export default function DokumentasiPage() {
                   {/* Code Snippets Tab */}
                   <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
                     <h5 className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">💻 Contoh Kode Implementasi Klien</h5>
-                    <div className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-4 font-mono text-xs text-cyan-300 leading-relaxed overflow-x-auto">
+                    <div className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl p-4 font-mono text-xs text-cyan-300 leading-relaxed overflow-x-auto">
                       <div>// Example in PHP Laravel (Http Client)</div>
                       <div className="text-slate-300 mt-1">
                         $response = Http::withToken('<span className="text-amber-300">API_KEY_ANDA</span>')<br />

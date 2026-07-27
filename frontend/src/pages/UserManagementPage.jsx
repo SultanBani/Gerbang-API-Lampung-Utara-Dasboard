@@ -109,24 +109,24 @@ export default function UserManagementPage() {
 
       {/* Alerts */}
       {successMsg && (
-        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+        <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500 dark:text-emerald-400" />
           <span>{successMsg}</span>
         </div>
       )}
 
       {error && (
-        <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+        <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-500 dark:text-red-400" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Users Table */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-950/80 uppercase text-[10px] font-bold text-slate-400 border-b border-slate-800">
+          <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+            <thead className="bg-slate-100 dark:bg-slate-800/60 uppercase text-[10px] font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="px-5 py-3.5">Pengguna & Instansi</th>
                 <th className="px-5 py-3.5">Username / Email</th>
@@ -135,20 +135,20 @@ export default function UserManagementPage() {
                 <th className="px-5 py-3.5 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
               {users.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
+                <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                   <td className="px-5 py-4">
-                    <div className="font-bold text-slate-100">{u.name}</div>
-                    <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                      <Building2 className="w-3 h-3 text-slate-500" />
+                    <div className="font-bold text-slate-900 dark:text-slate-100">{u.name}</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                      <Building2 className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                       {u.opd_name || 'Dinas / Instansi Daerah'}
                     </div>
                   </td>
 
                   <td className="px-5 py-4">
-                    <div className="font-mono text-slate-200">{u.username || '-'}</div>
-                    <div className="text-[11px] text-slate-400">{u.email}</div>
+                    <div className="font-mono text-slate-800 dark:text-slate-200">{u.username || '-'}</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">{u.email}</div>
                   </td>
 
                   <td className="px-5 py-4">
@@ -160,8 +160,8 @@ export default function UserManagementPage() {
                     </span>
                   </td>
 
-                  <td className="px-5 py-4 text-slate-300 font-medium">
-                    {u.application ? u.application.name : <span className="text-slate-500 italic">-</span>}
+                  <td className="px-5 py-4 text-slate-700 dark:text-slate-300 font-medium">
+                    {u.application ? u.application.name : <span className="text-slate-400 dark:text-slate-500 italic">-</span>}
                   </td>
 
                   <td className="px-5 py-4 text-right">
@@ -183,10 +183,10 @@ export default function UserManagementPage() {
 
       {/* Modal Add User */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-blue-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               Buat Akun Login Baru
             </h3>
 
@@ -199,7 +199,7 @@ export default function UserManagementPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Contoh: Dinas Perencanaan (Bappeda)"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -212,7 +212,7 @@ export default function UserManagementPage() {
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     placeholder="bappeda"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -220,7 +220,7 @@ export default function UserManagementPage() {
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                   >
                     <option value="dinas">Dinas / OPD</option>
                     <option value="admin">Super Admin</option>
@@ -236,7 +236,7 @@ export default function UserManagementPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="bappeda@lampungutarakab.go.id"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -248,7 +248,7 @@ export default function UserManagementPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="••••••••••••"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -259,7 +259,7 @@ export default function UserManagementPage() {
                   value={formData.opd_name}
                   onChange={(e) => setFormData({ ...formData, opd_name: e.target.value })}
                   placeholder="Badan Perencanaan Pembangunan Daerah"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -268,7 +268,7 @@ export default function UserManagementPage() {
                 <select
                   value={formData.application_id}
                   onChange={(e) => setFormData({ ...formData, application_id: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                 >
                   <option value="">-- Pilih Aplikasi OPD (Opsional) --</option>
                   {applications.map((app) => (
@@ -283,7 +283,7 @@ export default function UserManagementPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl"
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl transition-colors"
                 >
                   Batal
                 </button>
