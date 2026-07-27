@@ -12,9 +12,9 @@ class RequestLogController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = RequestLog::with([
-            'application:id,name,opd',
-            'endpoint:id,method,url,tag',
-            'apiKey:id,key,status',
+            'endpoint:id,opd_id,title,slug',
+            'opd:id,name,code',
+            'accessRequest:id,endpoint_id,requestor_opd_id,status',
         ])->latest();
 
         if ($request->filled('status_code')) {
@@ -32,7 +32,7 @@ class RequestLogController extends Controller
         }
 
         if ($request->filled('method')) {
-            $query->whereRaw('UPPER(method) = ?', [strtoupper($request->method_filter ?? $request->method)]);
+            $query->whereRaw('UPPER(method) = ?', [strtoupper($request->input('method'))]);
         }
 
         if ($request->filled('date')) {
@@ -44,12 +44,12 @@ class RequestLogController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('url', 'like', "%{$search}%")
                   ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhereHas('application', fn ($aq) => $aq->where('name', 'like', "%{$search}%"));
+                  ->orWhereHas('opd', fn ($oq) => $oq->where('name', 'like', "%{$search}%"));
             });
         }
 
-        if ($request->filled('application_id')) {
-            $query->where('application_id', (int) $request->application_id);
+        if ($request->filled('opd_id')) {
+            $query->where('opd_id', (int) $request->opd_id);
         }
 
         $perPage = min((int) $request->get('per_page', 15), 100);
@@ -57,7 +57,7 @@ class RequestLogController extends Controller
 
         $summary = [
             'total_shown'  => $logs->total(),
-            'success_rate' => $this->calculateSuccessRate($request),
+            'success_rate' => $this->calculateSuccessRate(),
         ];
 
         return response()->json([
@@ -71,9 +71,9 @@ class RequestLogController extends Controller
     public function show(int $id): JsonResponse
     {
         $log = RequestLog::with([
-            'application:id,name,opd',
-            'endpoint:id,method,url,tag,description',
-            'apiKey:id,key,status,expires_at',
+            'endpoint:id,opd_id,title,slug,target_url',
+            'opd:id,name,code',
+            'accessRequest',
         ])->findOrFail($id);
 
         $requestPayload  = $log->request_payload
@@ -110,7 +110,7 @@ class RequestLogController extends Controller
         ]);
     }
 
-    private function calculateSuccessRate(Request $request): float
+    private function calculateSuccessRate(): float
     {
         $total   = RequestLog::count();
         $success = RequestLog::whereBetween('status_code', [200, 299])->count();

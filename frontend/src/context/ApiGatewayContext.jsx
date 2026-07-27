@@ -6,16 +6,16 @@ const ApiGatewayContext = createContext()
 export function ApiGatewayProvider({ children }) {
   // ── State Utama ────────────────────────────────────────────────────
   const [stats, setStats]               = useState(null)
-  const [applications, setApplications] = useState([])
+  const [opds, setOpds]                 = useState([])
   const [endpoints, setEndpoints]       = useState([])
   const [accessControls, setAccessControls] = useState({ applications: [], endpoints: [], matrix: {} })
   const [logs, setLogs]                 = useState({ data: [], meta: {} })
-  const [apiKeys, setApiKeys]           = useState([])
+  const [users, setUsers]               = useState([])
 
   // ── Loading & Error per-resource ──────────────────────────────────
   const [loading, setLoading] = useState({
-    stats: false, applications: false, endpoints: false,
-    accessControls: false, logs: false, action: false,
+    stats: false, opds: false, endpoints: false,
+    accessControls: false, logs: false, action: false, users: false,
   })
   const [error, setError] = useState(null)
 
@@ -37,26 +37,16 @@ export function ApiGatewayProvider({ children }) {
     }
   }, [])
 
-  const fetchApplications = useCallback(async (params = {}) => {
-    setRes('applications', true)
+  const fetchOpds = useCallback(async (params = {}) => {
+    setRes('opds', true)
     try {
-      const res = await api.get('/api/admin/applications', { params: { per_page: 50, ...params } })
+      const res = await api.get('/api/admin/opds', { params: { per_page: 50, ...params } })
       const items = res.data.data?.data ?? res.data.data ?? []
-      setApplications(items)
-      // Flatten API keys dari nested aplikasi
-      const keys = items.flatMap(app =>
-        (app.api_keys ?? []).map(k => ({
-          ...k,
-          appId:   app.id,
-          appName: app.name,
-          opd:     app.opd,
-        }))
-      )
-      setApiKeys(keys)
+      setOpds(items)
     } catch (e) {
       setError(e.userMessage)
     } finally {
-      setRes('applications', false)
+      setRes('opds', false)
     }
   }, [])
 
@@ -96,23 +86,34 @@ export function ApiGatewayProvider({ children }) {
     }
   }, [])
 
+  const fetchUsers = useCallback(async () => {
+    setRes('users', true)
+    try {
+      const res = await api.get('/api/admin/users')
+      if (res.data.success) {
+        setUsers(res.data.data)
+      }
+    } catch (e) {
+      setError(e.userMessage)
+    } finally {
+      setRes('users', false)
+    }
+  }, [])
+
   // ─────────────────────────────────────────────────────────────────
-  // CRUD ACTIONS — Applications
+  // CRUD ACTIONS — OPDs (menggantikan Applications)
   // ─────────────────────────────────────────────────────────────────
 
-  const createApplication = useCallback(async (formData) => {
+  const createOpd = useCallback(async (formData) => {
     setRes('action', true)
     try {
       const payload = {
         name:        formData.name,
-        opd:         formData.opd,
-        pic_name:    formData.pic || formData.pic_name,
-        pic_phone:   formData.phone || formData.pic_phone || null,
+        code:        formData.code,
         description: formData.description || null,
-        status:      formData.status || 'active',
       }
-      const res = await api.post('/api/admin/applications', payload)
-      await fetchApplications()
+      const res = await api.post('/api/admin/opds', payload)
+      await fetchOpds()
       return res.data
     } catch (e) {
       setError(e.userMessage)
@@ -120,13 +121,13 @@ export function ApiGatewayProvider({ children }) {
     } finally {
       setRes('action', false)
     }
-  }, [fetchApplications])
+  }, [fetchOpds])
 
-  const updateApplication = useCallback(async (id, formData) => {
+  const updateOpd = useCallback(async (id, formData) => {
     setRes('action', true)
     try {
-      const res = await api.put(`/api/admin/applications/${id}`, formData)
-      await fetchApplications()
+      const res = await api.put(`/api/admin/opds/${id}`, formData)
+      await fetchOpds()
       return res.data
     } catch (e) {
       setError(e.userMessage)
@@ -134,14 +135,13 @@ export function ApiGatewayProvider({ children }) {
     } finally {
       setRes('action', false)
     }
-  }, [fetchApplications])
+  }, [fetchOpds])
 
-  const deleteApplication = useCallback(async (id) => {
+  const deleteOpd = useCallback(async (id) => {
     setRes('action', true)
     try {
-      await api.delete(`/api/admin/applications/${id}`)
-      setApplications(prev => prev.filter(a => a.id !== id))
-      setApiKeys(prev => prev.filter(k => k.appId !== id))
+      await api.delete(`/api/admin/opds/${id}`)
+      setOpds(prev => prev.filter(a => a.id !== id))
     } catch (e) {
       setError(e.userMessage)
       throw e
@@ -149,20 +149,6 @@ export function ApiGatewayProvider({ children }) {
       setRes('action', false)
     }
   }, [])
-
-  const generateNewKey = useCallback(async (appId) => {
-    setRes('action', true)
-    try {
-      const res = await api.post(`/api/admin/applications/${appId}/generate-key`)
-      await fetchApplications()
-      return res.data
-    } catch (e) {
-      setError(e.userMessage)
-      throw e
-    } finally {
-      setRes('action', false)
-    }
-  }, [fetchApplications])
 
   // ─────────────────────────────────────────────────────────────────
   // CRUD ACTIONS — Endpoints
@@ -172,14 +158,28 @@ export function ApiGatewayProvider({ children }) {
     setRes('action', true)
     try {
       const payload = {
-        method:           formData.method,
-        url:              formData.url,
-        description:      formData.description || null,
-        tag:              formData.tag || 'Umum',
-        is_auth_required: formData.isAuthRequired ?? true,
-        rate_limit:       Number(formData.rateLimit) || 60,
+        opd_id:             formData.opd_id,
+        title:              formData.title,
+        slug:               formData.slug,
+        target_url:         formData.target_url,
+        method_permissions: formData.method_permissions,
+        is_active:          formData.is_active ?? true,
       }
       const res = await api.post('/api/admin/endpoints', payload)
+      await fetchEndpoints()
+      return res.data
+    } catch (e) {
+      setError(e.userMessage)
+      throw e
+    } finally {
+      setRes('action', false)
+    }
+  }, [fetchEndpoints])
+
+  const updateEndpoint = useCallback(async (id, formData) => {
+    setRes('action', true)
+    try {
+      const res = await api.put(`/api/admin/endpoints/${id}`, formData)
       await fetchEndpoints()
       return res.data
     } catch (e) {
@@ -248,15 +248,34 @@ export function ApiGatewayProvider({ children }) {
   }, [fetchAccessControls])
 
   // ─────────────────────────────────────────────────────────────────
-  // LEGACY COMPAT — API Key revoke (hanya ubah lokal, generate yang baru pakai generateNewKey)
+  // USER MANAGEMENT ACTIONS
   // ─────────────────────────────────────────────────────────────────
 
-  const revokeKey = useCallback(async (appId) => {
-    // Tidak ada endpoint revoke terpisah; untuk revoke gunakan generate-key
-    // yang otomatis merevoke key lama. Di sini kita update UI saja.
-    setApiKeys(prev =>
-      prev.map(k => k.appId === appId ? { ...k, status: 'revoked' } : k)
-    )
+  const createUser = useCallback(async (formData) => {
+    setRes('action', true)
+    try {
+      const res = await api.post('/api/admin/users', formData)
+      await fetchUsers()
+      return res.data
+    } catch (e) {
+      setError(e.userMessage)
+      throw e
+    } finally {
+      setRes('action', false)
+    }
+  }, [fetchUsers])
+
+  const deleteUser = useCallback(async (id) => {
+    setRes('action', true)
+    try {
+      await api.delete(`/api/admin/users/${id}`)
+      setUsers(prev => prev.filter(u => u.id !== id))
+    } catch (e) {
+      setError(e.userMessage)
+      throw e
+    } finally {
+      setRes('action', false)
+    }
   }, [])
 
   return (
@@ -264,38 +283,40 @@ export function ApiGatewayProvider({ children }) {
       value={{
         // State
         stats,
-        applications,
+        opds,
+        applications: opds, // Legacy compat alias
         endpoints,
         accessControls,
         logs,
-        apiKeys,
+        users,
         loading,
         error,
 
         // Fetch
         fetchStats,
-        fetchApplications,
+        fetchOpds,
+        fetchApplications: fetchOpds, // Legacy compat alias
         fetchEndpoints,
         fetchAccessControls,
         fetchLogs,
+        fetchUsers,
 
-        // Application actions
-        createApplication,
-        updateApplication,
-        deleteApplication,
-        generateNewKey,
+        // OPD actions
+        createOpd,
+        updateOpd,
+        deleteOpd,
 
         // Endpoint actions
         createEndpoint,
+        updateEndpoint,
         deleteEndpoint,
 
         // Access control
         toggleAccess,
 
-        // Legacy compat
-        revokeKey,
-        addApplication: createApplication,
-        addEndpoint:    createEndpoint,
+        // User management
+        createUser,
+        deleteUser,
       }}
     >
       {children}

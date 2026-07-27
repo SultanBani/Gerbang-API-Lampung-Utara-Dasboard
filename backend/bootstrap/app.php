@@ -46,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // ─── Alias ────────────────────────────────────────────────────────
         $middleware->alias([
             'api.gateway' => ApiGatewayMiddleware::class,
+            'role'        => \App\Http\Middleware\EnsureUserHasRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

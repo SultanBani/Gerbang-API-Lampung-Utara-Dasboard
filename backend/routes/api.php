@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Admin\AdminStatsController;
-use App\Http\Controllers\Api\Admin\ApplicationController;
 use App\Http\Controllers\Api\Admin\EndpointController;
 use App\Http\Controllers\Api\Admin\AccessControlController;
 use App\Http\Controllers\Api\Admin\RequestLogController;
 use App\Http\Controllers\Api\Admin\UserManagementController;
+use App\Http\Controllers\Api\Admin\OpdManagementController;
 use App\Http\Controllers\GatewayController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,8 +17,9 @@ use Illuminate\Support\Facades\Route;
 |
 | 1. /api/auth/login        → Publik (tanpa auth)
 | 2. /api/auth/me & logout  → Protected (auth:sanctum)
-| 3. /api/admin/*           → Protected Admin (auth:sanctum)
-| 4. /APIGATELU/{opd}/{slug}→ Dynamic Gateway Proxy (ApiGatewayMiddleware)
+| 3. /api/admin/*           → Protected Admin (auth:sanctum + role admin)
+| 4. /api/opd/*             → Protected OPD (auth:sanctum)
+| 5. /APIGATELU/{opd}/{slug}→ Dynamic Gateway Proxy (ApiGatewayMiddleware)
 |
 */
 
@@ -40,30 +41,35 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout',  [AuthController::class, 'logout']);
     });
 
-    // Admin Management REST API
-    Route::prefix('api/admin')->group(function () {
+    // ─────────────────────────────────────────────────────────────────
+    // [3] Admin Management REST API — hanya role 'admin'
+    // ─────────────────────────────────────────────────────────────────
+    Route::prefix('api/admin')->middleware('role:admin')->group(function () {
         // Dashboard stats
         Route::get('/stats', [AdminStatsController::class, 'index']);
 
-        // Applications & API Keys (legacy — akan dihapus)
-        Route::apiResource('applications', ApplicationController::class);
-        Route::post('/applications/{id}/generate-key', [ApplicationController::class, 'generateKey']);
+        // OPD Management (menggantikan Application CRUD)
+        Route::apiResource('opds', OpdManagementController::class);
 
-        // Endpoints
+        // Endpoint Management
         Route::apiResource('endpoints', EndpointController::class);
 
-        // Access Control Matrix
+        // Access Control (melalui AccessRequest)
         Route::get('/access-controls',          [AccessControlController::class, 'index']);
         Route::post('/access-controls/toggle',  [AccessControlController::class, 'toggle']);
 
         // Request Logs
-        Route::get('/logs', [RequestLogController::class, 'index']);
+        Route::get('/logs',         [RequestLogController::class, 'index']);
+        Route::get('/logs/{id}',    [RequestLogController::class, 'show']);
+        Route::delete('/logs/purge',[RequestLogController::class, 'purge']);
 
         // User Management (admin creates/manages OPD accounts)
         Route::apiResource('users', UserManagementController::class);
     });
 
-    // OPD Dashboard API
+    // ─────────────────────────────────────────────────────────────────
+    // [4] OPD Dashboard API — authenticated users with opd role
+    // ─────────────────────────────────────────────────────────────────
     Route::prefix('api/opd')->group(function () {
         Route::get('/catalog', [\App\Http\Controllers\Api\OpdController::class, 'catalog']);
         Route::get('/my-endpoints', [\App\Http\Controllers\Api\OpdController::class, 'myEndpoints']);
@@ -80,7 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// [3] GATEWAY PROXY — /APIGATELU/{opd_code}/{endpoint_slug}
+// [5] GATEWAY PROXY — /APIGATELU/{opd_code}/{endpoint_slug}
 //     ApiGatewayMiddleware melakukan validasi API Key, resolve endpoint,
 //     cek method permission, lalu proxy pass ke upstream target_url.
 // ─────────────────────────────────────────────────────────────────────────
@@ -97,4 +103,3 @@ Route::get('/APIGATELU/health', function () {
 Route::any('/APIGATELU/{opd_code}/{endpoint_slug}', [GatewayController::class, 'handle'])
     ->middleware('api.gateway')
     ->name('gateway.proxy');
-

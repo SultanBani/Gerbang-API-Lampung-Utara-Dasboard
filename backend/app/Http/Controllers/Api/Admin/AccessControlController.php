@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AccessControl;
-use App\Models\Application;
+use App\Models\AccessRequest;
+use App\Models\Opd;
 use App\Models\Endpoint;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,12 +12,12 @@ use Illuminate\Http\Request;
 /**
  * AccessControlController
  *
- * Mengelola hak akses antar-aplikasi dan endpoint (tabel `access_controls`).
+ * Mengelola hak akses antar-OPD dan endpoint melalui AccessRequest model.
  * Menyediakan matrix view dan toggle per-kombinasi.
  *
  * Routes:
- *   GET  /api/admin/access-controls         → Matrix izin semua app × endpoint
- *   POST /api/admin/access-controls/toggle  → Toggle izin aplikasi ke endpoint
+ *   GET  /api/admin/access-controls         → Matrix izin semua OPD × endpoint
+ *   POST /api/admin/access-controls/toggle  → Toggle izin OPD ke endpoint
  */
 class AccessControlController extends Controller
 {
@@ -25,31 +25,35 @@ class AccessControlController extends Controller
      * GET /api/admin/access-controls
      *
      * Mengembalikan matrix hak akses:
-     * - Daftar semua aplikasi
+     * - Daftar semua OPD
      * - Daftar semua endpoint
-     * - Map izin: { "app_id:endpoint_id" => is_allowed }
+     * - Map izin: { "opd_id:endpoint_id" => is_allowed }
      */
     public function index(): JsonResponse
     {
-        $applications = Application::select('id', 'name', 'opd', 'status')
+        $opds = Opd::select('id', 'name', 'code', 'description')
             ->orderBy('name')
             ->get();
 
-        $endpoints = Endpoint::select('id', 'method', 'url', 'tag', 'description')
-            ->orderBy('tag')
-            ->orderBy('url')
+        $endpoints = Endpoint::with('opd:id,name,code')
+            ->select('id', 'opd_id', 'title', 'slug', 'target_url', 'method_permissions', 'is_active')
+            ->orderBy('opd_id')
+            ->orderBy('title')
             ->get();
 
-        // Ambil semua record access_control dan bangun lookup map
-        $accessControls = AccessControl::all();
+        // Ambil semua access_requests yang disetujui dan bangun lookup map
+        $accessRequests = AccessRequest::where('status', 'approved')->get();
 
-        // Map format: { "app_id:endpoint_id" => ["id" => ..., "is_allowed" => ...] }
+        // Map format: { "requestor_opd_id:endpoint_id" => { id, is_allowed } }
         $matrix = [];
-        foreach ($accessControls as $ac) {
-            $key          = "{$ac->application_id}:{$ac->endpoint_id}";
+        foreach ($accessRequests as $ar) {
+            $key          = "{$ar->requestor_opd_id}:{$ar->endpoint_id}";
+            $isActive     = !$ar->isExpired();
             $matrix[$key] = [
-                'id'         => $ac->id,
-                'is_allowed' => (bool) $ac->is_allowed,
+                'id'         => $ar->id,
+                'is_allowed' => $isActive,
+                'api_key'    => $ar->api_key,
+                'status'     => $ar->status,
             ];
         }
 
@@ -57,11 +61,11 @@ class AccessControlController extends Controller
             'success' => true,
             'message' => 'Access control matrix retrieved successfully.',
             'data'    => [
-                'applications'    => $applications,
+                'applications'    => $opds,
                 'endpoints'       => $endpoints,
                 'matrix'          => $matrix,
-                'total_grants'    => $accessControls->where('is_allowed', true)->count(),
-                'total_denies'    => $accessControls->where('is_allowed', false)->count(),
+                'total_grants'    => collect($matrix)->where('is_allowed', true)->count(),
+                'total_denies'    => collect($matrix)->where('is_allowed', false)->count(),
             ],
         ]);
     }
@@ -69,49 +73,68 @@ class AccessControlController extends Controller
     /**
      * POST /api/admin/access-controls/toggle
      *
-     * Toggle izin aplikasi terhadap endpoint tertentu.
-     * - Jika record belum ada → buat dengan is_allowed = true
-     * - Jika record sudah ada → flip nilai is_allowed
+     * Toggle izin OPD terhadap endpoint tertentu.
+     * - Jika belum ada AccessRequest → buat baru status approved + generate api_key
+     * - Jika sudah ada dan approved → ubah ke rejected
+     * - Jika sudah ada dan rejected → ubah ke approved + regenerate api_key
      *
-     * Body: { "application_id": 1, "endpoint_id": 3 }
+     * Body: { "opd_id": 1, "endpoint_id": 3 }
      */
     public function toggle(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'application_id' => 'required|integer|exists:applications,id',
+            'application_id' => 'required|integer|exists:opds,id',   // Frontend sends application_id
             'endpoint_id'    => 'required|integer|exists:endpoints,id',
         ]);
 
-        // firstOrCreate + toggle
-        $access = AccessControl::firstOrCreate(
-            [
-                'application_id' => $validated['application_id'],
-                'endpoint_id'    => $validated['endpoint_id'],
-            ],
-            ['is_allowed' => false]  // default saat baru dibuat = false, lalu di-flip
-        );
+        $opdId      = $validated['application_id'];
+        $endpointId = $validated['endpoint_id'];
 
-        // Flip nilai
-        $access->is_allowed = ! $access->is_allowed;
-        $access->save();
+        // Cari AccessRequest yang sudah ada
+        $access = AccessRequest::where('requestor_opd_id', $opdId)
+            ->where('endpoint_id', $endpointId)
+            ->first();
 
-        // Ambil nama untuk pesan yang ramah
-        $app      = Application::find($validated['application_id']);
-        $endpoint = Endpoint::find($validated['endpoint_id']);
+        if ($access) {
+            // Toggle: approved <-> rejected
+            if ($access->status === 'approved') {
+                $access->status = 'rejected';
+                $access->save();
+                $isAllowed = false;
+            } else {
+                $access->status  = 'approved';
+                $access->api_key = $access->api_key ?: \Illuminate\Support\Str::random(40);
+                $access->save();
+                $isAllowed = true;
+            }
+        } else {
+            // Buat baru langsung approved
+            $endpoint = Endpoint::find($endpointId);
+            $access = AccessRequest::create([
+                'endpoint_id'      => $endpointId,
+                'requestor_opd_id' => $opdId,
+                'requested_methods' => $endpoint->method_permissions ?? ['GET'],
+                'status'           => 'approved',
+                'api_key'          => \Illuminate\Support\Str::random(40),
+            ]);
+            $isAllowed = true;
+        }
 
-        $status  = $access->is_allowed ? 'GRANTED' : 'REVOKED';
-        $message = "[{$status}] {$app?->name} → {$endpoint?->method} {$endpoint?->url}";
+        $opd      = Opd::find($opdId);
+        $endpoint = Endpoint::find($endpointId);
+        $status   = $isAllowed ? 'GRANTED' : 'REVOKED';
+        $message  = "[{$status}] {$opd?->name} → {$endpoint?->title}";
 
         return response()->json([
             'success' => true,
             'message' => $message,
             'data'    => [
                 'id'             => $access->id,
-                'application_id' => $access->application_id,
+                'application_id' => $access->requestor_opd_id,
                 'endpoint_id'    => $access->endpoint_id,
-                'is_allowed'     => $access->is_allowed,
-                'application'    => $app?->name,
-                'endpoint'       => $endpoint?->method . ' ' . $endpoint?->url,
+                'is_allowed'     => $isAllowed,
+                'application'    => $opd?->name,
+                'endpoint'       => $endpoint?->title,
             ],
         ]);
     }

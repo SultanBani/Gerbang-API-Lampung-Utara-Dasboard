@@ -37,4 +37,12 @@ class Endpoint extends Model
     {
         return $this->hasMany(AccessRequest::class);
     }
+
+    /**
+     * Semua log trafik yang mengarah ke endpoint ini.
+     */
+    public function requestLogs(): HasMany
+    {
+        return $this->hasMany(RequestLog::class);
+    }
 }

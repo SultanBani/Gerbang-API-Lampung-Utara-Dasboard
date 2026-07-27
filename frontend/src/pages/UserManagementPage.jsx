@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import api from '../services/api'
-import { useAuth } from '../context/AuthContext'
 import { useApiGateway } from '../context/ApiGatewayContext'
-import { Users, UserPlus, KeyRound, Shield, Building2, Trash2, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Users, UserPlus, Shield, Building2, Trash2, CheckCircle2, AlertCircle } from 'lucide-react'
 
 export default function UserManagementPage() {
   const [users, setUsers]           = useState([])
@@ -11,17 +10,16 @@ export default function UserManagementPage() {
   const [successMsg, setSuccessMsg] = useState(null)
   const [showModal, setShowModal]   = useState(false)
 
-  const { applications, fetchApplications } = useApiGateway()
+  const { opds, fetchOpds } = useApiGateway()
 
-  // Form State
+  // Form State — sesuai schema baru
   const [formData, setFormData] = useState({
     name: '',
     username: '',
     email: '',
     password: '',
-    role: 'dinas',
-    opd_name: '',
-    application_id: '',
+    role: 'opd',
+    opd_id: '',
   })
 
   const fetchUsers = async () => {
@@ -40,8 +38,8 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     fetchUsers()
-    fetchApplications()
-  }, [fetchApplications])
+    fetchOpds()
+  }, [fetchOpds])
 
   const handleCreateUser = async (e) => {
     e.preventDefault()
@@ -50,7 +48,7 @@ export default function UserManagementPage() {
 
     try {
       const payload = { ...formData }
-      if (!payload.application_id) delete payload.application_id
+      if (!payload.opd_id) delete payload.opd_id
 
       const res = await api.post('/api/admin/users', payload)
       if (res.data.success) {
@@ -61,9 +59,8 @@ export default function UserManagementPage() {
           username: '',
           email: '',
           password: '',
-          role: 'dinas',
-          opd_name: '',
-          application_id: '',
+          role: 'opd',
+          opd_id: '',
         })
         fetchUsers()
       }
@@ -88,11 +85,11 @@ export default function UserManagementPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-400" />
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             Manajemen Akun Login OPD & Admin
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Kelola kredensial akun pengguna Admin Diskominfo dan Dinas/OPD yang dapat mengakses portal.
           </p>
         </div>
@@ -131,7 +128,7 @@ export default function UserManagementPage() {
                 <th className="px-5 py-3.5">Pengguna & Instansi</th>
                 <th className="px-5 py-3.5">Username / Email</th>
                 <th className="px-5 py-3.5">Role</th>
-                <th className="px-5 py-3.5">Aplikasi Terkait</th>
+                <th className="px-5 py-3.5">OPD</th>
                 <th className="px-5 py-3.5 text-right">Aksi</th>
               </tr>
             </thead>
@@ -142,7 +139,7 @@ export default function UserManagementPage() {
                     <div className="font-bold text-slate-900 dark:text-slate-100">{u.name}</div>
                     <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                       <Building2 className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-                      {u.opd_name || 'Dinas / Instansi Daerah'}
+                      {u.opd?.name || 'Tidak terhubung ke OPD'}
                     </div>
                   </td>
 
@@ -153,7 +150,7 @@ export default function UserManagementPage() {
 
                   <td className="px-5 py-4">
                     <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                      u.role === 'admin' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                      u.role === 'admin' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30'
                     }`}>
                       <Shield className="w-3 h-3" />
                       {u.role === 'admin' ? 'Super Admin' : 'Akun Dinas OPD'}
@@ -161,7 +158,12 @@ export default function UserManagementPage() {
                   </td>
 
                   <td className="px-5 py-4 text-slate-700 dark:text-slate-300 font-medium">
-                    {u.application ? u.application.name : <span className="text-slate-400 dark:text-slate-500 italic">-</span>}
+                    {u.opd ? (
+                      <div>
+                        <div className="font-bold">{u.opd.name}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{u.opd.code}</div>
+                      </div>
+                    ) : <span className="text-slate-400 dark:text-slate-500 italic">—</span>}
                   </td>
 
                   <td className="px-5 py-4 text-right">
@@ -192,7 +194,7 @@ export default function UserManagementPage() {
 
             <form onSubmit={handleCreateUser} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Nama Pengguna / Dinas</label>
+                <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Nama Pengguna / Dinas</label>
                 <input
                   type="text"
                   required
@@ -205,7 +207,7 @@ export default function UserManagementPage() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Username</label>
+                  <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Username</label>
                   <input
                     type="text"
                     required
@@ -216,20 +218,20 @@ export default function UserManagementPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Role</label>
+                  <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Role</label>
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                   >
-                    <option value="dinas">Dinas / OPD</option>
+                    <option value="opd">Dinas / OPD</option>
                     <option value="admin">Super Admin</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Email Resmi</label>
+                <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Email Resmi</label>
                 <input
                   type="email"
                   required
@@ -241,7 +243,7 @@ export default function UserManagementPage() {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Password</label>
+                <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Password</label>
                 <input
                   type="password"
                   required
@@ -253,27 +255,16 @@ export default function UserManagementPage() {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Nama Instansi OPD</label>
-                <input
-                  type="text"
-                  value={formData.opd_name}
-                  onChange={(e) => setFormData({ ...formData, opd_name: e.target.value })}
-                  placeholder="Badan Perencanaan Pembangunan Daerah"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Hubungkan ke Aplikasi OPD</label>
+                <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">Hubungkan ke OPD</label>
                 <select
-                  value={formData.application_id}
-                  onChange={(e) => setFormData({ ...formData, application_id: e.target.value })}
+                  value={formData.opd_id}
+                  onChange={(e) => setFormData({ ...formData, opd_id: e.target.value })}
                   className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                 >
-                  <option value="">-- Pilih Aplikasi OPD (Opsional) --</option>
-                  {applications.map((app) => (
-                    <option key={app.id} value={app.id}>
-                      {app.name} ({app.opd})
+                  <option value="">-- Pilih OPD (Opsional) --</option>
+                  {opds.map((opd) => (
+                    <option key={opd.id} value={opd.id}>
+                      {opd.name} ({opd.code})
                     </option>
                   ))}
                 </select>

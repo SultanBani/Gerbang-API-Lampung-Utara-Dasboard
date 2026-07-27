@@ -12,7 +12,7 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'APIGATELU/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
@@ -28,6 +28,7 @@ return [
         'Authorization',
         'X-Client-ID',
         'X-Secret-Key',
+        'X-API-KEY',
         'Accept',
         'X-Requested-With',
         'Origin',

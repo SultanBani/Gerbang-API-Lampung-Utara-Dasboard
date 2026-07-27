@@ -13,11 +13,19 @@ class OpdController extends Controller
     // ─── 1. KATALOG API ──────────────────────────────────────────────
     public function catalog(Request $request)
     {
-        $opdId = $request->user()->opd_id;
-        
+        $user = $request->user();
+
+        // BUG-23: Guard against null opd_id
+        if (!$user->opd_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun Anda tidak terhubung ke OPD manapun.',
+            ], 403);
+        }
+
         $endpoints = Endpoint::with('opd')
             ->where('is_active', true)
-            ->where('opd_id', '!=', $opdId)
+            ->where('opd_id', '!=', $user->opd_id)
             ->get();
 
         return response()->json(['success' => true, 'data' => $endpoints]);
@@ -26,22 +34,46 @@ class OpdController extends Controller
     // ─── 2. KELOLA API SENDIRI ───────────────────────────────────────
     public function myEndpoints(Request $request)
     {
-        $opdId = $request->user()->opd_id;
-        $endpoints = Endpoint::where('opd_id', $opdId)->get();
+        $user = $request->user();
+
+        if (!$user->opd_id) {
+            return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
+        }
+
+        $endpoints = Endpoint::where('opd_id', $user->opd_id)->get();
         return response()->json(['success' => true, 'data' => $endpoints]);
     }
 
     public function storeEndpoint(Request $request)
     {
+        $user = $request->user();
+
+        if (!$user->opd_id) {
+            return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|regex:/^[a-z0-9\-]+$/',
             'target_url' => 'required|url',
             'method_permissions' => 'required|array|min:1',
+            'method_permissions.*' => 'in:GET,POST,PUT,PATCH,DELETE',
             'is_active' => 'boolean',
         ]);
 
-        $validated['opd_id'] = $request->user()->opd_id;
+        // BUG-11: Validate slug uniqueness per-OPD
+        $exists = Endpoint::where('opd_id', $user->opd_id)
+            ->where('slug', $validated['slug'])
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => "Endpoint dengan slug \"{$validated['slug']}\" sudah ada pada OPD Anda.",
+            ], 422);
+        }
+
+        $validated['opd_id'] = $user->opd_id;
         
         $endpoint = Endpoint::create($validated);
 
@@ -50,15 +82,37 @@ class OpdController extends Controller
 
     public function updateEndpoint(Request $request, $id)
     {
-        $endpoint = Endpoint::where('id', $id)->where('opd_id', $request->user()->opd_id)->firstOrFail();
+        $user = $request->user();
+
+        if (!$user->opd_id) {
+            return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
+        }
+
+        $endpoint = Endpoint::where('id', $id)->where('opd_id', $user->opd_id)->firstOrFail();
         
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
-            'slug' => 'sometimes|required|string|max:255',
+            'slug' => 'sometimes|required|string|max:255|regex:/^[a-z0-9\-]+$/',
             'target_url' => 'sometimes|required|url',
             'method_permissions' => 'sometimes|required|array|min:1',
+            'method_permissions.*' => 'in:GET,POST,PUT,PATCH,DELETE',
             'is_active' => 'boolean',
         ]);
+
+        // BUG-11: Validate slug uniqueness on update
+        if (isset($validated['slug']) && $validated['slug'] !== $endpoint->slug) {
+            $exists = Endpoint::where('opd_id', $user->opd_id)
+                ->where('slug', $validated['slug'])
+                ->where('id', '!=', $endpoint->id)
+                ->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Endpoint dengan slug \"{$validated['slug']}\" sudah ada pada OPD Anda.",
+                ], 422);
+            }
+        }
 
         $endpoint->update($validated);
 
@@ -67,7 +121,13 @@ class OpdController extends Controller
 
     public function destroyEndpoint(Request $request, $id)
     {
-        $endpoint = Endpoint::where('id', $id)->where('opd_id', $request->user()->opd_id)->firstOrFail();
+        $user = $request->user();
+
+        if (!$user->opd_id) {
+            return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
+        }
+
+        $endpoint = Endpoint::where('id', $id)->where('opd_id', $user->opd_id)->firstOrFail();
         $endpoint->delete();
         
         return response()->json(['success' => true, 'message' => 'Endpoint dihapus']);
@@ -76,11 +136,15 @@ class OpdController extends Controller
     // ─── 3. PERMINTAAN AKSES MASUK (INCOMING) ────────────────────────
     public function incomingRequests(Request $request)
     {
-        $opdId = $request->user()->opd_id;
+        $user = $request->user();
+
+        if (!$user->opd_id) {
+            return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
+        }
         
         $requests = AccessRequest::with(['endpoint', 'requestorOpd'])
-            ->whereHas('endpoint', function ($q) use ($opdId) {
-                $q->where('opd_id', $opdId);
+            ->whereHas('endpoint', function ($q) use ($user) {
+                $q->where('opd_id', $user->opd_id);
             })
             ->latest()
             ->get();
@@ -88,19 +152,33 @@ class OpdController extends Controller
         return response()->json(['success' => true, 'data' => $requests]);
     }
 
+    // BUG-09: Fixed — now validates $action parameter
     public function processRequest(Request $request, $id, $action)
     {
-        $opdId = $request->user()->opd_id;
+        $user = $request->user();
+
+        if (!$user->opd_id) {
+            return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
+        }
+
+        // Validate action parameter
+        if (!in_array($action, ['approve', 'reject'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Action tidak valid. Gunakan "approve" atau "reject".',
+            ], 422);
+        }
+
         $accessReq = AccessRequest::with('endpoint')->where('id', $id)->firstOrFail();
 
         // Pastikan endpoint milik OPD yang login
-        if ($accessReq->endpoint->opd_id !== $opdId) {
+        if ($accessReq->endpoint->opd_id !== $user->opd_id) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
         if ($action === 'approve') {
             $accessReq->status = 'approved';
-            $accessReq->api_key = Str::random(40);
+            $accessReq->api_key = $accessReq->api_key ?: Str::random(40);
         } elseif ($action === 'reject') {
             $accessReq->status = 'rejected';
         }
@@ -113,24 +191,60 @@ class OpdController extends Controller
     // ─── 4. STATUS PENGAJUAN SAYA (OUTGOING) ─────────────────────────
     public function myAccessRequests(Request $request)
     {
-        $opdId = $request->user()->opd_id;
+        $user = $request->user();
+
+        if (!$user->opd_id) {
+            return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
+        }
         
         $requests = AccessRequest::with(['endpoint.opd'])
-            ->where('requestor_opd_id', $opdId)
+            ->where('requestor_opd_id', $user->opd_id)
             ->latest()
             ->get();
 
         return response()->json(['success' => true, 'data' => $requests]);
     }
 
+    // BUG-10: Fixed — prevents duplicate access requests
     public function submitRequest(Request $request)
     {
+        $user = $request->user();
+
+        if (!$user->opd_id) {
+            return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
+        }
+
         $validated = $request->validate([
             'endpoint_id' => 'required|exists:endpoints,id',
             'requested_methods' => 'required|array|min:1',
+            'requested_methods.*' => 'in:GET,POST,PUT,PATCH,DELETE',
         ]);
 
-        $validated['requestor_opd_id'] = $request->user()->opd_id;
+        // Prevent duplicate: check for existing pending/approved request
+        $existing = AccessRequest::where('requestor_opd_id', $user->opd_id)
+            ->where('endpoint_id', $validated['endpoint_id'])
+            ->whereIn('status', ['pending', 'approved'])
+            ->first();
+
+        if ($existing) {
+            $statusText = $existing->status === 'pending' ? 'masih menunggu persetujuan' : 'sudah disetujui';
+            return response()->json([
+                'success' => false,
+                'message' => "Permintaan akses ke endpoint ini {$statusText}.",
+                'data'    => $existing,
+            ], 422);
+        }
+
+        // Prevent requesting own endpoint
+        $endpoint = Endpoint::findOrFail($validated['endpoint_id']);
+        if ($endpoint->opd_id === $user->opd_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak perlu mengajukan akses ke endpoint milik OPD Anda sendiri.',
+            ], 422);
+        }
+
+        $validated['requestor_opd_id'] = $user->opd_id;
         $validated['status'] = 'pending';
 
         $req = AccessRequest::create($validated);

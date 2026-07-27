@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Application;
+use App\Models\Opd;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -12,11 +12,11 @@ use Illuminate\Validation\Rule;
 class UserManagementController extends Controller
 {
     /**
-     * Tampilkan seluruh akun pengguna (Admin & Dinas)
+     * Tampilkan seluruh akun pengguna (Admin & OPD)
      */
     public function index()
     {
-        $users = User::with('application')->orderBy('role', 'asc')->orderBy('name', 'asc')->get();
+        $users = User::with('opd')->orderBy('role', 'asc')->orderBy('name', 'asc')->get();
 
         return response()->json([
             'success' => true,
@@ -25,30 +25,42 @@ class UserManagementController extends Controller
     }
 
     /**
-     * Buat akun Dinas baru oleh Admin
+     * Buat akun baru oleh Admin
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'           => 'required|string|max:255',
-            'username'       => 'required|string|max:100|unique:users,username',
-            'email'          => 'required|email|max:255|unique:users,email',
-            'password'       => 'required|string|min:6',
-            'role'           => 'required|in:admin,dinas',
-            'opd_name'       => 'nullable|string|max:255',
-            'application_id' => 'nullable|exists:applications,id',
+            'name'     => 'required|string|max:255',
+            'username' => 'required|string|max:100|unique:users,username',
+            'email'    => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:6',
+            'role'     => 'required|in:admin,opd',
+            'opd_id'   => 'nullable|exists:opds,id',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
 
         $user = User::create($validated);
-        $user->load('application');
+        $user->load('opd');
 
         return response()->json([
             'success' => true,
             'message' => 'Akun pengguna berhasil dibuat.',
             'data'    => $user
         ], 201);
+    }
+
+    /**
+     * Detail satu user
+     */
+    public function show(int $id)
+    {
+        $user = User::with('opd')->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $user
+        ]);
     }
 
     /**
@@ -59,13 +71,12 @@ class UserManagementController extends Controller
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
-            'name'           => 'sometimes|required|string|max:255',
-            'username'       => ['sometimes', 'required', 'string', 'max:100', Rule::unique('users')->ignore($user->id)],
-            'email'          => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password'       => 'nullable|string|min:6',
-            'role'           => 'sometimes|required|in:admin,dinas',
-            'opd_name'       => 'nullable|string|max:255',
-            'application_id' => 'nullable|exists:applications,id',
+            'name'     => 'sometimes|required|string|max:255',
+            'username' => ['sometimes', 'required', 'string', 'max:100', Rule::unique('users')->ignore($user->id)],
+            'email'    => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|string|min:6',
+            'role'     => 'sometimes|required|in:admin,opd',
+            'opd_id'   => 'nullable|exists:opds,id',
         ]);
 
         if (!empty($validated['password'])) {
@@ -75,7 +86,7 @@ class UserManagementController extends Controller
         }
 
         $user->update($validated);
-        $user->load('application');
+        $user->load('opd');
 
         return response()->json([
             'success' => true,

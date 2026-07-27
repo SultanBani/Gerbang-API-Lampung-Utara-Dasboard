@@ -215,7 +215,7 @@ export default function DashboardPage() {
                     : recentLogs.map(log => {
                         const sc = log.status_code
                         const time = log.created_at?.split('T')[1]?.substring(0, 8) ?? log.created_at?.split(' ')[1] ?? '—'
-                        const appName = log.application?.name ?? '—'
+                        const appName = log.opd?.name ?? '—'
                         return (
                           <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                             <td className="py-3 text-slate-500 dark:text-slate-400 font-mono text-[11px]">{time}</td>

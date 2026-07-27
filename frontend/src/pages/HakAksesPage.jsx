@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useApiGateway } from '../context/ApiGatewayContext'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Building2, CheckCircle2, X } from 'lucide-react'
 
 export default function HakAksesPage() {
   const { accessControls, fetchAccessControls, toggleAccess, loading } = useApiGateway()
@@ -64,8 +64,8 @@ export default function HakAksesPage() {
                     <th className="py-4 px-6 min-w-[240px]">Endpoint API</th>
                     {displayedApps.map(app => (
                       <th key={app.id} className="py-4 px-4 text-center min-w-[110px]">
-                        <div className="font-bold text-slate-900 dark:text-slate-100">{app.name}</div>
-                        <div className="text-[9px] text-slate-500 dark:text-slate-400 font-normal lowercase tracking-normal">{app.opd}</div>
+                        <div className="flex items-center justify-center gap-1.5 font-bold text-slate-900 dark:text-slate-100"><Building2 className="w-3.5 h-3.5 text-slate-400" />{app.name}</div>
+                        <div className="text-[10px] text-slate-500 font-normal lowercase tracking-normal">{app.code}</div>
                       </th>
                     ))}
                   </tr>
@@ -74,16 +74,20 @@ export default function HakAksesPage() {
                   {endpoints.map(ep => (
                     <tr key={ep.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="py-3.5 px-6">
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
-                            ep.method === 'GET'  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
-                            ep.method === 'POST' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' :
-                            ep.method === 'PUT'  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
-                            'bg-red-500/10 text-red-600 dark:text-red-400'
-                          }`}>{ep.method}</span>
-                          <code className="font-mono text-slate-800 dark:text-slate-200 font-bold text-xs">{ep.url}</code>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(ep.method_permissions || []).map(method => (
+                            <span key={method} className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono ${
+                              method === 'GET'  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                              method === 'POST' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' :
+                              method === 'PUT'  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
+                              'bg-red-500/10 text-red-600 dark:text-red-400'
+                            }`}>{method}</span>
+                          ))}
                         </div>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">{ep.description}</span>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <code className="font-mono text-slate-800 dark:text-slate-200 font-bold text-xs">/APIGATELU/{ep.opd?.code}/{ep.slug}</code>
+                        </div>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">{ep.title}</span>
                       </td>
                       {displayedApps.map(app => {
                         const allowed = isAllowed(app.id, ep.id)
@@ -91,12 +95,14 @@ export default function HakAksesPage() {
                           <td key={app.id} className="py-3.5 px-4 text-center">
                             <button
                               onClick={() => toggleAccess(app.id, ep.id)}
-                              className={`w-11 h-6 rounded-full transition-all duration-200 relative p-1 focus:outline-none shadow-inner cursor-pointer ${
-                                allowed ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700'
+                              className={`w-11 h-6 rounded-full transition-all duration-200 flex items-center justify-center focus:outline-none ${
+                                allowed 
+                                ? 'bg-emerald-500 text-white shadow-emerald-500/30' 
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-600'
                               }`}
-                              title={`${app.name} → ${ep.method} ${ep.url}: ${allowed ? 'Diizinkan' : 'Ditolak'}`}
+                              title={allowed ? `Cabut Akses ${app.name} ke ${ep.title}` : `Beri Akses ${app.name} ke ${ep.title}`}
                             >
-                              <span className={`w-4 h-4 rounded-full bg-white block transition-transform duration-200 shadow-md ${allowed ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                              {allowed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
                             </button>
                           </td>
                         )
