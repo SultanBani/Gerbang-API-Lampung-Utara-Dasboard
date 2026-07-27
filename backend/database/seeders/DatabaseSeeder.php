@@ -15,7 +15,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // ── 1. Import Data dari Dump SQL Resmi (gerbang_api_lampung_utara.sql) ──
-        $this->call(SqlDumpSeeder::class);
+        // (Dihapus agar tidak konflik dengan struktur baru)
+        // $this->call(SqlDumpSeeder::class);
 
         // ── 2. Seed Data OPD & Endpoints ────────────────────────────────────────
         $this->call([

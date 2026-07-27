@@ -25,7 +25,7 @@ class EndpointSeeder extends Seeder
                 'title' => 'API Data Kependudukan (NIK)',
                 'slug' => 'penduduk',
                 'target_url' => 'http://disdukcapil.local/api/v1/penduduk',
-                'method_permissions' => json_encode(['GET', 'POST']),
+                'method_permissions' => ['GET', 'POST'],
                 'is_active' => true,
             ],
             [
@@ -33,7 +33,7 @@ class EndpointSeeder extends Seeder
                 'title' => 'API Pencarian Kartu Keluarga',
                 'slug' => 'pencarian-kk',
                 'target_url' => 'http://disdukcapil.local/api/v1/kk',
-                'method_permissions' => json_encode(['GET']),
+                'method_permissions' => ['GET'],
                 'is_active' => true,
             ],
             [
@@ -41,7 +41,7 @@ class EndpointSeeder extends Seeder
                 'title' => 'API Capaian Program Pembangunan',
                 'slug' => 'capaian-program',
                 'target_url' => 'http://bappeda.local/api/capaian-program',
-                'method_permissions' => json_encode(['GET']),
+                'method_permissions' => ['GET'],
                 'is_active' => true,
             ],
             [
@@ -49,7 +49,7 @@ class EndpointSeeder extends Seeder
                 'title' => 'API Data Sebaran Stunting',
                 'slug' => 'data-stunting',
                 'target_url' => 'http://dinkes.local/api/stunting',
-                'method_permissions' => json_encode(['GET']),
+                'method_permissions' => ['GET'],
                 'is_active' => true,
             ],
             [
@@ -57,7 +57,7 @@ class EndpointSeeder extends Seeder
                 'title' => 'API Serapan Anggaran APBD',
                 'slug' => 'serapan-apbd',
                 'target_url' => 'http://bpkad.local/api/anggaran/serapan',
-                'method_permissions' => json_encode(['GET']),
+                'method_permissions' => ['GET'],
                 'is_active' => true,
             ],
             [
@@ -65,7 +65,7 @@ class EndpointSeeder extends Seeder
                 'title' => 'API Data Kepegawaian',
                 'slug' => 'data-pegawai',
                 'target_url' => 'http://bkd.local/api/pegawai',
-                'method_permissions' => json_encode(['GET']),
+                'method_permissions' => ['GET'],
                 'is_active' => true,
             ]
         ];

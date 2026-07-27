@@ -62,6 +62,21 @@ Route::middleware('auth:sanctum')->group(function () {
         // User Management (admin creates/manages OPD accounts)
         Route::apiResource('users', UserManagementController::class);
     });
+
+    // OPD Dashboard API
+    Route::prefix('api/opd')->group(function () {
+        Route::get('/catalog', [\App\Http\Controllers\Api\OpdController::class, 'catalog']);
+        Route::get('/my-endpoints', [\App\Http\Controllers\Api\OpdController::class, 'myEndpoints']);
+        Route::post('/my-endpoints', [\App\Http\Controllers\Api\OpdController::class, 'storeEndpoint']);
+        Route::put('/my-endpoints/{id}', [\App\Http\Controllers\Api\OpdController::class, 'updateEndpoint']);
+        Route::delete('/my-endpoints/{id}', [\App\Http\Controllers\Api\OpdController::class, 'destroyEndpoint']);
+        
+        Route::get('/incoming-requests', [\App\Http\Controllers\Api\OpdController::class, 'incomingRequests']);
+        Route::patch('/incoming-requests/{id}/{action}', [\App\Http\Controllers\Api\OpdController::class, 'processRequest']);
+        
+        Route::get('/my-access-requests', [\App\Http\Controllers\Api\OpdController::class, 'myAccessRequests']);
+        Route::post('/access-requests', [\App\Http\Controllers\Api\OpdController::class, 'submitRequest']);
+    });
 });
 
 // ─────────────────────────────────────────────────────────────────────────
