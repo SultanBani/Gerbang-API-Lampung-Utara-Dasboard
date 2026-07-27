@@ -1,33 +1,21 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
+/**
+ * DEPRECATED: This migration is no longer used.
+ * The 'applications' table has been replaced by 'opds' in the multi-tenant architecture.
+ * See: 2026_07_27_010000_create_opds_table.php
+ */
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('applications', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('opd');
-            $table->string('pic_name');
-            $table->string('pic_phone')->nullable();
-            $table->text('description')->nullable();
-            $table->string('status')->default('active'); // active, inactive
-            $table->timestamps();
-        });
+        // Intentionally empty — replaced by opds table
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('applications');
+        // Intentionally empty
     }
 };

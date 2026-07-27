@@ -1,32 +1,21 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
+/**
+ * DEPRECATED: This migration is no longer used.
+ * API keys are now generated within the 'access_requests' table upon approval.
+ * See: 2026_07_27_010200_create_access_requests_table.php
+ */
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('api_keys', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('application_id')->constrained('applications')->onDelete('cascade');
-            $table->string('key')->unique();
-            $table->string('status')->default('active'); // active, revoked, expired
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamp('last_used_at')->nullable();
-            $table->timestamps();
-        });
+        // Intentionally empty — api_key is now a column in access_requests
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('api_keys');
+        // Intentionally empty
     }
 };

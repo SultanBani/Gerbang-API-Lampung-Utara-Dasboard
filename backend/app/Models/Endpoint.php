@@ -3,37 +3,38 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Endpoint extends Model
 {
     protected $fillable = [
-        'method',
-        'url',
-        'description',
-        'tag',
-        'is_auth_required',
-        'rate_limit',
+        'opd_id',
+        'title',
+        'slug',
+        'target_url',
+        'method_permissions',
+        'is_active',
     ];
 
     protected $casts = [
-        'is_auth_required' => 'boolean',
-        'rate_limit' => 'integer',
+        'method_permissions' => 'array',
+        'is_active' => 'boolean',
     ];
 
-    public function accessControls()
+    /**
+     * OPD yang memiliki/menyediakan endpoint ini.
+     */
+    public function opd(): BelongsTo
     {
-        return $this->hasMany(AccessControl::class);
+        return $this->belongsTo(Opd::class);
     }
 
-    public function applications()
+    /**
+     * Semua permintaan akses yang ditujukan ke endpoint ini.
+     */
+    public function accessRequests(): HasMany
     {
-        return $this->belongsToMany(Application::class, 'access_controls')
-                    ->withPivot('is_allowed')
-                    ->withTimestamps();
-    }
-
-    public function requestLogs()
-    {
-        return $this->hasMany(RequestLog::class);
+        return $this->hasMany(AccessRequest::class);
     }
 }

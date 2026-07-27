@@ -2,30 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class ApiKey extends Model
+/**
+ * @deprecated API keys are now a field on the AccessRequest model.
+ * This file is kept only because it could not be deleted due to filesystem permissions.
+ * DO NOT USE — see App\Models\AccessRequest instead.
+ */
+class ApiKey
 {
-    protected $fillable = [
-        'application_id',
-        'key',
-        'status',
-        'expires_at',
-        'last_used_at',
-    ];
-
-    protected $casts = [
-        'expires_at' => 'datetime',
-        'last_used_at' => 'datetime',
-    ];
-
-    public function application()
-    {
-        return $this->belongsTo(Application::class);
-    }
-
-    public function requestLogs()
-    {
-        return $this->hasMany(RequestLog::class);
-    }
+    // DEPRECATED — see AccessRequest model
 }

@@ -16,9 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('username')->unique()->nullable();
             $table->string('email')->unique();
-            $table->string('role')->default('dinas'); // 'admin' atau 'dinas'
-            $table->string('opd_name')->nullable();
-            $table->unsignedBigInteger('application_id')->nullable();
+            $table->enum('role', ['admin', 'opd'])->default('opd');
+            $table->foreignId('opd_id')->nullable()->constrained('opds')->onDelete('set null');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

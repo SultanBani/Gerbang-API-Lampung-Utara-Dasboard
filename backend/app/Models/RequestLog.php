@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RequestLog extends Model
 {
     protected $fillable = [
-        'api_key_id',
-        'application_id',
+        'access_request_id',
         'endpoint_id',
+        'opd_id',
         'method',
         'url',
         'status_code',
@@ -24,18 +25,27 @@ class RequestLog extends Model
         'response_time_ms' => 'integer',
     ];
 
-    public function apiKey()
+    /**
+     * AccessRequest yang terkait dengan log ini.
+     */
+    public function accessRequest(): BelongsTo
     {
-        return $this->belongsTo(ApiKey::class);
+        return $this->belongsTo(AccessRequest::class);
     }
 
-    public function application()
-    {
-        return $this->belongsTo(Application::class);
-    }
-
-    public function endpoint()
+    /**
+     * Endpoint yang diakses.
+     */
+    public function endpoint(): BelongsTo
     {
         return $this->belongsTo(Endpoint::class);
+    }
+
+    /**
+     * OPD yang melakukan request.
+     */
+    public function opd(): BelongsTo
+    {
+        return $this->belongsTo(Opd::class);
     }
 }

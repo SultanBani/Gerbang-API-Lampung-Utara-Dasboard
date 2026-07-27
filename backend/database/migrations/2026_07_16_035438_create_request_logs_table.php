@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('request_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('api_key_id')->nullable()->constrained('api_keys')->onDelete('set null');
-            $table->foreignId('application_id')->nullable()->constrained('applications')->onDelete('set null');
+            $table->foreignId('access_request_id')->nullable()->constrained('access_requests')->onDelete('set null');
             $table->foreignId('endpoint_id')->nullable()->constrained('endpoints')->onDelete('set null');
+            $table->foreignId('opd_id')->nullable()->constrained('opds')->onDelete('set null');
             $table->string('method');
             $table->string('url');
             $table->integer('status_code');

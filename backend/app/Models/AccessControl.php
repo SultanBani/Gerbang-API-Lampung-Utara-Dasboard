@@ -2,27 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class AccessControl extends Model
+/**
+ * @deprecated Access control is now handled by the AccessRequest model with approval workflow.
+ * This file is kept only because it could not be deleted due to filesystem permissions.
+ * DO NOT USE — see App\Models\AccessRequest instead.
+ */
+class AccessControl
 {
-    protected $fillable = [
-        'application_id',
-        'endpoint_id',
-        'is_allowed',
-    ];
-
-    protected $casts = [
-        'is_allowed' => 'boolean',
-    ];
-
-    public function application()
-    {
-        return $this->belongsTo(Application::class);
-    }
-
-    public function endpoint()
-    {
-        return $this->belongsTo(Endpoint::class);
-    }
+    // DEPRECATED — see AccessRequest model
 }
