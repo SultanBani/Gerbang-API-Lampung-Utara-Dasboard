@@ -24,6 +24,7 @@ export default function EndpointPage() {
   }, [fetchEndpoints, fetchOpds])
 
   const filteredEndpoints = useMemo(() => {
+    return endpoints.filter(ep => {
       const q = searchQuery.toLowerCase()
       const matchQuery =
         ep.title?.toLowerCase().includes(q) ||
