@@ -8,8 +8,17 @@ use App\Http\Controllers\Api\Admin\AccessControlController;
 use App\Http\Controllers\Api\Admin\RequestLogController;
 use App\Http\Controllers\Api\Admin\UserManagementController;
 use App\Http\Controllers\Api\Admin\OpdManagementController;
+use App\Http\Controllers\Api\PadDatasetController;
 use App\Http\Controllers\GatewayController;
 use Illuminate\Support\Facades\Route;
+
+// ─────────────────────────────────────────────────────────────────────────
+// PUBLIC DATASETS (Dapat diakses langsung di browser tanpa header token)
+// ─────────────────────────────────────────────────────────────────────────
+Route::get('/gateway/jumlah-pendapatan-asli-daerah-pad-tahun-2023-2024-kab-lampung-utara', [PadDatasetController::class, 'index']);
+Route::get('/gateway/keuangan/pad-2023-2024', [PadDatasetController::class, 'index']);
+Route::get('/api/v1/pad-2023-2024', [PadDatasetController::class, 'index']);
+Route::get('/APIGATELU/bpkad/jumlah-pendapatan-asli-daerah-pad-tahun-2023-2024-kab-lampung-utara', [PadDatasetController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------

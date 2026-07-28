@@ -1,10 +1,20 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import {
-  Send, Building2, Link2, Check, Copy, Key, Clock, CheckCircle, XCircle, Loader2
+  Send, Building2, Link2, Check, Copy, Key, Clock, CheckCircle, XCircle, Loader2, ExternalLink
 } from 'lucide-react'
 
-const GATEWAY_BASE = 'https://ragem-api.lampungutarakab.go.id/APIGATELU'
+const getGatewayBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname
+    if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.')) {
+      return `${window.location.protocol}//${host}:8000/APIGATELU`
+    }
+  }
+  return import.meta.env.VITE_GATEWAY_BASE || 'https://ragem-api.lampungutarakab.go.id/APIGATELU'
+}
+
+const GATEWAY_BASE = getGatewayBaseUrl()
 const methodColor = {
   GET:    'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30',
   POST:   'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/30',
@@ -115,6 +125,16 @@ export default function OpdRequestsPage() {
                         <code className="text-[11px] font-mono text-blue-600 dark:text-blue-300 break-all flex-1 leading-relaxed">
                           {GATEWAY_BASE}/{req.endpoint?.opd?.code || 'opd'}/{req.endpoint?.slug || 'slug'}?api_key={req.api_key}
                         </code>
+                        <a
+                          href={`${GATEWAY_BASE}/${req.endpoint?.opd?.code || 'opd'}/${req.endpoint?.slug || 'slug'}?api_key=${req.api_key}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
+                          title="Buka JSON Langsung di Chrome"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Buka JSON</span>
+                        </a>
                         <button
                           onClick={() => copyUrl(
                             `${GATEWAY_BASE}/${req.endpoint?.opd?.code || 'opd'}/${req.endpoint?.slug || 'slug'}?api_key=${req.api_key}`,

@@ -15,17 +15,8 @@ class OpdController extends Controller
     {
         $user = $request->user();
 
-        // BUG-23: Guard against null opd_id
-        if (!$user->opd_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akun Anda tidak terhubung ke OPD manapun.',
-            ], 403);
-        }
-
         $endpoints = Endpoint::with('opd')
             ->where('is_active', true)
-            ->where('opd_id', '!=', $user->opd_id)
             ->get();
 
         return response()->json(['success' => true, 'data' => $endpoints]);

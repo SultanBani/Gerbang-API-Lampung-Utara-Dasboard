@@ -61,6 +61,14 @@ class EndpointSeeder extends Seeder
                 'is_active' => true,
             ],
             [
+                'opd_id' => $bpkad->id,
+                'title' => 'Jumlah Pendapatan Asli Daerah (PAD) tahun 2023 2024 Kab. Lampung Utara',
+                'slug' => 'jumlah-pendapatan-asli-daerah-pad-tahun-2023-2024-kab-lampung-utara',
+                'target_url' => 'https://data.lampungutarakab.go.id/dataset/7080a6bf-733c-408e-805c-e2e3ba5ffe2d/resource/047bf171-881f-45a9-a8f7-814f31a0e43a/download/jumlah-pendapatan-asli-daerah-pad-tahun-2023-2024-kab.-lampung-utara.csv',
+                'method_permissions' => ['GET'],
+                'is_active' => true,
+            ],
+            [
                 'opd_id' => $bkd->id,
                 'title' => 'API Data Kepegawaian',
                 'slug' => 'data-pegawai',

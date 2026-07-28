@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 import {
-  Building2, Globe, Send, X, Loader2, CheckCircle, Search
+  Building2, Globe, Send, X, Loader2, CheckCircle, Search, ShieldCheck
 } from 'lucide-react'
 
 const methodColor = {
@@ -13,6 +14,7 @@ const methodColor = {
 }
 
 export default function OpdCatalogPage() {
+  const { user } = useAuth()
   const [catalogEndpoints, setCatalogEndpoints] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchCatalog, setSearchCatalog] = useState('')
@@ -143,14 +145,21 @@ export default function OpdCatalogPage() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => { setSelectedEndpoint(ep); setRequestMethods([]); setShowRequestModal(true) }}
-                    disabled={!ep.is_active}
-                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600/10 border border-blue-500/20 text-blue-400 text-xs font-semibold hover:bg-blue-600/20 hover:border-blue-500/40 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    Ajukan Akses API
-                  </button>
+                  {user?.opd_id && user.opd_id === ep.opd_id ? (
+                    <div className="mt-4 w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 text-xs font-semibold">
+                      <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                      <span>API Milik OPD Anda</span>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { setSelectedEndpoint(ep); setRequestMethods([]); setShowRequestModal(true) }}
+                      disabled={!ep.is_active}
+                      className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-semibold hover:bg-blue-600/20 hover:border-blue-500/40 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      Ajukan Akses API
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
