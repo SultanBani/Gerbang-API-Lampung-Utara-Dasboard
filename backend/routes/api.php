@@ -42,6 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout',  [AuthController::class, 'logout']);
     });
 
+    // Daftarkan route broadcasting untuk auth private channel menggunakan Sanctum
+    \Illuminate\Support\Facades\Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
     // ─────────────────────────────────────────────────────────────────
     // [3] Admin Management REST API — hanya role 'admin'
     // ─────────────────────────────────────────────────────────────────
