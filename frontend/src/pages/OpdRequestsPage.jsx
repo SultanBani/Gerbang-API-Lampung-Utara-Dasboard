@@ -122,18 +122,15 @@ export default function OpdRequestsPage() {
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">URL (Akses via Chrome)</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <code className="text-[11px] font-mono text-blue-600 dark:text-blue-300 break-all flex-1 leading-relaxed">
-                          {GATEWAY_BASE}/{req.endpoint?.opd?.code || 'opd'}/{req.endpoint?.slug || 'slug'}?api_key={req.api_key}
-                        </code>
                         <a
                           href={`${GATEWAY_BASE}/${req.endpoint?.opd?.code || 'opd'}/${req.endpoint?.slug || 'slug'}?api_key=${req.api_key}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
-                          title="Buka JSON Langsung di Chrome"
+                          className="text-[11px] font-mono text-blue-600 dark:text-blue-400 hover:text-blue-500 hover:underline break-all flex-1 leading-relaxed flex items-center gap-1.5 font-bold"
+                          title="Klik untuk membuka langsung di Chrome"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Buka JSON</span>
+                          <span>{GATEWAY_BASE}/{req.endpoint?.opd?.code || 'opd'}/{req.endpoint?.slug || 'slug'}?api_key={req.api_key}</span>
+                          <ExternalLink className="w-3.5 h-3.5 shrink-0 text-blue-500" />
                         </a>
                         <button
                           onClick={() => copyUrl(

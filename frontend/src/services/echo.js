@@ -1,40 +1,34 @@
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
+// Optional WebSocket / Echo helper with graceful fallback
+let echoInstance = null
 
-window.Pusher = Pusher;
+try {
+  // Dynamically load Echo if available
+  const EchoModule = await import('laravel-echo').catch(() => null)
+  const PusherModule = await import('pusher-js').catch(() => null)
 
-// Create and configure Echo instance for Reverb
-// Default Reverb uses port 8080 and local IP
-const echo = new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY || 'qwertyuiop', // Gunakan key sesuai .env backend
-    wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
-    wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-    wssPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
-    enabledTransports: ['ws', 'wss'],
-    authorizer: (channel, options) => {
-        return {
-            authorize: (socketId, callback) => {
-                const token = localStorage.getItem('token');
-                fetch(`http://${window.location.hostname}:8000/api/broadcasting/auth`, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        socket_id: socketId,
-                        channel_name: channel.name
-                    })
-                })
-                .then(response => response.json())
-                .then(data => callback(false, data))
-                .catch(error => callback(true, error));
-            }
-        };
-    },
-});
+  if (EchoModule && PusherModule) {
+    const Echo = EchoModule.default
+    const Pusher = PusherModule.default
+    window.Pusher = Pusher
 
-export default echo;
+    echoInstance = new Echo({
+      broadcaster: 'reverb',
+      key: import.meta.env.VITE_REVERB_APP_KEY || 'qwertyuiop',
+      wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
+      wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
+      wssPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
+      forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
+      enabledTransports: ['ws', 'wss'],
+    })
+  }
+} catch (e) {
+  console.warn('Echo websocket listener disabled:', e)
+}
+
+// Fallback dummy object if Echo is not available to prevent crashes
+export default echoInstance || {
+  private: () => ({
+    notification: () => ({}),
+    listen: () => ({}),
+  }),
+}

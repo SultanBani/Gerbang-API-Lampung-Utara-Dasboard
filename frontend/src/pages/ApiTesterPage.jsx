@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useApiGateway } from '../context/ApiGatewayContext'
-import { gatewayApi } from '../services/api'
+import api, { gatewayApi } from '../services/api'
 import {
   Send, Loader2, Plus, Trash2, Copy, Check,
   FolderOpen, Code2, Sparkles, ShieldCheck,
@@ -16,7 +16,7 @@ const METHOD_COLORS = {
   DELETE: { bg: 'bg-red-500/10 dark:bg-red-500/20',         text: 'text-red-600 dark:text-red-400',         border: 'border-red-500/30' },
 }
 
-// Preset Collection Endpoints (Lampung Utara Gateway API)
+// Preset Collection Endpoints (Lampung Utara Gateway API - Fallback)
 const PRESET_COLLECTIONS = [
   {
     category: 'Keuangan (BPKAD)',
@@ -101,6 +101,64 @@ export default function ApiTesterPage() {
   const fetchApplications = context.fetchApplications || (() => {})
   const fetchEndpoints = context.fetchEndpoints || (() => {})
 
+  // Catalog Endpoints from backend API
+  const [catalogEndpoints, setCatalogEndpoints] = useState([])
+
+  useEffect(() => {
+    api.get('/api/opd/catalog')
+      .then(res => {
+        if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+          setCatalogEndpoints(res.data.data)
+        }
+      })
+      .catch(err => console.error('Gagal memuat katalog API:', err))
+  }, [])
+
+  // Build dynamic collections grouped by OPD
+  const dynamicCollections = useMemo(() => {
+    if (!catalogEndpoints || catalogEndpoints.length === 0) {
+      return PRESET_COLLECTIONS
+    }
+
+    const groups = {}
+    catalogEndpoints.forEach(item => {
+      const category = item.opd_name || item.opd?.name || 'OPD Terdaftar'
+      if (!groups[category]) {
+        groups[category] = []
+      }
+
+      let rawMethods = ['GET']
+      if (Array.isArray(item.method_permissions)) {
+        rawMethods = item.method_permissions
+      } else if (typeof item.method_permissions === 'string') {
+        try { rawMethods = JSON.parse(item.method_permissions) } catch { rawMethods = ['GET'] }
+      }
+
+      const methods = rawMethods && rawMethods.length > 0 ? rawMethods : ['GET']
+      const formattedSlug = item.slug ? (item.slug.startsWith('/') ? item.slug : `/${item.slug}`) : `/${item.id}`
+
+      methods.forEach(m => {
+        const apiKey = item.user_api_key || item.api_key || ''
+        groups[category].push({
+          id: `${item.id}-${m}`,
+          name: item.title,
+          method: m,
+          url: formattedSlug,
+          desc: item.target_url || item.description || `Endpoint ${item.title}`,
+          apiKey: apiKey,
+          params: [],
+          headers: apiKey ? [{ key: 'X-API-KEY', value: apiKey, active: true }] : [],
+          body: ''
+        })
+      })
+    })
+
+    return Object.keys(groups).map(cat => ({
+      category: cat,
+      items: groups[cat]
+    }))
+  }, [catalogEndpoints])
+
   // App Selection for Auto API Key
   const [selectedAppId, setSelectedAppId] = useState('')
 
@@ -183,44 +241,48 @@ export default function ApiTesterPage() {
     return requestUrl.includes('?') ? `${requestUrl}&${queryString}` : `${requestUrl}?${queryString}`
   }, [requestUrl, queryParams])
 
-  // Handle Preset Select from Collection Sidebar
-  const handleSelectPreset = (item) => {
-    setRequestMethod(item.method)
-    setRequestUrl(item.url)
-    if (item.params) setQueryParams(item.params)
-    if (item.headers) setCustomHeaders(item.headers)
-    if (item.body) setRequestBody(item.body)
-  }
-
-  // Handle Send API Request (Postman Core Execution)
-  const handleSendRequest = async () => {
+  // Core API Request Execution Engine
+  const executeSend = async (method = requestMethod, url = requestUrl, params = queryParams, headersExtra = customHeaders, bodyStr = requestBody) => {
     setLoading(true)
     setResponseResult(null)
     setResponseError(null)
 
     const startTime = performance.now()
-    const path = fullTargetUrl.startsWith('/') ? fullTargetUrl.substring(1) : fullTargetUrl
+
+    // Construct active params string
+    const activeParams = (params || []).filter(p => p.active && p.key.trim())
+    let targetPath = url
+    if (activeParams.length > 0) {
+      const qStr = activeParams.map(p => `${encodeURIComponent(p.key.trim())}=${encodeURIComponent(p.value.trim())}`).join('&')
+      targetPath = targetPath.includes('?') ? `${targetPath}&${qStr}` : `${targetPath}?${qStr}`
+    }
+
+    const path = targetPath.startsWith('/') ? targetPath.substring(1) : targetPath
 
     // Build headers
-    const headers = {
+    const apiKeyHeader = (headersExtra || []).find(h => h.key.toLowerCase() === 'x-api-key' && h.active)?.value
+      || currentKey?.key
+      || 'gkp_bappeda_key_2026_x89a'
+
+    const reqHeaders = {
+      'X-API-KEY':    apiKeyHeader,
       'X-Client-ID':  String(currentKey?.appId ?? 1),
-      'X-Secret-Key': currentKey?.key ?? 'gkp_bappeda_key_2026_x89a',
       'Accept':       'application/json',
       'Content-Type': 'application/json',
     }
 
     // Append custom active headers
-    customHeaders.forEach(h => {
+    ;(headersExtra || []).forEach(h => {
       if (h.active && h.key.trim()) {
-        headers[h.key.trim()] = h.value.trim()
+        reqHeaders[h.key.trim()] = h.value.trim()
       }
     })
 
     try {
       let bodyData = undefined
-      if (['POST', 'PUT', 'PATCH'].includes(requestMethod) && requestBody.trim()) {
+      if (['POST', 'PUT', 'PATCH'].includes(method) && bodyStr && bodyStr.trim()) {
         try {
-          bodyData = JSON.parse(requestBody)
+          bodyData = JSON.parse(bodyStr)
         } catch (jsonErr) {
           setResponseError(`Syntax Error pada Request Body JSON: ${jsonErr.message}`)
           setLoading(false)
@@ -229,10 +291,10 @@ export default function ApiTesterPage() {
       }
 
       const res = await gatewayApi.request({
-        method:  requestMethod,
+        method:  method,
         url:     `/${path}`,
         data:    bodyData,
-        headers: headers,
+        headers: reqHeaders,
       })
 
       const elapsed = Math.round(performance.now() - startTime)
@@ -243,12 +305,12 @@ export default function ApiTesterPage() {
         data:       res.data,
         headers:    res.headers,
         timestamp:  new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        url:        requestUrl,
-        method:     requestMethod
+        url:        url,
+        method:     method
       }
 
       setResponseResult(resObj)
-      setRequestHistory(prev => [resObj, ...prev.slice(0, 19)]) // Keep last 20 requests
+      setRequestHistory(prev => [resObj, ...prev.slice(0, 19)])
     } catch (err) {
       const elapsed = Math.round(performance.now() - startTime)
       if (err.response) {
@@ -259,8 +321,8 @@ export default function ApiTesterPage() {
           data:       err.response.data,
           headers:    err.response.headers,
           timestamp:  new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          url:        requestUrl,
-          method:     requestMethod
+          url:        url,
+          method:     method
         }
         setResponseResult(resObj)
         setRequestHistory(prev => [resObj, ...prev.slice(0, 19)])
@@ -270,6 +332,29 @@ export default function ApiTesterPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Handle Preset Select & Auto-Send from Collection Sidebar
+  const handleSelectPreset = (item) => {
+    setRequestMethod(item.method)
+    setRequestUrl(item.url)
+    const p = item.params || []
+    const keyToUse = item.apiKey || currentKey?.key || 'gkp_bappeda_key_2026_x89a'
+    const h = item.headers && item.headers.length > 0 ? item.headers : [
+      { key: 'X-API-KEY', value: keyToUse, active: true }
+    ]
+    const b = item.body || ''
+    setQueryParams(p)
+    setCustomHeaders(h)
+    setRequestBody(b)
+
+    // Auto trigger Send request immediately
+    executeSend(item.method, item.url, p, h, b)
+  }
+
+  // Handle Send API Request via Send Button
+  const handleSendRequest = () => {
+    executeSend(requestMethod, requestUrl, queryParams, customHeaders, requestBody)
   }
 
   // Prettify JSON Body
@@ -372,7 +457,7 @@ export default function ApiTesterPage() {
           {/* COLLECTIONS TAB */}
           {activeSidebarTab === 'collections' && (
             <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1">
-              {PRESET_COLLECTIONS.map((cat, idx) => {
+              {dynamicCollections.map((cat, idx) => {
                 const filteredItems = cat.items.filter(item =>
                   item.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
                   item.url.toLowerCase().includes(searchFilter.toLowerCase())
@@ -412,7 +497,12 @@ export default function ApiTesterPage() {
                                 {item.url}
                               </span>
                             </div>
-                            <Play className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 shrink-0 opacity-0 group-hover:opacity-100 transition-all" />
+                            <div className="flex items-center gap-1.5 shrink-0 opacity-80 group-hover:opacity-100 transition-all">
+                              <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 shadow-sm">
+                                <Play className="w-3 h-3 fill-current" />
+                                <span>Run</span>
+                              </span>
+                            </div>
                           </button>
                         )
                       })}

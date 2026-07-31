@@ -48,16 +48,10 @@ export default function App() {
                 {/* Main Page Content */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
                   <Routes>
-                    {/* Default Home Redirect */}
+                    {/* Default Home Redirect — Wajib ke Halaman Login Pertama */}
                     <Route
                       path="/"
-                      element={
-                        isAdmin ? (
-                          <Navigate to="/dashboard" replace />
-                        ) : (
-                          <Navigate to="/portal-opd" replace />
-                        )
-                      }
+                      element={<Navigate to="/login" replace />}
                     />
 
                     {/* Admin Only Routes */}
@@ -73,15 +67,11 @@ export default function App() {
                       </>
                     )}
 
-                    {/* Dinas OPD Only Routes */}
-                    {!isAdmin && (
-                      <>
-                        <Route path="/portal-opd" element={<OpdDashboardPage />} />
-                        <Route path="/portal-opd/catalog" element={<OpdCatalogPage />} />
-                        <Route path="/portal-opd/manage" element={<OpdManageApiPage />} />
-                        <Route path="/portal-opd/requests" element={<OpdRequestsPage />} />
-                      </>
-                    )}
+                    {/* OPD & Shared Service Routes */}
+                    <Route path="/portal-opd" element={<OpdDashboardPage />} />
+                    <Route path="/portal-opd/catalog" element={<OpdCatalogPage />} />
+                    <Route path="/portal-opd/manage" element={<OpdManageApiPage />} />
+                    <Route path="/portal-opd/requests" element={<OpdRequestsPage />} />
 
                     {/* Shared Routes */}
                     <Route path="/tester" element={<ApiTesterPage />} />
@@ -90,12 +80,7 @@ export default function App() {
                     {/* Fallback Catch-all Route */}
                     <Route
                       path="*"
-                      element={
-                        <Navigate
-                          to={isAdmin ? "/dashboard" : "/portal-opd"}
-                          replace
-                        />
-                      }
+                      element={<Navigate to="/login" replace />}
                     />
                   </Routes>
                 </main>
