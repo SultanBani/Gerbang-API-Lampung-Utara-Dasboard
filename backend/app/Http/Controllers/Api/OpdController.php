@@ -15,18 +15,34 @@ class OpdController extends Controller
     {
         $user = $request->user();
 
-        // BUG-23: Guard against null opd_id
-        if (!$user->opd_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akun Anda tidak terhubung ke OPD manapun.',
-            ], 403);
-        }
-
         $endpoints = Endpoint::with('opd')
             ->where('is_active', true)
-            ->where('opd_id', '!=', $user->opd_id)
             ->get();
+
+        $userOpdId = $user ? $user->opd_id : null;
+        if (!$userOpdId && $user && $user->role === 'admin') {
+            $diskominfo = \App\Models\Opd::where('code', 'diskominfo')->first();
+            $userOpdId = $diskominfo ? $diskominfo->id : null;
+        }
+
+        // Fetch user's access requests
+        $myRequests = [];
+        if ($userOpdId) {
+            $myRequests = AccessRequest::where('requestor_opd_id', $userOpdId)
+                ->get()
+                ->keyBy('endpoint_id');
+        }
+
+        $endpoints->transform(function ($ep) use ($user, $userOpdId, $myRequests) {
+            // Super Admin also needs approval unless it is their own OPD endpoint!
+            $isOwner = $userOpdId && ((int)$userOpdId === (int)$ep->opd_id);
+            $req = $myRequests[$ep->id] ?? null;
+
+            $ep->is_owner = $isOwner;
+            $ep->access_status = $isOwner ? 'approved' : ($req ? $req->status : 'none');
+            $ep->user_api_key = ($req && $req->status === 'approved') ? $req->api_key : null;
+            return $ep;
+        });
 
         return response()->json(['success' => true, 'data' => $endpoints]);
     }
@@ -52,13 +68,22 @@ class OpdController extends Controller
             return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
         }
 
+        // Support stringified JSON array from FormData
+        if ($request->has('method_permissions') && is_string($request->input('method_permissions'))) {
+            $decoded = json_decode($request->input('method_permissions'), true);
+            if (is_array($decoded)) {
+                $request->merge(['method_permissions' => $decoded]);
+            }
+        }
+
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|regex:/^[a-z0-9\-]+$/',
-            'target_url' => 'required|url',
+            'title'              => 'required|string|max:255',
+            'slug'               => 'required|string|max:255|regex:/^[a-z0-9\-]+$/',
+            'target_url'         => 'nullable|string',
+            'file'               => 'nullable|file|mimes:csv,txt,pdf,json,xlsx|max:10240',
             'method_permissions' => 'required|array|min:1',
             'method_permissions.*' => 'in:GET,POST,PUT,PATCH,DELETE',
-            'is_active' => 'boolean',
+            'is_active'          => 'nullable',
         ]);
 
         // BUG-11: Validate slug uniqueness per-OPD
@@ -73,8 +98,26 @@ class OpdController extends Controller
             ], 422);
         }
 
+        // Process File Upload if provided
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $opdCode = $user->opd ? $user->opd->code : 'opd';
+            $extension = strtolower($file->getClientOriginalExtension());
+            $fileName = $validated['slug'] . '_' . time() . '.' . $extension;
+            $path = $file->storeAs("datasets/{$opdCode}", $fileName, 'public');
+            $validated['target_url'] = url("storage/{$path}");
+        }
+
+        if (empty($validated['target_url'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Harap upload file (CSV/PDF/JSON) atau isi Target URL.',
+            ], 422);
+        }
+
         $validated['opd_id'] = $user->opd_id;
-        
+        $validated['is_active'] = filter_var($validated['is_active'] ?? true, FILTER_VALIDATE_BOOLEAN);
+
         $endpoint = Endpoint::create($validated);
 
         return response()->json(['success' => true, 'data' => $endpoint]);
@@ -89,14 +132,23 @@ class OpdController extends Controller
         }
 
         $endpoint = Endpoint::where('id', $id)->where('opd_id', $user->opd_id)->firstOrFail();
-        
+
+        // Support stringified JSON array from FormData
+        if ($request->has('method_permissions') && is_string($request->input('method_permissions'))) {
+            $decoded = json_decode($request->input('method_permissions'), true);
+            if (is_array($decoded)) {
+                $request->merge(['method_permissions' => $decoded]);
+            }
+        }
+
         $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'slug' => 'sometimes|required|string|max:255|regex:/^[a-z0-9\-]+$/',
-            'target_url' => 'sometimes|required|url',
+            'title'              => 'sometimes|required|string|max:255',
+            'slug'               => 'sometimes|required|string|max:255|regex:/^[a-z0-9\-]+$/',
+            'target_url'         => 'nullable|string',
+            'file'               => 'nullable|file|mimes:csv,txt,pdf,json,xlsx|max:10240',
             'method_permissions' => 'sometimes|required|array|min:1',
             'method_permissions.*' => 'in:GET,POST,PUT,PATCH,DELETE',
-            'is_active' => 'boolean',
+            'is_active'          => 'nullable',
         ]);
 
         // BUG-11: Validate slug uniqueness on update
@@ -112,6 +164,21 @@ class OpdController extends Controller
                     'message' => "Endpoint dengan slug \"{$validated['slug']}\" sudah ada pada OPD Anda.",
                 ], 422);
             }
+        }
+
+        // Process File Upload if provided
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $opdCode = $user->opd ? $user->opd->code : 'opd';
+            $extension = strtolower($file->getClientOriginalExtension());
+            $slug = $validated['slug'] ?? $endpoint->slug;
+            $fileName = $slug . '_' . time() . '.' . $extension;
+            $path = $file->storeAs("datasets/{$opdCode}", $fileName, 'public');
+            $validated['target_url'] = url("storage/{$path}");
+        }
+
+        if (isset($validated['is_active'])) {
+            $validated['is_active'] = filter_var($validated['is_active'], FILTER_VALIDATE_BOOLEAN);
         }
 
         $endpoint->update($validated);
@@ -210,7 +277,13 @@ class OpdController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->opd_id) {
+        $userOpdId = $user->opd_id;
+        if (!$userOpdId && $user->role === 'admin') {
+            $diskominfo = \App\Models\Opd::where('code', 'diskominfo')->first();
+            $userOpdId = $diskominfo ? $diskominfo->id : null;
+        }
+
+        if (!$userOpdId) {
             return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
         }
 
@@ -221,7 +294,7 @@ class OpdController extends Controller
         ]);
 
         // Prevent duplicate: check for existing pending/approved request
-        $existing = AccessRequest::where('requestor_opd_id', $user->opd_id)
+        $existing = AccessRequest::where('requestor_opd_id', $userOpdId)
             ->where('endpoint_id', $validated['endpoint_id'])
             ->whereIn('status', ['pending', 'approved'])
             ->first();
@@ -237,14 +310,14 @@ class OpdController extends Controller
 
         // Prevent requesting own endpoint
         $endpoint = Endpoint::findOrFail($validated['endpoint_id']);
-        if ($endpoint->opd_id === $user->opd_id) {
+        if ((int)$endpoint->opd_id === (int)$userOpdId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Tidak perlu mengajukan akses ke endpoint milik OPD Anda sendiri.',
             ], 422);
         }
 
-        $validated['requestor_opd_id'] = $user->opd_id;
+        $validated['requestor_opd_id'] = $userOpdId;
         $validated['status'] = 'pending';
 
         $req = AccessRequest::create($validated);

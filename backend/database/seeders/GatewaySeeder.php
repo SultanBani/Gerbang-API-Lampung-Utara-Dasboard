@@ -114,6 +114,7 @@ class GatewaySeeder extends Seeder
             ['method' => 'GET',  'url' => 'perencanaan/program',      'description' => 'Daftar program kerja & kegiatan RKPD daerah',       'tag' => 'Perencanaan',  'is_auth_required' => true,  'rate_limit' => 60],
             ['method' => 'GET',  'url' => 'perencanaan/usulan-musrenbang', 'description' => 'Daftar usulan pembangunan desa & kecamatan',   'tag' => 'Perencanaan',  'is_auth_required' => true,  'rate_limit' => 40],
             ['method' => 'GET',  'url' => 'keuangan/apbd',            'description' => 'Realisasi anggaran pendapatan & belanja APBD',      'tag' => 'Keuangan',     'is_auth_required' => true,  'rate_limit' => 30],
+            ['method' => 'GET',  'url' => 'keuangan/pad-2023-2024',   'description' => 'Jumlah Pendapatan Asli Daerah (PAD) tahun 2023 2024 Kab. Lampung Utara', 'tag' => 'Keuangan', 'is_auth_required' => true, 'rate_limit' => 30],
             ['method' => 'GET',  'url' => 'kesehatan/faskes',         'description' => 'Daftar Puskesmas & faskes di Kotabumi & sekitarnya', 'tag' => 'Kesehatan',   'is_auth_required' => true,  'rate_limit' => 60],
             ['method' => 'GET',  'url' => 'pendidikan/sekolah',       'description' => 'Data profil SD & SMP se-Kabupaten Lampung Utara',  'tag' => 'Pendidikan',   'is_auth_required' => true,  'rate_limit' => 60],
             ['method' => 'GET',  'url' => 'dinsos/dtks',              'description' => 'Verifikasi data warga penerima bantuan DTKS',        'tag' => 'Sosial',       'is_auth_required' => true,  'rate_limit' => 80],

@@ -51,18 +51,20 @@ export default function Header({ onToggleSidebar }) {
     if (user?.role === 'admin') {
       fetchNotifications()
 
-      // Listen ke private channel user admin
+      // Safely load echo notification listener if active
       import('../services/echo').then(({ default: echo }) => {
-        echo.private(`App.Models.User.${user.id}`)
-          .notification((notification) => {
-            // Ketika ada notifikasi baru datang dari WebSocket
-            setNotifications(prev => [notification, ...prev])
-            setUnreadCount(prev => prev + 1)
-            
-            // Opsional: mainkan suara 'ting'
-            // new Audio('/notification.mp3').play().catch(e => {})
-          })
-      }).catch(err => console.error('Echo load error:', err))
+        if (echo && typeof echo.private === 'function') {
+          try {
+            echo.private(`App.Models.User.${user.id}`)
+              .notification((notification) => {
+                setNotifications(prev => [notification, ...prev])
+                setUnreadCount(prev => prev + 1)
+              })
+          } catch (e) {
+            console.warn('Echo notification setup skipped:', e)
+          }
+        }
+      }).catch(err => console.warn('Echo import skipped:', err))
     }
   }, [user])
 

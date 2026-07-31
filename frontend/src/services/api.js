@@ -1,5 +1,12 @@
 import axios from 'axios'
 
+const rawHost = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1'
+const host = rawHost === 'localhost' ? '127.0.0.1' : rawHost
+
+/**
+ * Axios instance untuk Admin & Auth API Laravel
+ * Base URL: /
+ */
 const api = axios.create({
   baseURL: '/',
   headers: {
@@ -10,11 +17,11 @@ const api = axios.create({
 })
 
 /**
- * Axios instance untuk Gateway Proxy (APIGATELU)
- * Base URL: /APIGATELU
+ * Axios instance untuk Gateway Proxy (APIGATELU / Gateway)
+ * Base URL: /gateway
  */
 export const gatewayApi = axios.create({
-  baseURL: `/APIGATELU`,
+  baseURL: `/gateway`,
   timeout: 30000,
 })
 

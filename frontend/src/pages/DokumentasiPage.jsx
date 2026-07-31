@@ -39,7 +39,7 @@ export default function DokumentasiPage() {
           </div>
           <h3 className="font-extrabold text-base">Dokumentasi API Gateway Lampung Utara</h3>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-            Base URL Server Publik: <code className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono">https://api.lampungutarakab.go.id</code>
+            Base URL Server Publik: <code className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono">https://ragem-api.lampungutarakab.go.id/APIGATELU</code>
           </p>
         </div>
 

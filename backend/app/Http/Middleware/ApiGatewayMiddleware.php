@@ -187,7 +187,15 @@ class ApiGatewayMiddleware
             $proxyResponse = $this->forwardRequest($request, $endpoint->target_url, $upstreamHeaders);
 
             $httpStatus      = $proxyResponse->status();
-            $responsePayload = $proxyResponse->json() ?? $proxyResponse->body();
+            $rawBody         = $proxyResponse->body();
+            $jsonData        = $proxyResponse->json();
+
+            // Auto-convert CSV upstream response to structured JSON
+            if (! $jsonData && (str_contains(strtolower($endpoint->target_url), '.csv') || str_contains(strtolower($proxyResponse->header('Content-Type') ?? ''), 'csv'))) {
+                $jsonData = $this->parseCsvToJson($rawBody);
+            }
+
+            $responsePayload = $jsonData ?? $rawBody;
 
         } catch (ConnectionException $e) {
             $httpStatus = 502;
@@ -342,6 +350,34 @@ class ApiGatewayMiddleware
             'message' => $message,
             'data'    => null,
         ], $status, $this->corsHeaders());
+    }
+
+    /**
+     * Parse raw CSV content text into a structured JSON array.
+     */
+    private function parseCsvToJson(string $csvContent): array
+    {
+        $lines = explode("\n", str_replace("\r", "", trim($csvContent)));
+        if (count($lines) === 0) return [];
+
+        $delimiter = str_contains($lines[0], ';') ? ';' : ',';
+        $headers = str_getcsv(array_shift($lines), $delimiter);
+
+        $data = [];
+        foreach ($lines as $line) {
+            if (trim($line) === '') continue;
+            $row = str_getcsv($line, $delimiter);
+            if (count($row) === count($headers)) {
+                $data[] = array_combine($headers, $row);
+            }
+        }
+
+        return [
+            'status'        => 'success',
+            'format'        => 'JSON (Parsed from CSV)',
+            'total_records' => count($data),
+            'data'          => $data
+        ];
     }
 
     /**

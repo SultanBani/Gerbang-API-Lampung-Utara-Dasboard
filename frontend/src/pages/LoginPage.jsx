@@ -16,10 +16,10 @@ export default function LoginPage() {
 
     try {
       const loggedUser = await login(loginInput, password)
-      if (loggedUser.role === 'admin') {
-        navigate('/')
+      if (loggedUser?.role === 'admin') {
+        navigate('/dashboard', { replace: true })
       } else {
-        navigate('/portal-opd')
+        navigate('/portal-opd', { replace: true })
       }
     } catch (err) {
       // Error handled in AuthContext
