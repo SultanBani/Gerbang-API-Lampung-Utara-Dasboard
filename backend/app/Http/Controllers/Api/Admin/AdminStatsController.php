@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Opd;
 use App\Models\Endpoint;
-use App\Models\AccessRequest;
 use App\Models\RequestLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -28,11 +27,7 @@ class AdminStatsController extends Controller
         $totalOpds      = Opd::count();
         $totalEndpoints = Endpoint::count();
         $totalUsers     = User::count();
-        $activeAccessKeys = AccessRequest::where('status', 'approved')
-            ->where(function ($q) {
-                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })
-            ->count();
+        $activeEndpoints = Endpoint::where('is_active', true)->count();
 
         // ── Traffic Hari Ini ─────────────────────────────────────────
         $totalHitsToday  = RequestLog::whereDate('created_at', today())->count();
@@ -106,7 +101,7 @@ class AdminStatsController extends Controller
                 'total_applications'  => $totalOpds,
                 'total_endpoints'     => $totalEndpoints,
                 'total_users'         => $totalUsers,
-                'active_keys'         => $activeAccessKeys,
+                'active_keys'         => $activeEndpoints,
                 'total_hits_today'    => $totalHitsToday,
                 'failed_hits_today'   => $failedHitsToday,
                 'avg_response_time'   => $avgResponseTime,

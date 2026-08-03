@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RequestLog extends Model
 {
     protected $fillable = [
-        'access_request_id',
         'endpoint_id',
         'opd_id',
         'method',
@@ -24,14 +23,6 @@ class RequestLog extends Model
         'status_code' => 'integer',
         'response_time_ms' => 'integer',
     ];
-
-    /**
-     * AccessRequest yang terkait dengan log ini.
-     */
-    public function accessRequest(): BelongsTo
-    {
-        return $this->belongsTo(AccessRequest::class);
-    }
 
     /**
      * Endpoint yang diakses.

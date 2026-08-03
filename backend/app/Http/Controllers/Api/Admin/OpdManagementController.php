@@ -29,7 +29,7 @@ class OpdManagementController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Opd::withCount(['users', 'endpoints', 'accessRequests']);
+        $query = Opd::withCount(['users', 'endpoints']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -77,8 +77,8 @@ class OpdManagementController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $opd = Opd::with(['users', 'endpoints', 'accessRequests.endpoint'])
-            ->withCount(['users', 'endpoints', 'accessRequests'])
+        $opd = Opd::with(['users', 'endpoints'])
+            ->withCount(['users', 'endpoints'])
             ->findOrFail($id);
 
         return response()->json([

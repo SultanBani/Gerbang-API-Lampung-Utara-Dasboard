@@ -7,17 +7,13 @@ import AiChatWidget from './components/AiChatWidget'
 
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
-import AplikasiPage from './pages/AplikasiPage'
 import EndpointPage from './pages/EndpointPage'
-import HakAksesPage from './pages/HakAksesPage'
-import ApiKeyPage from './pages/ApiKeyPage'
 import LogRequestPage from './pages/LogRequestPage'
 import ApiTesterPage from './pages/ApiTesterPage'
 import DokumentasiPage from './pages/DokumentasiPage'
 import OpdDashboardPage from './pages/OpdDashboardPage'
 import OpdCatalogPage from './pages/OpdCatalogPage'
 import OpdManageApiPage from './pages/OpdManageApiPage'
-import OpdRequestsPage from './pages/OpdRequestsPage'
 import UserManagementPage from './pages/UserManagementPage'
 
 export default function App() {
@@ -58,20 +54,20 @@ export default function App() {
                     {isAdmin && (
                       <>
                         <Route path="/dashboard" element={<DashboardPage />} />
-                        <Route path="/aplikasi" element={<AplikasiPage />} />
                         <Route path="/users" element={<UserManagementPage />} />
                         <Route path="/endpoints" element={<EndpointPage />} />
-                        <Route path="/hak-akses" element={<HakAksesPage />} />
-                        <Route path="/api-keys" element={<ApiKeyPage />} />
                         <Route path="/logs" element={<LogRequestPage />} />
                       </>
                     )}
 
-                    {/* OPD & Shared Service Routes */}
-                    <Route path="/portal-opd" element={<OpdDashboardPage />} />
-                    <Route path="/portal-opd/catalog" element={<OpdCatalogPage />} />
-                    <Route path="/portal-opd/manage" element={<OpdManageApiPage />} />
-                    <Route path="/portal-opd/requests" element={<OpdRequestsPage />} />
+                    {/* OPD Routes — hanya untuk role OPD */}
+                    {!isAdmin && (
+                      <>
+                        <Route path="/portal-opd" element={<OpdDashboardPage />} />
+                        <Route path="/portal-opd/catalog" element={<OpdCatalogPage />} />
+                        <Route path="/portal-opd/manage" element={<OpdManageApiPage />} />
+                      </>
+                    )}
 
                     {/* Shared Routes */}
                     <Route path="/tester" element={<ApiTesterPage />} />

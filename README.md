@@ -1,8 +1,12 @@
 # 🔀 Gerbang API Lampung Utara
 
-> **Dashboard & Management System untuk API Gateway Pemerintah Kabupaten Lampung Utara**
+> **Dashboard & Management System untuk Data Terbuka Pemerintah Kabupaten Lampung Utara**
 
-Repositori ini menggunakan arsitektur **Decoupled Monorepo** — backend dan frontend dikerjakan dalam satu repository namun terpisah secara deployment.
+Gerbang API Lampung Utara merupakan portal open data berbasis API. Sistem ini dirancang untuk memfasilitasi pertukaran data antar instansi (OPD) secara publik. Tidak ada lagi sistem perizinan (Access Control) yang rumit; semua data yang diunggah dipublikasikan secara langsung agar dapat digunakan oleh OPD lain.
+
+Repositori ini menggunakan arsitektur **Decoupled Monorepo**:
+- **Backend:** Laravel 11 (RESTful API Gateway)
+- **Frontend:** React + Vite (Single Page Application UI)
 
 ---
 
@@ -11,29 +15,23 @@ Repositori ini menggunakan arsitektur **Decoupled Monorepo** — backend dan fro
 ```
 Gerbang-API-Lampung-Utara-Dasboard/
 │
-├── backend/                # 🔧 Laravel 13 — RESTful API Gateway
+├── backend/                # 🔧 Laravel 11 — RESTful API Gateway
 │   ├── app/
 │   │   ├── Http/Controllers/
-│   │   ├── Models/
-│   │   └── Providers/
-│   ├── config/
-│   ├── database/
-│   │   └── migrations/     # Schema: applications, endpoints, api_keys, access_controls, request_logs
+│   │   ├── Models/         # Schema utama: Opd, Endpoint, RequestLog, User
+│   │   └── Middleware/
 │   ├── routes/
-│   ├── storage/
-│   ├── tests/
-│   ├── artisan
-│   ├── composer.json
-│   └── .env.example        # Konfigurasi environment backend
+│   ├── .env.example        
+│   └── artisan
 │
-├── frontend/               # 🎨 Framework UI (belum diinisiasi)
-│   └── README.md           # Panduan instalasi framework
+├── frontend/               # 🎨 React + Vite UI Dashboard
+│   ├── src/
+│   │   ├── components/     # UI reusable, layout (Sidebar, Header)
+│   │   ├── context/        # State Management (Auth, Theme, ApiGateway)
+│   │   ├── pages/          # Halaman admin & dashboard OPD
+│   │   └── services/       # Konfigurasi axios (api.js)
+│   └── package.json        
 │
-├── _old_monolith_archive/  # 📦 Arsip kode monolith lama (referensi)
-│   ├── resources/views/    # Blade templates lama
-│   └── public/             # Static assets lama
-│
-├── .gitignore              # Ignore rules untuk backend/ dan frontend/
 └── README.md               # File ini
 ```
 
@@ -42,75 +40,62 @@ Gerbang-API-Lampung-Utara-Dasboard/
 ## 🔧 Backend (Laravel API)
 
 ### Persyaratan
-- PHP 8.3+
+- PHP 8.2+
 - Composer 2+
+- Node.js & npm (untuk frontend)
 
-### Setup
+### Instalasi Backend
 
 ```bash
 cd backend
-
-# Install dependencies
 composer install
-
-# Copy environment
 cp .env.example .env
-
-# Generate app key
 php artisan key:generate
-
-# Jalankan migrasi database
-php artisan migrate
-
-# Jalankan server development
+php artisan migrate:fresh --seed
 php artisan serve
 ```
 
 API akan berjalan di: **http://localhost:8000**
 
-### Struktur Database
+### Struktur Database Terkini
 
 | Tabel             | Deskripsi                                         |
 |-------------------|---------------------------------------------------|
-| `applications`    | Aplikasi klien OPD yang terdaftar                 |
-| `endpoints`       | Daftar endpoint API yang dikelola gateway         |
-| `api_keys`        | Kunci API unik per aplikasi (dengan expiry)        |
-| `access_controls` | Hak akses antar aplikasi dan endpoint             |
-| `request_logs`    | Log seluruh request yang masuk ke gateway         |
+| `opds`            | Data Instansi Pemilik Data (OPD)                  |
+| `endpoints`       | Daftar layanan API / dataset milik OPD            |
+| `users`           | Akun admin monitoring & akun instansi/OPD         |
+| `request_logs`    | Catatan lalu lintas data / hit gateway            |
+
+*(Catatan: Sistem Token API, Application, dan Access Control telah dihentikan karena seluruh data gateway sekarang bersifat **Publik**).*
 
 ---
 
-## 🎨 Frontend (UI Dashboard)
+## 🎨 Frontend (React + Vite)
 
-> 🚧 **Belum diinisiasi.** Lihat [`frontend/README.md`](./frontend/README.md) untuk panduan instalasi.
+Frontend dibangun dengan React (Vite), menggunakan Tailwind CSS untuk styling dan Lucide React untuk ikon. 
 
----
-
-## 🌿 Git Branching Strategy
-
-| Branch     | Scope Pekerjaan                                                      |
-|------------|----------------------------------------------------------------------|
-| `main`     | Integrasi, dokumentasi root, konfigurasi monorepo                    |
-| `backend`  | Migrations, Models, API Controllers, Middleware, API Routes          |
-| `frontend` | Inisiasi framework UI, komponen, halaman, state management           |
+### Instalasi Frontend
 
 ```bash
-# Mulai pengerjaan backend
-git checkout backend
-
-# Mulai pengerjaan frontend
-git checkout frontend
-
-# Merge ke main setelah fitur selesai
-git checkout main
-git merge backend  # atau frontend
+cd frontend
+npm install
+npm run dev
 ```
+
+Aplikasi UI berjalan di: **http://localhost:5173**
 
 ---
 
-## 📦 Arsip Monolith Lama
+## 🚀 Fitur Utama
 
-Kode Blade UI dari versi monolith tersimpan di [`_old_monolith_archive/`](./_old_monolith_archive/) sebagai referensi. Folder ini **tidak akan dideploy** dan hanya untuk keperluan migrasi logika UI ke framework baru.
+1. **Portal Publik (Bebas Token):**
+   Seluruh dataset/API yang terdaftar dapat diakses bebas tanpa perlu token/API Key.
+2. **Katalog API (Open Data):**
+   OPD dapat mencari dan menggunakan API dari instansi lain secara transparan.
+3. **Manajemen Dataset OPD:**
+   Setiap OPD memiliki akun masing-masing untuk mengelola dan mempublikasikan API/Dataset.
+4. **Monitoring Terpusat:**
+   Dinas Kominfo memiliki akses khusus (Admin Super) untuk melihat seluruh log interaksi dan mengatur kredensial OPD.
 
 ---
 

@@ -8,14 +8,13 @@ export function ApiGatewayProvider({ children }) {
   const [stats, setStats]               = useState(null)
   const [opds, setOpds]                 = useState([])
   const [endpoints, setEndpoints]       = useState([])
-  const [accessControls, setAccessControls] = useState({ applications: [], endpoints: [], matrix: {} })
   const [logs, setLogs]                 = useState({ data: [], meta: {} })
   const [users, setUsers]               = useState([])
 
   // ── Loading & Error per-resource ──────────────────────────────────
   const [loading, setLoading] = useState({
     stats: false, opds: false, endpoints: false,
-    accessControls: false, logs: false, action: false, users: false,
+    logs: false, action: false, users: false,
   })
   const [error, setError] = useState(null)
 
@@ -62,18 +61,6 @@ export function ApiGatewayProvider({ children }) {
     }
   }, [])
 
-  const fetchAccessControls = useCallback(async () => {
-    setRes('accessControls', true)
-    try {
-      const res = await api.get('/api/admin/access-controls')
-      setAccessControls(res.data.data)
-    } catch (e) {
-      setError(e.userMessage)
-    } finally {
-      setRes('accessControls', false)
-    }
-  }, [])
-
   const fetchLogs = useCallback(async (params = {}) => {
     setRes('logs', true)
     try {
@@ -101,7 +88,7 @@ export function ApiGatewayProvider({ children }) {
   }, [])
 
   // ─────────────────────────────────────────────────────────────────
-  // CRUD ACTIONS — OPDs (menggantikan Applications)
+  // CRUD ACTIONS — OPDs
   // ─────────────────────────────────────────────────────────────────
 
   const createOpd = useCallback(async (formData) => {
@@ -204,50 +191,6 @@ export function ApiGatewayProvider({ children }) {
   }, [])
 
   // ─────────────────────────────────────────────────────────────────
-  // ACCESS CONTROL ACTIONS
-  // ─────────────────────────────────────────────────────────────────
-
-  const toggleAccess = useCallback(async (appId, endpointId) => {
-    // Optimistic UI update
-    const key = `${appId}:${endpointId}`
-    setAccessControls(prev => {
-      const current = prev.matrix?.[key]
-      return {
-        ...prev,
-        matrix: {
-          ...prev.matrix,
-          [key]: {
-            id:         current?.id ?? null,
-            is_allowed: !(current?.is_allowed ?? false),
-          },
-        },
-      }
-    })
-
-    try {
-      const res = await api.post('/api/admin/access-controls/toggle', {
-        application_id: appId,
-        endpoint_id:    endpointId,
-      })
-      // Sync actual value dari server
-      setAccessControls(prev => ({
-        ...prev,
-        matrix: {
-          ...prev.matrix,
-          [key]: {
-            id:         res.data.data.id,
-            is_allowed: res.data.data.is_allowed,
-          },
-        },
-      }))
-    } catch (e) {
-      // Rollback on error
-      await fetchAccessControls()
-      setError(e.userMessage)
-    }
-  }, [fetchAccessControls])
-
-  // ─────────────────────────────────────────────────────────────────
   // USER MANAGEMENT ACTIONS
   // ─────────────────────────────────────────────────────────────────
 
@@ -284,9 +227,7 @@ export function ApiGatewayProvider({ children }) {
         // State
         stats,
         opds,
-        applications: opds, // Legacy compat alias
         endpoints,
-        accessControls,
         logs,
         users,
         loading,
@@ -295,9 +236,7 @@ export function ApiGatewayProvider({ children }) {
         // Fetch
         fetchStats,
         fetchOpds,
-        fetchApplications: fetchOpds, // Legacy compat alias
         fetchEndpoints,
-        fetchAccessControls,
         fetchLogs,
         fetchUsers,
 
@@ -310,9 +249,6 @@ export function ApiGatewayProvider({ children }) {
         createEndpoint,
         updateEndpoint,
         deleteEndpoint,
-
-        // Access control
-        toggleAccess,
 
         // User management
         createUser,

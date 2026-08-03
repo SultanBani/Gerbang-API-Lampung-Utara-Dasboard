@@ -4,10 +4,7 @@ import { useApiGateway } from '../context/ApiGatewayContext'
 import { useAuth } from '../context/AuthContext'
 import {
   BarChart3,
-  FolderKanban,
   Sliders,
-  Lock,
-  Key,
   ClipboardList,
   TestTube,
   BookOpen,
@@ -16,12 +13,11 @@ import {
   Building2,
   Globe,
   Shield,
-  Send,
   X
 } from 'lucide-react'
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { applications, endpoints } = useApiGateway()
+  const { endpoints } = useApiGateway()
   const { user, logout, isAdmin } = useAuth()
   const navigate = useNavigate()
 
@@ -34,27 +30,24 @@ export default function Sidebar({ isOpen, onClose }) {
     if (onClose) onClose()
   }
 
-  // Navigation Items for Admin vs OPD
+  // ── Navigation Items ──────────────────────────────────────────────
+
+  // Admin Monitoring — hanya muncul untuk role admin
   const navItemsMonitoringAdmin = isAdmin ? [
     { to: '/dashboard', label: 'Dashboard Monitoring', icon: BarChart3 },
-    { to: '/users', label: 'Akun Login OPD & Admin', icon: Users },
-    { to: '/aplikasi', label: 'Aplikasi / OPD Terdaftar', icon: FolderKanban, badge: applications.length },
+    { to: '/users', label: 'Manajemen Pengguna & Instansi', icon: Users },
     { to: '/endpoints', label: 'Endpoint API', icon: Sliders, badge: endpoints.length, badgeStyle: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border-indigo-500/20' },
-    { to: '/hak-akses', label: 'Matrix Hak Akses', icon: Lock },
-    { to: '/api-keys', label: 'Token / API Key', icon: Key },
     { to: '/logs', label: 'Log Request', icon: ClipboardList, badge: 'Live', badgeStyle: 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/20' }
   ] : []
 
-  const navItemsLayananOpd = [
+  // Portal Layanan OPD — hanya muncul untuk role OPD (bukan admin)
+  const navItemsLayananOpd = !isAdmin ? [
+    { to: '/portal-opd', label: 'Dashboard OPD', icon: Building2 },
     { to: '/portal-opd/catalog', label: 'Katalog API', icon: Globe },
     { to: '/portal-opd/manage', label: 'Kelola API Saya', icon: Shield },
-    { to: '/portal-opd/requests', label: 'Status Pengajuan', icon: Send },
-  ]
+  ] : []
 
-  if (!isAdmin) {
-    navItemsLayananOpd.unshift({ to: '/portal-opd', label: 'Dashboard OPD', icon: Building2 })
-  }
-
+  // Developer Tools — muncul untuk semua user
   const navItemsDeveloper = [
     { to: '/tester', label: 'API Tester', icon: TestTube },
     { to: '/dokumentasi', label: 'Dokumentasi API', icon: BookOpen }
@@ -119,23 +112,25 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Navigation Menu Groups */}
         <nav className="p-4 space-y-5 overflow-y-auto max-h-[calc(100vh-140px)]">
-          {/* Admin Monitoring & Account Management */}
+          {/* Admin Monitoring */}
           {isAdmin && (
             <div>
               <span className="px-3 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 tracking-widest uppercase block mb-2">
-                Monitoring & Kelola Akun
+                Monitoring & Kelola
               </span>
               {renderNavLinks(navItemsMonitoringAdmin)}
             </div>
           )}
 
-          {/* Service API Instansi (Dinas OPD & Diskominfo) */}
-          <div>
-            <span className="px-3 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 tracking-widest uppercase block mb-2">
-              {isAdmin ? 'Layanan API Diskominfo' : 'Portal Layanan OPD'}
-            </span>
-            {renderNavLinks(navItemsLayananOpd)}
-          </div>
+          {/* Portal Layanan OPD — hanya untuk role OPD */}
+          {!isAdmin && navItemsLayananOpd.length > 0 && (
+            <div>
+              <span className="px-3 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 tracking-widest uppercase block mb-2">
+                Portal Layanan OPD
+              </span>
+              {renderNavLinks(navItemsLayananOpd)}
+            </div>
+          )}
 
           {/* Developer Tools */}
           <div>
@@ -157,7 +152,7 @@ export default function Sidebar({ isOpen, onClose }) {
             <div className="truncate">
               <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{user?.name || 'Pengguna'}</h3>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                {isAdmin ? 'Super Admin Diskominfo' : (user?.opd?.name || 'Dinas OPD')}
+                {isAdmin ? 'Super Admin' : (user?.opd?.name || 'Dinas OPD')}
               </p>
             </div>
           </div>

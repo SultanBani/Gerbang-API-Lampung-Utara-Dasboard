@@ -24,20 +24,27 @@ class DatabaseSeeder extends Seeder
             EndpointSeeder::class,
         ]);
 
-        // ── 3. Users (Super Admin Diskominfo & Akun Per-Dinas OPD) ──────────────
-        $adminOpd = Opd::where('code', 'diskominfo')->first();
+        // ── 3. Users (Super Admin Monitoring & Akun Per-Dinas OPD) ──────────────
+        // Admin murni untuk monitoring — TIDAK terhubung ke OPD manapun
         User::updateOrCreate(
             ['username' => 'admin'],
             [
-                'name'           => 'Admin Super Diskominfo',
+                'name'           => 'Super Admin Gateway',
                 'email'          => 'admin@lampungutarakab.go.id',
                 'password'       => Hash::make('AdminPassword2026!'),
                 'role'           => 'admin',
-                'opd_id'         => $adminOpd?->id,
+                'opd_id'         => null,
             ]
         );
 
         $opdAccounts = [
+            [
+                'username'  => 'diskominfo',
+                'name'      => 'Dinas Komunikasi & Informatika',
+                'email'     => 'diskominfo@lampungutarakab.go.id',
+                'password'  => 'Diskominfo2026!',
+                'opd_code'  => 'diskominfo',
+            ],
             [
                 'username'  => 'disdukcapil',
                 'name'      => 'Dinas Kependudukan & Capil',

@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\AccessRequest;
 use App\Models\Endpoint;
 use App\Models\Opd;
 use App\Models\RequestLog;
@@ -22,13 +21,15 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * URL Pattern: /APIGATELU/{opd_code}/{endpoint_slug}
  *
- * Pipeline 4-Layer:
+ * Pipeline 3-Layer (Public Gateway — tanpa API Key):
  * ┌────────────────────────────────────────────────────────────────────┐
  * │  L1: Resolve OPD & Endpoint  → 404 jika OPD/slug tidak ditemukan │
- * │  L2: Auth API Key            → 401 jika key tidak valid/expired   │
- * │  L3: Method Permission       → 405 jika HTTP method tidak diizin  │
- * │  L4: Proxy + Logging         → Forward ke upstream, catat di DB   │
+ * │  L2: Method Permission       → 405 jika HTTP method tidak diizin  │
+ * │  L3: Proxy + Logging         → Forward ke upstream, catat di DB   │
  * └────────────────────────────────────────────────────────────────────┘
+ *
+ * Semua data API yang dipublikasikan OPD bersifat publik dan dapat
+ * diakses oleh siapa saja tanpa memerlukan API Key.
  */
 class ApiGatewayMiddleware
 {
@@ -96,54 +97,11 @@ class ApiGatewayMiddleware
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // LAYER 2 — Autentikasi API Key
-        // Ambil dari header X-API-KEY atau query parameter ?api_key=
+        // LAYER 2 — Validasi HTTP Method
+        // Cek apakah method request diizinkan di method_permissions endpoint
         // ═══════════════════════════════════════════════════════════════
-        $apiKey = $request->header('X-API-KEY')
-                ?? $request->query('api_key');
-
-        if (! $apiKey) {
-            return $this->errorResponse(
-                'Unauthorized: API Key diperlukan. Kirim via header "X-API-KEY" atau query parameter "api_key".',
-                401
-            );
-        }
-
-        /** @var AccessRequest|null $accessRequest */
-        $accessRequest = AccessRequest::with('requestorOpd')
-            ->where('api_key', $apiKey)
-            ->where('endpoint_id', $endpoint->id)
-            ->first();
-
-        if (! $accessRequest) {
-            return $this->errorResponse(
-                'Unauthorized: API Key tidak valid atau tidak memiliki izin untuk endpoint ini.',
-                401
-            );
-        }
-
-        // Validasi: status harus 'approved'
-        if (! $accessRequest->isApproved()) {
-            return $this->errorResponse(
-                sprintf('Forbidden: Permintaan akses berstatus "%s", belum disetujui.', $accessRequest->status),
-                403
-            );
-        }
-
-        // Validasi: belum kedaluwarsa
-        if ($accessRequest->isExpired()) {
-            return $this->errorResponse(
-                'Unauthorized: API Key sudah kedaluwarsa. Silakan ajukan perpanjangan.',
-                401
-            );
-        }
-
-        // ═══════════════════════════════════════════════════════════════
-        // LAYER 3 — Validasi HTTP Method
-        // Cek apakah method request diizinkan di requested_methods
-        // ═══════════════════════════════════════════════════════════════
-        $requestMethod    = strtoupper($request->method());
-        $allowedMethods   = array_map('strtoupper', $accessRequest->requested_methods ?? []);
+        $requestMethod  = strtoupper($request->method());
+        $allowedMethods = array_map('strtoupper', $endpoint->method_permissions ?? ['GET']);
 
         if (! in_array($requestMethod, $allowedMethods, true)) {
             return $this->errorResponse(
@@ -157,7 +115,7 @@ class ApiGatewayMiddleware
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // LAYER 4 — Proxy Request ke Upstream & Request Logging
+        // LAYER 3 — Proxy Request ke Upstream & Request Logging
         // ═══════════════════════════════════════════════════════════════
 
         $startTime = microtime(true);
@@ -166,7 +124,7 @@ class ApiGatewayMiddleware
         // Siapkan headers upstream
         $upstreamHeaders = $this->buildUpstreamHeaders(
             $request,
-            $accessRequest->requestorOpd->name ?? 'Unknown',
+            $opd->name,
             $requestId
         );
 
@@ -232,9 +190,8 @@ class ApiGatewayMiddleware
 
         // Simpan log ke request_logs
         $this->writeLog([
-            'access_request_id' => $accessRequest->id,
             'endpoint_id'       => $endpoint->id,
-            'opd_id'            => $accessRequest->requestor_opd_id,
+            'opd_id'            => $opd->id,
             'method'            => $requestMethod,
             'url'               => sprintf('/APIGATELU/%s/%s', $opdCode, $endpointSlug),
             'status_code'       => $httpStatus,
@@ -388,7 +345,7 @@ class ApiGatewayMiddleware
         return [
             'Access-Control-Allow-Origin'  => '*',
             'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers' => 'X-API-KEY, Content-Type, Accept, Authorization',
+            'Access-Control-Allow-Headers' => 'Content-Type, Accept, Authorization',
         ];
     }
 }
