@@ -6,18 +6,18 @@ import {
 } from 'lucide-react'
 
 const methodColor = {
-  GET:    'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30',
-  POST:   'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/30',
-  PUT:    'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30',
-  PATCH:  'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-500/15 dark:text-purple-400 dark:border-purple-500/30',
+  GET: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30',
+  POST: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/30',
+  PUT: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30',
+  PATCH: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-500/15 dark:text-purple-400 dark:border-purple-500/30',
   DELETE: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30',
 }
 
 function StatCard({ icon: Icon, value, label, hint, accentColor = 'blue' }) {
   const colors = {
-    blue:   { bg: 'bg-blue-500/10',   text: 'text-blue-600 dark:text-blue-400',   blur: 'bg-blue-500/10 group-hover:bg-blue-500/20',   border: 'hover:border-blue-300' },
+    blue: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', blur: 'bg-blue-500/10 group-hover:bg-blue-500/20', border: 'hover:border-blue-300' },
     indigo: { bg: 'bg-indigo-500/10', text: 'text-indigo-600 dark:text-indigo-400', blur: 'bg-indigo-500/10 group-hover:bg-indigo-500/20', border: 'hover:border-indigo-300' },
-    emerald:{ bg: 'bg-emerald-500/10',text: 'text-emerald-600 dark:text-emerald-400', blur:'bg-emerald-500/10 group-hover:bg-emerald-500/20', border:'hover:border-emerald-300' },
+    emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', blur: 'bg-emerald-500/10 group-hover:bg-emerald-500/20', border: 'hover:border-emerald-300' },
   }
   const c = colors[accentColor] || colors.blue
   return (
@@ -74,7 +74,7 @@ export default function OpdDashboardPage() {
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 text-xs font-semibold">
               <Building2 className="w-3.5 h-3.5" />
-              Portal OPD — {user?.opd?.name || 'Instansi OPD'}
+              Portal OPD  {user?.opd?.name || 'Instansi OPD'}
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               Selamat datang, {user?.name || 'Pengguna OPD'}
