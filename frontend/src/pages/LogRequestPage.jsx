@@ -15,7 +15,7 @@ function StatusBadge({ code }) {
 }
 
 export default function LogRequestPage() {
-  const { fetchLogs, logs, applications, fetchApplications, loading } = useApiGateway()
+  const { fetchLogs, logs, opds, fetchOpds, loading } = useApiGateway()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [filterApp, setFilterApp]     = useState('')
@@ -24,8 +24,8 @@ export default function LogRequestPage() {
   const [selectedLogForAi, setSelectedLogForAi] = useState(null)
 
   useEffect(() => {
-    if (applications.length === 0) fetchApplications()
-  }, [applications.length, fetchApplications])
+    if (opds.length === 0) fetchOpds()
+  }, [opds.length, fetchOpds])
 
   const loadLogs = useCallback(() => {
     const params = { page, per_page: 15 }
@@ -45,7 +45,7 @@ export default function LogRequestPage() {
     const rows = logItems.map(l => [
       l.id,
       l.created_at,
-      l.application?.name ?? '—',
+      l.opd?.name ?? '—',
       l.method, l.url, l.status_code, l.response_time_ms, l.ip_address
     ])
     const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
@@ -72,7 +72,7 @@ export default function LogRequestPage() {
 
           <select value={filterApp} onChange={e => { setFilterApp(e.target.value); setPage(1) }} className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-amber-500 shadow-sm">
             <option value="">Semua Aplikasi</option>
-            {applications.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}
+            {opds.map(opd => <option key={opd.id} value={opd.id}>{opd.name}</option>)}
           </select>
 
           <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1) }} className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-amber-500 shadow-sm">
@@ -99,7 +99,7 @@ export default function LogRequestPage() {
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
                 <th className="py-3.5 px-5">Waktu Transaksi</th>
-                <th className="py-3.5 px-5">Aplikasi Klien</th>
+                <th className="py-3.5 px-5">OPD Klien</th>
                 <th className="py-3.5 px-5">Method</th>
                 <th className="py-3.5 px-5">URL Endpoint</th>
                 <th className="py-3.5 px-5 text-center">Status</th>
@@ -119,7 +119,7 @@ export default function LogRequestPage() {
                       return (
                         <tr key={log.id} className={`hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors ${sc >= 400 ? 'bg-red-500/[0.03]' : ''}`}>
                           <td className="py-4 px-5 text-slate-500 dark:text-slate-400 font-mono text-[11px]">{time}</td>
-                          <td className="py-4 px-5 font-bold text-slate-900 dark:text-slate-200">{log.application?.name ?? '—'}</td>
+                          <td className="py-4 px-5 font-bold text-slate-900 dark:text-slate-200">{log.opd?.name ?? '—'}</td>
                           <td className="py-4 px-5">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
                               log.method === 'GET'  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
@@ -181,7 +181,7 @@ export default function LogRequestPage() {
             </div>
             <div className="p-6 space-y-4 text-xs">
               <div className="p-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl space-y-1 font-mono text-[11px]">
-                <div><span className="text-slate-500">Aplikasi:</span> <strong className="text-slate-800 dark:text-slate-200">{selectedLogForAi.application?.name ?? '—'}</strong></div>
+                <div><span className="text-slate-500">Instansi (OPD):</span> <strong className="text-slate-800 dark:text-slate-200">{selectedLogForAi.opd?.name ?? '—'}</strong></div>
                 <div><span className="text-slate-500">Endpoint:</span> <strong className="text-blue-600 dark:text-blue-400">{selectedLogForAi.method} {selectedLogForAi.url}</strong></div>
                 <div><span className="text-slate-500">Waktu:</span> <span className="text-slate-600 dark:text-slate-300">{selectedLogForAi.created_at?.replace('T', ' ').substring(0, 19)}</span></div>
                 <div><span className="text-slate-500">Status:</span> <StatusBadge code={selectedLogForAi.status_code} /></div>

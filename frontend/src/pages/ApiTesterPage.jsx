@@ -96,9 +96,9 @@ const PRESET_COLLECTIONS = [
 
 export default function ApiTesterPage() {
   const context = useApiGateway() || {}
-  const applications = context.applications || context.opds || []
+  const opds = context.opds || []
   const endpoints = context.endpoints || []
-  const fetchApplications = context.fetchApplications || (() => {})
+  const fetchOpds = context.fetchOpds || (() => {})
   const fetchEndpoints = context.fetchEndpoints || (() => {})
 
   // Catalog Endpoints from backend API
@@ -162,9 +162,9 @@ export default function ApiTesterPage() {
   // App Selection for Auto API Key
   const [selectedAppId, setSelectedAppId] = useState('')
 
-  // Generate dynamic API Keys array from applications / OPD list safely
+  // Generate dynamic API Keys array from opds list safely
   const apiKeys = useMemo(() => {
-    if (!applications || applications.length === 0) {
+    if (!opds || opds.length === 0) {
       return [
         { id: 1, appId: 1, application_id: 1, appName: 'SIPKD Keuangan BPKAD', opd: 'bpkad', key: 'gkp_bappeda_key_2026_x89a', status: 'active' },
         { id: 2, appId: 2, application_id: 2, appName: 'SIAK Integrasi Dukcapil', opd: 'disdukcapil', key: 'gkp_disdukcapil_key_2026_a1b2', status: 'active' }
@@ -179,7 +179,7 @@ export default function ApiTesterPage() {
       key: `gkp_${(app.code || 'opd').toLowerCase()}_key_2026_x89a`,
       status: 'active'
     }))
-  }, [applications])
+  }, [opds])
 
   // Request State
   const [requestMethod, setRequestMethod] = useState('GET')
@@ -210,11 +210,10 @@ export default function ApiTesterPage() {
   const [requestHistory, setRequestHistory]     = useState([])
   const [searchFilter, setSearchFilter]         = useState('')
 
-  // Load initial data
   useEffect(() => {
-    if (applications.length === 0 && fetchApplications) fetchApplications()
+    if (opds.length === 0 && fetchOpds) fetchOpds()
     if (endpoints.length === 0 && fetchEndpoints) fetchEndpoints()
-  }, [applications.length, endpoints.length, fetchApplications, fetchEndpoints])
+  }, [opds.length, endpoints.length, fetchOpds, fetchEndpoints])
 
   // Auto-select first active API key
   useEffect(() => {

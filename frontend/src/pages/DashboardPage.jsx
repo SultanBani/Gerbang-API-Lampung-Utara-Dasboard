@@ -61,15 +61,15 @@ function StatCard({ icon: Icon, value, label, hint, hintColor = 'text-emerald-60
 }
 
 export default function DashboardPage() {
-  const { stats, fetchStats, fetchApplications, fetchEndpoints, fetchLogs, logs, loading } = useApiGateway()
+  const { stats, fetchStats, fetchOpds, fetchEndpoints, fetchLogs, logs, loading } = useApiGateway()
   const { isDark } = useTheme()
 
   useEffect(() => {
     fetchStats()
-    fetchApplications()
+    fetchOpds()
     fetchEndpoints()
     fetchLogs({ per_page: 5 })
-  }, [fetchStats, fetchApplications, fetchEndpoints, fetchLogs])
+  }, [fetchStats, fetchOpds, fetchEndpoints, fetchLogs])
 
   const textColor  = isDark ? '#94a3b8' : '#475569'
   const gridColor  = isDark ? 'rgba(51, 65, 85, 0.2)' : 'rgba(203, 213, 225, 0.5)'
