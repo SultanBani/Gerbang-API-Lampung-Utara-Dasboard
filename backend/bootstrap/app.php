@@ -44,6 +44,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
 
+        // Aktifkan stateful API untuk Sanctum agar cookie session (SPA) dibaca oleh middleware auth
+        $middleware->statefulApi();
+
         // ─── Alias ────────────────────────────────────────────────────────
         $middleware->alias([
             'api.gateway' => ApiGatewayMiddleware::class,
