@@ -164,27 +164,8 @@ export default function ApiTesterPage() {
     }))
   }, [catalogEndpoints])
 
-  // App Selection for Auto API Key
-  const [selectedAppId, setSelectedAppId] = useState('')
-
-  // Generate dynamic API Keys array from opds list safely
-  const apiKeys = useMemo(() => {
-    if (!opds || opds.length === 0) {
-      return [
-        { id: 1, appId: 1, application_id: 1, appName: 'SIPKD Keuangan BPKAD', opd: 'bpkad', key: 'gkp_bpkad_key_2026_x89a', status: 'active' },
-        { id: 2, appId: 2, application_id: 2, appName: 'SIAK Integrasi Dukcapil', opd: 'disdukcapil', key: 'gkp_disdukcapil_key_2026_a1b2', status: 'active' }
-      ]
-    }
-    return opds.map((opdItem, idx) => ({
-      id: opdItem.id || idx + 1,
-      appId: opdItem.id || idx + 1,
-      application_id: opdItem.id || idx + 1,
-      appName: opdItem.name || `OPD #${idx + 1}`,
-      opd: opdItem.code || 'opd',
-      key: opdItem.api_key || `gkp_${(opdItem.code || 'opd').toLowerCase()}_key_2026_x89a`,
-      status: 'active'
-    }))
-  }, [opds])
+  // Auth API Key (Input Manual oleh User)
+  const [authApiKey, setAuthApiKey] = useState('')
 
   // Request State
   const [requestMethod, setRequestMethod] = useState('GET')
@@ -220,18 +201,7 @@ export default function ApiTesterPage() {
     if (endpoints.length === 0 && fetchEndpoints) fetchEndpoints()
   }, [opds.length, endpoints.length, fetchOpds, fetchEndpoints])
 
-  // Auto-select first active API key
-  useEffect(() => {
-    if (apiKeys.length > 0 && !selectedAppId) {
-      setSelectedAppId(String(apiKeys[0].appId))
-    }
-  }, [apiKeys, selectedAppId])
 
-  // Get current active key object
-  const currentKey = useMemo(() => {
-    const id = Number(selectedAppId)
-    return apiKeys.find(k => k.appId === id || k.id === id) || apiKeys[0] || { appId: 1, key: 'gkp_bappeda_key_2026_x89a' }
-  }, [apiKeys, selectedAppId])
 
   // Construct full target URL including active query parameters
   const fullTargetUrl = useMemo(() => {
@@ -265,9 +235,9 @@ export default function ApiTesterPage() {
   }, [fullTargetUrl])
 
   const generatedCodeSnippet = useMemo(() => {
-    const keyToUse = currentKey?.key || 'gkp_bpkad_key_2026_x89a'
+    const keyToUse = authApiKey || 'gkp_contoh_key_123'
     const headersList = [
-      { key: 'X-API-KEY', value: keyToUse },
+      { key: 'X-Secret-Key', value: keyToUse },
       { key: 'Accept', value: 'application/json' }
     ]
 
@@ -404,7 +374,7 @@ export default function ApiTesterPage() {
       default:
         return ''
     }
-  }, [selectedLang, clientTargetUrl, requestMethod, customHeaders, requestBody, currentKey])
+  }, [selectedLang, clientTargetUrl, requestMethod, customHeaders, requestBody, authApiKey])
 
   const handleCopySnippet = () => {
     navigator.clipboard.writeText(generatedCodeSnippet)
@@ -436,15 +406,16 @@ export default function ApiTesterPage() {
     }
 
     // Build headers
-    const apiKeyHeader = (headersExtra || []).find(h => h.key.toLowerCase() === 'x-api-key' && h.active)?.value
-      || currentKey?.key
-      || 'gkp_bappeda_key_2026_x89a'
+    const apiKeyHeader = (headersExtra || []).find(h => (h.key.toLowerCase() === 'x-api-key' || h.key.toLowerCase() === 'x-secret-key') && h.active)?.value
+      || authApiKey
 
     const reqHeaders = {
-      'X-API-KEY':    apiKeyHeader,
-      'X-Client-ID':  String(currentKey?.appId ?? 1),
       'Accept':       'application/json',
       'Content-Type': 'application/json',
+    }
+
+    if (apiKeyHeader) {
+      reqHeaders['X-Secret-Key'] = apiKeyHeader
     }
 
     // Append custom active headers
@@ -517,7 +488,7 @@ export default function ApiTesterPage() {
     setRequestMethod(item.method)
     setRequestUrl(item.url)
     const p = item.params || []
-    const keyToUse = item.apiKey || currentKey?.key || 'gkp_bappeda_key_2026_x89a'
+    if (item.apiKey) setAuthApiKey(item.apiKey)
     const h = item.headers && item.headers.length > 0 ? item.headers : []
     const b = item.body || ''
     setQueryParams(p)
@@ -789,13 +760,13 @@ export default function ApiTesterPage() {
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                 <Key className="w-3.5 h-3.5 text-blue-500" />
-                <span className="font-semibold text-[11px]">Klien API:</span>
-                {currentKey ? (
-                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-md text-[10px] font-mono">
-                    ✓ {currentKey.appName || 'Instansi OPD'} (X-Client-ID: {currentKey.appId})
+                <span className="font-semibold text-[11px]">API Key:</span>
+                {authApiKey ? (
+                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-md text-[10px] font-mono flex items-center gap-1">
+                    ✓ Terisi
                   </span>
                 ) : (
-                  <span className="text-amber-500 font-semibold text-[11px]">* Belum ada API Key dipilih</span>
+                  <span className="text-amber-500 font-semibold text-[11px]">* Belum diisi</span>
                 )}
               </div>
 
@@ -804,7 +775,7 @@ export default function ApiTesterPage() {
                 className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1"
               >
                 <Sliders className="w-3 h-3" />
-                Ganti Akun / Key
+                Input API Key
               </button>
             </div>
           </div>
@@ -907,8 +878,7 @@ export default function ApiTesterPage() {
 
                 {/* Fixed Auto Headers */}
                 {[
-                  ['X-Client-ID',  String(currentKey?.appId ?? '1'), 'text-blue-600 dark:text-blue-400'],
-                  ['X-Secret-Key', currentKey ? `${currentKey.key?.substring(0, 24)}...` : '—', 'text-emerald-600 dark:text-emerald-400'],
+                  ['X-Secret-Key', authApiKey ? `${authApiKey.substring(0, 16)}...` : '—', 'text-emerald-600 dark:text-emerald-400'],
                   ['Accept',       'application/json', 'text-slate-600 dark:text-slate-300'],
                 ].map(([k, v, cls]) => (
                   <div key={k} className="flex items-center gap-2 opacity-90">
@@ -982,44 +952,21 @@ export default function ApiTesterPage() {
             {activeReqTab === 'auth' && (
               <div className="space-y-4">
                 <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs text-blue-600 dark:text-blue-300 leading-relaxed">
-                  💡 Autentikasi Gateway menggunakan skema <strong>API Key (X-Client-ID & X-Secret-Key)</strong>.
-                  Pilih aplikasi terdaftar di bawah ini untuk mengisi kredensial secara otomatis:
+                  💡 Masukkan <strong>API Key</strong> (X-Secret-Key) yang Anda peroleh dari halaman <strong>Katalog API</strong> (setelah permohonan disetujui) untuk mengakses endpoint ini secara sah.
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Pilih Aplikasi Klien:
+                    API Key (X-Secret-Key):
                   </label>
-                  <select
-                    value={selectedAppId}
-                    onChange={e => setSelectedAppId(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="">— Pilih Aplikasi —</option>
-                    {apiKeys.map(k => (
-                      <option key={k.id} value={k.appId}>
-                        {k.appName} ({k.opd}) — Status: {k.status}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    type="text"
+                    placeholder="Contoh: gkp_dinkes_key_xxyz..."
+                    value={authApiKey}
+                    onChange={e => setAuthApiKey(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500 shadow-inner"
+                  />
                 </div>
-
-                {currentKey && (
-                  <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2 font-mono text-xs">
-                    <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                      <span>X-Client-ID:</span>
-                      <span className="font-extrabold text-blue-600 dark:text-blue-400">{currentKey.appId}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                      <span>X-Secret-Key:</span>
-                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400">{currentKey.key}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                      <span>Status Token:</span>
-                      <span className="text-emerald-500 font-bold uppercase">{currentKey.status}</span>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 

@@ -41,6 +41,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout',  [AuthController::class, 'logout']);
     });
 
+    // Shared endpoints (Dapat diakses oleh Admin & OPD)
+    Route::get('api/shared/opds', [\App\Http\Controllers\Api\Admin\OpdManagementController::class, 'index']);
+
     // ─────────────────────────────────────────────────────────────────
     // [3] Admin Management REST API — hanya role 'admin'
     // ─────────────────────────────────────────────────────────────────

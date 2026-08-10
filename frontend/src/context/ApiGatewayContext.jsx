@@ -39,7 +39,7 @@ export function ApiGatewayProvider({ children }) {
   const fetchOpds = useCallback(async (params = {}) => {
     setRes('opds', true)
     try {
-      const res = await api.get('/api/admin/opds', { params: { per_page: 50, ...params } })
+      const res = await api.get('/api/shared/opds', { params: { per_page: 50, ...params } })
       const items = res.data.data?.data ?? res.data.data ?? []
       setOpds(items)
     } catch (e) {
