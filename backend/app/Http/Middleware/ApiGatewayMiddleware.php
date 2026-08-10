@@ -146,7 +146,15 @@ class ApiGatewayMiddleware
         $isAuthorized = false;
         $authErrorMessage = null;
 
-        if ($apiKey) {
+        // Bypass khusus untuk Pemilik API (OPD Owner) atau Admin yang sedang login di Dashboard
+        if (\Illuminate\Support\Facades\Auth::guard('sanctum')->check()) {
+            $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user();
+            if ($user && ($user->role === 'admin' || $user->opd_id === $opd->id)) {
+                $isAuthorized = true;
+            }
+        }
+
+        if (!$isAuthorized && $apiKey) {
             $accessReq = AccessRequest::where('endpoint_id', $endpoint->id)
                 ->where('api_key', $apiKey)
                 ->first();
@@ -175,7 +183,7 @@ class ApiGatewayMiddleware
             } else {
                 $authErrorMessage = 'Forbidden: API Key tidak valid untuk endpoint ini.';
             }
-        } else {
+        } elseif (!$isAuthorized) {
             $authErrorMessage = sprintf(
                 'Forbidden: Akses ditolak. Untuk mengakses API milik OPD "%s" (%s), Anda wajib menyertakan API Key dari Permohonan Hak Akses yang telah disetujui.',
                 $opd->name,
