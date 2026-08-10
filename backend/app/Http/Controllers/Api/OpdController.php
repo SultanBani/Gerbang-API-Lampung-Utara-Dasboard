@@ -50,7 +50,7 @@ class OpdController extends Controller
             return response()->json(['success' => false, 'message' => 'Akun tidak terhubung ke OPD.'], 403);
         }
 
-        $endpoints = Endpoint::where('opd_id', $user->opd_id)->get();
+        $endpoints = Endpoint::with('opd')->where('opd_id', $user->opd_id)->get();
         return response()->json(['success' => true, 'data' => $endpoints]);
     }
 

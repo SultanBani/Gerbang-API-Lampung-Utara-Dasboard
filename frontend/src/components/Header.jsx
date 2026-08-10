@@ -15,7 +15,9 @@ const routeTitles = {
   '/tester': 'API Tester',
   '/dokumentasi': 'Dokumentasi API',
   '/users': 'Manajemen Akun OPD',
-  '/portal-opd': 'Dashboard OPD'
+  '/portal-opd': 'Dashboard OPD',
+  '/portal-opd/catalog': 'Katalog API Daerah',
+  '/portal-opd/manage': 'Kelola API Saya',
 }
 
 export default function Header({ onToggleSidebar }) {
@@ -188,7 +190,7 @@ export default function Header({ onToggleSidebar }) {
               </div>
 
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between px-2">
-                <button onClick={handleTestTrigger} className="text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                <button onClick={handleTestTrigger} className="text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer">
                   + Tes Trigger
                 </button>
                 {notifications.length > 0 && (

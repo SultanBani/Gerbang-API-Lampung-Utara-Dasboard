@@ -112,9 +112,16 @@ class RequestLogController extends Controller
 
     private function calculateSuccessRate(): float
     {
-        $total   = RequestLog::count();
-        $success = RequestLog::whereBetween('status_code', [200, 299])->count();
+        return (float) cache()->remember('request_logs_success_rate', 300, function () {
+            $stats = RequestLog::selectRaw('
+                count(*) as total,
+                SUM(CASE WHEN status_code BETWEEN 200 AND 299 THEN 1 ELSE 0 END) as success
+            ')->first();
 
-        return $total > 0 ? round(($success / $total) * 100, 1) : 0.0;
+            $total = (int) ($stats->total ?? 0);
+            $success = (int) ($stats->success ?? 0);
+
+            return $total > 0 ? round(($success / $total) * 100, 1) : 0.0;
+        });
     }
 }

@@ -49,17 +49,26 @@ class AdminStatsController extends Controller
             ->mapWithKeys(fn ($row) => [(string) $row->status_code => $row->total]);
 
         // ── Traffic Chart — 7 Hari Terakhir ──────────────────────────
-        $trafficChart = collect(range(6, 0))->map(function (int $daysAgo): array {
-            $date   = Carbon::today()->subDays($daysAgo);
-            $total  = RequestLog::whereDate('created_at', $date)->count();
-            $failed = RequestLog::whereDate('created_at', $date)
-                ->where('status_code', '>=', 400)
-                ->count();
+        $sevenDaysAgo = Carbon::today()->subDays(6);
+        $trafficData = RequestLog::select(
+                DB::raw('DATE(created_at) as date_val'),
+                DB::raw('count(*) as total'),
+                DB::raw('SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) as failed')
+            )
+            ->where('created_at', '>=', $sevenDaysAgo)
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->get()
+            ->keyBy('date_val');
+
+        $trafficChart = collect(range(6, 0))->map(function (int $daysAgo) use ($trafficData): array {
+            $date = Carbon::today()->subDays($daysAgo);
+            $dateString = $date->format('Y-m-d');
+            $data = $trafficData->get($dateString);
 
             return [
                 'date'   => $date->format('d M'),
-                'total'  => $total,
-                'failed' => $failed,
+                'total'  => $data ? (int) $data->total : 0,
+                'failed' => $data ? (int) $data->failed : 0,
             ];
         })->values()->all();
 
@@ -72,7 +81,8 @@ class AdminStatsController extends Controller
             ->get();
 
         // ── OPD Teraktif (hits 7 hari terakhir) ─────────────────────
-        $topApplications = RequestLog::select('opd_id', DB::raw('count(*) as hits'))
+        $topApplications = RequestLog::with('opd')
+            ->select('opd_id', DB::raw('count(*) as hits'))
             ->where('created_at', '>=', Carbon::now()->subDays(7))
             ->whereNotNull('opd_id')
             ->groupBy('opd_id')
@@ -80,10 +90,9 @@ class AdminStatsController extends Controller
             ->limit(5)
             ->get()
             ->map(function ($log) {
-                $opd = Opd::find($log->opd_id);
                 return [
-                    'application' => $opd->name ?? 'Unknown',
-                    'opd'         => $opd->code ?? '-',
+                    'application' => $log->opd->name ?? 'Unknown',
+                    'opd'         => $log->opd->code ?? '-',
                     'hits'        => $log->hits,
                 ];
             });

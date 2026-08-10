@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import AiChatWidget from './components/AiChatWidget'
+import ProtectedRoute from './components/ProtectedRoute'
 
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
@@ -44,30 +45,26 @@ export default function App() {
                 {/* Main Page Content */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
                   <Routes>
-                    {/* Default Home Redirect — Wajib ke Halaman Login Pertama */}
+                    {/* Default Home Redirect */}
                     <Route
                       path="/"
-                      element={<Navigate to="/login" replace />}
+                      element={<Navigate to={isAdmin ? "/dashboard" : "/portal-opd"} replace />}
                     />
 
                     {/* Admin Only Routes */}
-                    {isAdmin && (
-                      <>
-                        <Route path="/dashboard" element={<DashboardPage />} />
-                        <Route path="/users" element={<UserManagementPage />} />
-                        <Route path="/endpoints" element={<EndpointPage />} />
-                        <Route path="/logs" element={<LogRequestPage />} />
-                      </>
-                    )}
+                    <Route element={<ProtectedRoute requireAdmin={true} />}>
+                      <Route path="/dashboard" element={<DashboardPage />} />
+                      <Route path="/users" element={<UserManagementPage />} />
+                      <Route path="/endpoints" element={<EndpointPage />} />
+                      <Route path="/logs" element={<LogRequestPage />} />
+                    </Route>
 
-                    {/* OPD Routes — hanya untuk role OPD */}
-                    {!isAdmin && (
-                      <>
-                        <Route path="/portal-opd" element={<OpdDashboardPage />} />
-                        <Route path="/portal-opd/catalog" element={<OpdCatalogPage />} />
-                        <Route path="/portal-opd/manage" element={<OpdManageApiPage />} />
-                      </>
-                    )}
+                    {/* OPD Routes */}
+                    <Route element={<ProtectedRoute requireAdmin={false} />}>
+                      <Route path="/portal-opd" element={<OpdDashboardPage />} />
+                      <Route path="/portal-opd/catalog" element={<OpdCatalogPage />} />
+                      <Route path="/portal-opd/manage" element={<OpdManageApiPage />} />
+                    </Route>
 
                     {/* Shared Routes */}
                     <Route path="/tester" element={<ApiTesterPage />} />
@@ -76,7 +73,7 @@ export default function App() {
                     {/* Fallback Catch-all Route */}
                     <Route
                       path="*"
-                      element={<Navigate to="/login" replace />}
+                      element={<Navigate to={isAdmin ? "/dashboard" : "/portal-opd"} replace />}
                     />
                   </Routes>
                 </main>

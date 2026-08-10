@@ -72,7 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ─────────────────────────────────────────────────────────────────
     // [4] OPD Dashboard API — authenticated users with opd role
     // ─────────────────────────────────────────────────────────────────
-    Route::prefix('api/opd')->group(function () {
+    Route::prefix('api/opd')->middleware('role:opd')->group(function () {
         Route::get('/catalog', [\App\Http\Controllers\Api\OpdController::class, 'catalog']);
         Route::get('/my-endpoints', [\App\Http\Controllers\Api\OpdController::class, 'myEndpoints']);
         Route::post('/my-endpoints', [\App\Http\Controllers\Api\OpdController::class, 'storeEndpoint']);

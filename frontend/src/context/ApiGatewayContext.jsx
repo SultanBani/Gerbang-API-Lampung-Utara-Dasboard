@@ -208,6 +208,20 @@ export function ApiGatewayProvider({ children }) {
     }
   }, [fetchUsers])
 
+  const updateUser = useCallback(async (id, formData) => {
+    setRes('action', true)
+    try {
+      const res = await api.put(`/api/admin/users/${id}`, formData)
+      await fetchUsers()
+      return res.data
+    } catch (e) {
+      setError(e.userMessage)
+      throw e
+    } finally {
+      setRes('action', false)
+    }
+  }, [fetchUsers])
+
   const deleteUser = useCallback(async (id) => {
     setRes('action', true)
     try {
@@ -252,6 +266,7 @@ export function ApiGatewayProvider({ children }) {
 
         // User management
         createUser,
+        updateUser,
         deleteUser,
       }}
     >

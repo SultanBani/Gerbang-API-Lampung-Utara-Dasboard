@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import {
-  Building2, Shield, Globe, ExternalLink
+  Building2, Shield, Globe, ExternalLink, Loader2
 } from 'lucide-react'
 
 const methodColor = {
@@ -51,6 +51,7 @@ export default function OpdDashboardPage() {
   const [incomingRequests, setIncomingRequests] = useState([])
   const [actionLoadingId, setActionLoadingId]   = useState(null)
   const [toastMsg, setToastMsg]                 = useState('')
+  const [loading, setLoading]                   = useState(true)
 
   const showToast = (msg) => {
     setToastMsg(msg)
@@ -58,6 +59,7 @@ export default function OpdDashboardPage() {
   }
 
   const fetchData = useCallback(async () => {
+    setLoading(true)
     try {
       const [catalogRes, myEpRes, accessRes] = await Promise.allSettled([
         api.get('/api/opd/catalog'),
@@ -69,6 +71,8 @@ export default function OpdDashboardPage() {
       if (accessRes.status === 'fulfilled') setIncomingRequests(accessRes.value.data?.data?.incoming_requests || [])
     } catch (err) {
       console.error('Failed to fetch OPD data:', err)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
@@ -129,14 +133,20 @@ export default function OpdDashboardPage() {
       </div>
 
       {/* ─── Statistik Cards ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <StatCard icon={Shield} value={myEndpoints.length} label="API Milik Sendiri" hint="Endpoint yang Anda kelola" accentColor="indigo" />
-        <StatCard icon={Globe} value={incomingRequests.length} label="Permohonan Akses Masuk" hint="Dari OPD lain ke API Anda" accentColor="blue" />
-        <StatCard icon={Building2} value={new Set(catalogEndpoints.map(e => e.opd_id)).size} label="OPD Terdaftar" hint="Instansi yang memiliki API" accentColor="emerald" />
-      </div>
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <StatCard icon={Shield} value={myEndpoints.length} label="API Milik Sendiri" hint="Endpoint yang Anda kelola" accentColor="indigo" />
+            <StatCard icon={Globe} value={incomingRequests.length} label="Permohonan Akses Masuk" hint="Dari OPD lain ke API Anda" accentColor="blue" />
+            <StatCard icon={Building2} value={new Set(catalogEndpoints.map(e => e.opd_id)).size} label="OPD Terdaftar" hint="Instansi yang memiliki API" accentColor="emerald" />
+          </div>
 
-      {/* ─── Permohonan Hak Akses Masuk ───────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+          {/* ─── Permohonan Hak Akses Masuk ───────────────────────────── */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Building2 className="w-4 h-4 text-amber-500" />
@@ -259,6 +269,8 @@ export default function OpdDashboardPage() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {toastMsg && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-slate-800 text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-2xl z-[99999] flex items-center gap-2 border border-slate-700">

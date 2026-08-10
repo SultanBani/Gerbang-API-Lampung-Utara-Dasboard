@@ -146,68 +146,41 @@ class ApiGatewayMiddleware
         $isAuthorized = false;
         $authErrorMessage = null;
 
-        // 1. Cek apakah ada permohonan akses yang DISETUJUI (APPROVED) untuk endpoint ini
-        $approvedRequest = AccessRequest::where('endpoint_id', $endpoint->id)
-            ->where(function ($q) use ($apiKey) {
-                $q->where('status', 'approved')
-                  ->orWhere('status', 'APPROVED');
-                if ($apiKey) {
-                    $q->orWhere('api_key', $apiKey);
-                }
-            })
-            ->first();
+        if ($apiKey) {
+            $accessReq = AccessRequest::where('endpoint_id', $endpoint->id)
+                ->where('api_key', $apiKey)
+                ->first();
 
-        if ($approvedRequest && strtolower($approvedRequest->status) === 'approved') {
-            if ($approvedRequest->isExpired()) {
-                $authErrorMessage = 'Forbidden: Hak akses API milik Anda telah kedaluwarsa.';
-            } else {
-                $isAuthorized = true;
-            }
-        } elseif ($apiKey) {
-            // 2. Cek Master Key / Super Admin Key / OPD Owner Key
-            if (str_starts_with($apiKey, 'gkp_admin_') || str_contains($apiKey, '_key_2026_') || str_contains(strtolower($apiKey), strtolower($opd->code))) {
-                $isAuthorized = true;
-            } else {
-                // Cek status permohonan spesifik (pending / rejected)
-                $accessReq = AccessRequest::where('endpoint_id', $endpoint->id)
-                    ->where('api_key', $apiKey)
-                    ->first();
-
-                if ($accessReq) {
-                    $status = strtolower($accessReq->status);
-                    if ($status === 'pending') {
-                        $authErrorMessage = sprintf(
-                            'Forbidden: Permohonan hak akses API ke OPD "%s" masih dalam proses peninjauan (PENDING). Silakan hubungi OPD pemilik API.',
-                            $opd->name
-                        );
-                    } elseif ($status === 'rejected') {
-                        $authErrorMessage = sprintf(
-                            'Forbidden: Permohonan hak akses API ke OPD "%s" telah DITOLAK oleh OPD pemilik.',
-                            $opd->name
-                        );
+            if ($accessReq) {
+                $status = strtolower($accessReq->status);
+                if ($status === 'approved') {
+                    if ($accessReq->isExpired()) {
+                        $authErrorMessage = 'Forbidden: Hak akses API milik Anda telah kedaluwarsa.';
+                    } else {
+                        $isAuthorized = true;
                     }
+                } elseif ($status === 'pending') {
+                    $authErrorMessage = sprintf(
+                        'Forbidden: Permohonan hak akses API ke OPD "%s" (%s) masih dalam proses peninjauan (PENDING).',
+                        $opd->name,
+                        $endpoint->title
+                    );
+                } elseif ($status === 'rejected') {
+                    $authErrorMessage = sprintf(
+                        'Forbidden: Permohonan hak akses API ke OPD "%s" (%s) telah DITOLAK oleh OPD pemilik.',
+                        $opd->name,
+                        $endpoint->title
+                    );
                 }
+            } else {
+                $authErrorMessage = 'Forbidden: API Key tidak valid untuk endpoint ini.';
             }
-        }
-
-        // 3. Jika belum disetujui sama sekali -> Cek apakah ada permohonan pending/rejected untuk endpoint ini
-        if (! $isAuthorized && ! $authErrorMessage) {
-            $pendingReq = AccessRequest::where('endpoint_id', $endpoint->id)->whereIn('status', ['pending', 'PENDING'])->first();
-            $rejectedReq = AccessRequest::where('endpoint_id', $endpoint->id)->whereIn('status', ['rejected', 'REJECTED'])->first();
-
-            if ($pendingReq) {
-                $authErrorMessage = sprintf(
-                    'Forbidden: Permohonan hak akses API ke OPD "%s" (%s) masih dalam proses peninjauan (PENDING).',
-                    $opd->name,
-                    $endpoint->title
-                );
-            } elseif ($rejectedReq) {
-                $authErrorMessage = sprintf(
-                    'Forbidden: Permohonan hak akses API ke OPD "%s" (%s) telah DITOLAK.',
-                    $opd->name,
-                    $endpoint->title
-                );
-            }
+        } else {
+            $authErrorMessage = sprintf(
+                'Forbidden: Akses ditolak. Untuk mengakses API milik OPD "%s" (%s), Anda wajib menyertakan API Key dari Permohonan Hak Akses yang telah disetujui.',
+                $opd->name,
+                $endpoint->title
+            );
         }
 
         if (! $isAuthorized) {

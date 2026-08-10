@@ -42,7 +42,7 @@ export default function LogRequestPage() {
     loadLogs()
     const interval = setInterval(() => {
       loadLogs()
-    }, 4000)
+    }, 30000)
     return () => clearInterval(interval)
   }, [loadLogs])
 

@@ -1,16 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useApiGateway } from '../context/ApiGatewayContext'
-import { Search, Plus, Trash2, X, Loader2, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Search, Plus, Trash2, X, Loader2, Sparkles, CheckCircle2, Pencil } from 'lucide-react'
 
 export default function EndpointPage() {
-  const { endpoints, fetchEndpoints, createEndpoint, deleteEndpoint, loading } = useApiGateway()
+  const { endpoints, fetchEndpoints, createEndpoint, updateEndpoint, deleteEndpoint, loading } = useApiGateway()
 
   const [searchQuery, setSearchQuery]   = useState('')
-  const [filterMethod, setFilterMethod] = useState('all')
-  const [filterTag, setFilterTag]       = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [submitting, setSubmitting]     = useState(false)
   const [toast, setToast]               = useState('')
+  const [editingEndpoint, setEditingEndpoint] = useState(null)
 
   const [newForm, setNewForm] = useState({
     opd_id: '', method_permissions: ['GET'], url: '', target_url: '', is_active: true
@@ -40,14 +39,37 @@ export default function EndpointPage() {
     setNewForm({ opd_id: opds[0]?.id || '', method_permissions: ['GET'], title: 'API Data Kependudukan (NIK)', slug: 'penduduk-nik', target_url: 'http://internal.service/api/nik', is_active: true })
   }
 
+  const handleEdit = (ep) => {
+    setEditingEndpoint(ep)
+    setNewForm({
+      opd_id: ep.opd_id || '',
+      method_permissions: ep.method_permissions || ['GET'],
+      title: ep.title || '',
+      slug: ep.slug || '',
+      target_url: ep.target_url || '',
+      is_active: ep.is_active
+    })
+    setShowAddModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowAddModal(false)
+    setEditingEndpoint(null)
+    setNewForm({ opd_id: '', method_permissions: ['GET'], title: '', slug: '', target_url: '', is_active: true })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitting(true)
     try {
-      await createEndpoint(newForm)
-      setShowAddModal(false)
-      setNewForm({ opd_id: '', method_permissions: ['GET'], title: '', slug: '', target_url: '', is_active: true })
-      showToast('Endpoint berhasil didaftarkan!')
+      if (editingEndpoint) {
+        await updateEndpoint(editingEndpoint.id, newForm)
+        showToast('Endpoint berhasil diperbarui!')
+      } else {
+        await createEndpoint(newForm)
+        showToast('Endpoint berhasil didaftarkan!')
+      }
+      handleCloseModal()
     } catch (err) {
       showToast(err?.response?.data?.message ?? 'Gagal menyimpan endpoint.')
     } finally {
@@ -74,7 +96,7 @@ export default function EndpointPage() {
               className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors shadow-sm" />
           </div>
         </div>
-        <button onClick={() => setShowAddModal(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 transition-all cursor-pointer">
+        <button onClick={() => { setEditingEndpoint(null); setShowAddModal(true) }} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 transition-all cursor-pointer">
           <Plus className="w-4 h-4" /><span>Tambah Endpoint API</span>
         </button>
       </div>
@@ -135,9 +157,14 @@ export default function EndpointPage() {
                         </span>
                       </td>
                       <td className="py-4 px-5 text-right">
-                        <button onClick={() => handleDelete(ep.id, `${ep.title}`)} className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg font-bold text-[11px] transition-colors cursor-pointer inline-flex items-center gap-1">
-                          <Trash2 className="w-3.5 h-3.5" /><span>Hapus</span>
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => handleEdit(ep)} className="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 p-1.5 rounded-lg transition-colors cursor-pointer" title="Edit">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleDelete(ep.id, `${ep.title}`)} className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg font-bold text-[11px] transition-colors cursor-pointer inline-flex items-center gap-1">
+                            <Trash2 className="w-3.5 h-3.5" /><span>Hapus</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -155,8 +182,8 @@ export default function EndpointPage() {
         <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">⚙️ Registrasi Endpoint API Baru</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X className="w-4 h-4" /></button>
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">⚙️ {editingEndpoint ? 'Edit Endpoint API' : 'Registrasi Endpoint API Baru'}</h3>
+              <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"><X className="w-4 h-4" /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-between gap-3">
@@ -213,10 +240,10 @@ export default function EndpointPage() {
               </div>
 
               <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">Batal</button>
+                <button type="button" onClick={handleCloseModal} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">Batal</button>
                 <button type="submit" disabled={submitting} className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-bold px-5 py-2 rounded-xl text-xs shadow-lg shadow-indigo-600/25 transition-colors cursor-pointer flex items-center gap-2">
                   {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  {submitting ? 'Menyimpan...' : 'Daftarkan Endpoint'}
+                  {submitting ? 'Menyimpan...' : (editingEndpoint ? 'Simpan Perubahan' : 'Daftarkan Endpoint')}
                 </button>
               </div>
             </form>
