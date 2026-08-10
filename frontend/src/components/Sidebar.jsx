@@ -96,7 +96,7 @@ export default function Sidebar({ isOpen, onClose }) {
               className="w-10 h-10 rounded-xl object-cover shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-0.5"
             />
             <div>
-              <h1 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 tracking-tight leading-none">APIGET</h1>
+              <h1 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 tracking-tight leading-none">APIGATE</h1>
               <span className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 tracking-wider uppercase block mt-1">Lampung Utara</span>
             </div>
           </div>
