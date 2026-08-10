@@ -3,6 +3,17 @@ import api from '../services/api'
 import { useApiGateway } from '../context/ApiGatewayContext'
 import { Users, UserPlus, Shield, Building2, Trash2, CheckCircle2, AlertCircle, Eye, EyeOff, Pencil, Sparkles, KeyRound, Globe } from 'lucide-react'
 
+const DEFAULT_CREDENTIALS = {
+  admin: 'AdminPassword2026!',
+  diskominfo: 'Diskominfo2026!',
+  disdukcapil: 'Disdukcapil2026!',
+  bkd: 'BkdLampura2026!',
+  bappeda: 'DinasPerencanaan2026!',
+  bpkad: 'BpkadLampura2026!',
+  dinkes: 'DinkesLampura2026!',
+  disdik: 'DisdikLampura2026!',
+  dinsos: 'DinsosLampura2026!'
+}
 
 export default function UserManagementPage() {
   const [activeTab, setActiveTab] = useState('users') // 'users' | 'opds'
@@ -25,6 +36,11 @@ export default function UserManagementPage() {
   const [editingOpd, setEditingOpd] = useState(null)
   
   const [showPassword, setShowPassword] = useState(false)
+  const [visiblePasswords, setVisiblePasswords] = useState({})
+
+  const togglePasswordVisibility = (userId) => {
+    setVisiblePasswords(prev => ({ ...prev, [userId]: !prev[userId] }))
+  }
 
   // User Form
   const [userForm, setUserForm] = useState({
@@ -213,7 +229,7 @@ export default function UserManagementPage() {
                   <tr>
                     <th className="px-5 py-3.5">Pengguna & Instansi</th>
                     <th className="px-5 py-3.5">Username / Email</th>
-
+                    <th className="px-5 py-3.5">Password Default</th>
                     <th className="px-5 py-3.5">Role</th>
                     <th className="px-5 py-3.5 text-right">Aksi</th>
                   </tr>
@@ -232,7 +248,16 @@ export default function UserManagementPage() {
                         <div className="font-mono text-slate-800 dark:text-slate-200">{u.username || '-'}</div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">{u.email}</div>
                       </td>
-
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-300">
+                            {visiblePasswords[u.id] ? (DEFAULT_CREDENTIALS[u.username] || '********') : '••••••••'}
+                          </span>
+                          <button onClick={() => togglePasswordVisibility(u.id)} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer" title="Lihat Password Default">
+                            {visiblePasswords[u.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </td>
                       <td className="px-5 py-4">
                         <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full ${
                           u.role === 'admin' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30'
