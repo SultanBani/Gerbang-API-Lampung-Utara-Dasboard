@@ -146,6 +146,11 @@ class ApiGatewayMiddleware
         $isAuthorized = false;
         $authErrorMessage = null;
 
+        // Dukung Bearer token via query string (_token) untuk bypass buka di tab baru
+        if ($request->query('_token') && !$request->bearerToken()) {
+            $request->headers->set('Authorization', 'Bearer ' . $request->query('_token'));
+        }
+
         // Bypass khusus untuk Pemilik API (OPD Owner) atau Admin yang sedang login di Dashboard
         if (\Illuminate\Support\Facades\Auth::guard('sanctum')->check()) {
             $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user();

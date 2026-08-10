@@ -21,14 +21,15 @@ const methodColor = {
   DELETE: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30',
 }
 
-const getGatewayBaseUrl = () => {
+const getFullGatewayUrl = (opdCode, slug, token) => {
+  let url = `https://ragem-api.lampungutarakab.go.id/APIGATELU/${opdCode}/${slug}`
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.')) {
-      return `${window.location.protocol}//localhost:8000/APIGATELU`
+      url = `${window.location.protocol}//${host}:8000/APIGATELU/${opdCode}/${slug}`
     }
   }
-  return 'https://ragem-api.lampungutarakab.go.id/APIGATELU'
+  return token ? `${url}?_token=${token}` : url
 }
 
 export default function OpdManageApiPage() {
@@ -177,8 +178,6 @@ export default function OpdManageApiPage() {
     }))
   }
 
-  const gatewayBase = getGatewayBaseUrl()
-
   return (
     <div className="space-y-6">
       {/* Toast Notification */}
@@ -274,16 +273,6 @@ export default function OpdManageApiPage() {
                       placeholder="Contoh: pendapatan-asli-daerah"
                       className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs font-mono font-bold text-blue-600 dark:text-blue-400 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                     />
-                  </div>
-
-                  {/* Live Gateway Preview */}
-                  <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl space-y-1">
-                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">
-                      Preview URL Gateway Output JSON:
-                    </span>
-                    <p className="text-[11px] font-mono text-slate-800 dark:text-slate-200 break-all font-bold">
-                      {gatewayBase}/[kode-opd]/{epForm.slug || 'slug-api'}
-                    </p>
                   </div>
                 </div>
 
@@ -469,7 +458,7 @@ export default function OpdManageApiPage() {
             {myEndpoints.length > 0 ? (
               <div className="grid grid-cols-1 gap-4">
                 {myEndpoints.map(ep => {
-                  const gatewayUrl = `${gatewayBase}/${ep.opd?.code || 'opd'}/${ep.slug}`
+                  const gatewayUrl = getFullGatewayUrl(ep.opd?.code || 'opd', ep.slug, typeof window !== 'undefined' ? localStorage.getItem('gkp_token') : null)
                   const isUploadedFile = ep.target_url?.includes('/storage/')
 
                   return (

@@ -39,6 +39,18 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+// Inject token juga untuk gatewayApi (untuk fitur API Tester Bypass)
+gatewayApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('gkp_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
 // ─── Response Interceptor ────────────────────────────────────────────────
 // Unwrap error message dan tangani 401 (token tidak valid / expired)
 api.interceptors.response.use(

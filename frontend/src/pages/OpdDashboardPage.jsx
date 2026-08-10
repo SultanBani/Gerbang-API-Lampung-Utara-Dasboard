@@ -33,14 +33,15 @@ function StatCard({ icon: Icon, value, label, hint, accentColor = 'blue' }) {
   )
 }
 
-const getFullGatewayUrl = (opdCode, slug) => {
+const getFullGatewayUrl = (opdCode, slug, token) => {
+  let url = `https://ragem-api.lampungutarakab.go.id/APIGATELU/${opdCode}/${slug}`
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.')) {
-      return `${window.location.protocol}//${host}:8000/APIGATELU/${opdCode}/${slug}`
+      url = `${window.location.protocol}//${host}:8000/APIGATELU/${opdCode}/${slug}`
     }
   }
-  return `https://ragem-api.lampungutarakab.go.id/APIGATELU/${opdCode}/${slug}`
+  return token ? `${url}?_token=${token}` : url
 }
 
 export default function OpdDashboardPage() {
@@ -250,7 +251,7 @@ export default function OpdDashboardPage() {
                   </div>
                 </div>
                 <a
-                  href={getFullGatewayUrl(user?.opd?.code || 'opd', ep.slug)}
+                  href={getFullGatewayUrl(user?.opd?.code || 'opd', ep.slug, typeof window !== 'undefined' ? localStorage.getItem('gkp_token') : null)}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all cursor-pointer shadow-sm shrink-0"
