@@ -195,10 +195,15 @@ export default function OpdManageApiPage() {
 
       {/* Header & Add Action */}
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-          <Shield className="w-5 h-5 text-blue-500" />
-          Kelola API Saya
-        </h2>
+        <div>
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <Shield className="w-5 h-5 text-blue-500" />
+            Input & Kelola Layanan Data OPD
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Tempat OPD mengunggah dataset baru atau mendaftarkan service penginputan data.
+          </p>
+        </div>
 
         {!showEndpointForm && (
           <button
@@ -206,7 +211,7 @@ export default function OpdManageApiPage() {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs transition-all cursor-pointer shadow-lg shadow-blue-600/25 shrink-0 active:scale-95"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>Tambah API Baru</span>
+            <span>Input / Upload Data Baru</span>
           </button>
         )}
       </div>

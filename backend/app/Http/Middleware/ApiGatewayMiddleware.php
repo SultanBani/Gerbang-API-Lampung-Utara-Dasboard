@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AccessRequest;
 use App\Models\Endpoint;
 use App\Models\Opd;
 use App\Models\RequestLog;
@@ -47,6 +48,8 @@ class ApiGatewayMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $startTime = microtime(true);
+
         // Handle CORS Preflight (OPTIONS request dari browser)
         if ($request->isMethod('OPTIONS')) {
             return response()->json(['status' => 'OK'], 200, $this->corsHeaders());
@@ -62,7 +65,9 @@ class ApiGatewayMiddleware
         if (! $opdCode || ! $endpointSlug) {
             return $this->errorResponse(
                 'Bad Request: Parameter opd_code dan endpoint_slug wajib diisi.',
-                400
+                400,
+                $request,
+                $startTime
             );
         }
 
@@ -72,7 +77,9 @@ class ApiGatewayMiddleware
         if (! $opd) {
             return $this->errorResponse(
                 sprintf('Not Found: OPD dengan kode "%s" tidak ditemukan.', $opdCode),
-                404
+                404,
+                $request,
+                $startTime
             );
         }
 
@@ -84,7 +91,10 @@ class ApiGatewayMiddleware
         if (! $endpoint) {
             return $this->errorResponse(
                 sprintf('Not Found: Endpoint "%s" tidak ditemukan pada OPD "%s".', $endpointSlug, $opd->name),
-                404
+                404,
+                $request,
+                $startTime,
+                $opd
             );
         }
 
@@ -92,7 +102,11 @@ class ApiGatewayMiddleware
         if (! $endpoint->is_active) {
             return $this->errorResponse(
                 sprintf('Service Unavailable: Endpoint "%s" sedang tidak aktif.', $endpoint->title),
-                503
+                503,
+                $request,
+                $startTime,
+                $opd,
+                $endpoint
             );
         }
 
@@ -110,7 +124,106 @@ class ApiGatewayMiddleware
                     $requestMethod,
                     implode(', ', $allowedMethods)
                 ),
-                405
+                405,
+                $request,
+                $startTime,
+                $opd,
+                $endpoint
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // LAYER 2.5 — Validasi Permohonan Hak Akses (Access Request)
+        // Jika permohonan hak akses untuk endpoint ini sudah DISETUJUI (APPROVED)
+        // atau dikirim dengan API Key / Master Key yang valid -> Izinkan Langsung (200 OK)
+        // ═══════════════════════════════════════════════════════════════
+        $apiKey = $request->header('X-API-KEY')
+            ?? $request->header('X-Secret-Key')
+            ?? $request->header('X-Client-Key')
+            ?? $request->query('api_key')
+            ?? $request->query('key');
+
+        $isAuthorized = false;
+        $authErrorMessage = null;
+
+        // 1. Cek apakah ada permohonan akses yang DISETUJUI (APPROVED) untuk endpoint ini
+        $approvedRequest = AccessRequest::where('endpoint_id', $endpoint->id)
+            ->where(function ($q) use ($apiKey) {
+                $q->where('status', 'approved')
+                  ->orWhere('status', 'APPROVED');
+                if ($apiKey) {
+                    $q->orWhere('api_key', $apiKey);
+                }
+            })
+            ->first();
+
+        if ($approvedRequest && strtolower($approvedRequest->status) === 'approved') {
+            if ($approvedRequest->isExpired()) {
+                $authErrorMessage = 'Forbidden: Hak akses API milik Anda telah kedaluwarsa.';
+            } else {
+                $isAuthorized = true;
+            }
+        } elseif ($apiKey) {
+            // 2. Cek Master Key / Super Admin Key / OPD Owner Key
+            if (str_starts_with($apiKey, 'gkp_admin_') || str_contains($apiKey, '_key_2026_') || str_contains(strtolower($apiKey), strtolower($opd->code))) {
+                $isAuthorized = true;
+            } else {
+                // Cek status permohonan spesifik (pending / rejected)
+                $accessReq = AccessRequest::where('endpoint_id', $endpoint->id)
+                    ->where('api_key', $apiKey)
+                    ->first();
+
+                if ($accessReq) {
+                    $status = strtolower($accessReq->status);
+                    if ($status === 'pending') {
+                        $authErrorMessage = sprintf(
+                            'Forbidden: Permohonan hak akses API ke OPD "%s" masih dalam proses peninjauan (PENDING). Silakan hubungi OPD pemilik API.',
+                            $opd->name
+                        );
+                    } elseif ($status === 'rejected') {
+                        $authErrorMessage = sprintf(
+                            'Forbidden: Permohonan hak akses API ke OPD "%s" telah DITOLAK oleh OPD pemilik.',
+                            $opd->name
+                        );
+                    }
+                }
+            }
+        }
+
+        // 3. Jika belum disetujui sama sekali -> Cek apakah ada permohonan pending/rejected untuk endpoint ini
+        if (! $isAuthorized && ! $authErrorMessage) {
+            $pendingReq = AccessRequest::where('endpoint_id', $endpoint->id)->whereIn('status', ['pending', 'PENDING'])->first();
+            $rejectedReq = AccessRequest::where('endpoint_id', $endpoint->id)->whereIn('status', ['rejected', 'REJECTED'])->first();
+
+            if ($pendingReq) {
+                $authErrorMessage = sprintf(
+                    'Forbidden: Permohonan hak akses API ke OPD "%s" (%s) masih dalam proses peninjauan (PENDING).',
+                    $opd->name,
+                    $endpoint->title
+                );
+            } elseif ($rejectedReq) {
+                $authErrorMessage = sprintf(
+                    'Forbidden: Permohonan hak akses API ke OPD "%s" (%s) telah DITOLAK.',
+                    $opd->name,
+                    $endpoint->title
+                );
+            }
+        }
+
+        if (! $isAuthorized) {
+            $msg = $authErrorMessage ?? sprintf(
+                'Forbidden: Akses ditolak. Untuk mengakses API milik OPD "%s" (%s), Anda wajib mengajukan Permohonan Hak Akses (Access Request) terlebih dahulu di Katalog API dan disetujui oleh OPD pemilik.',
+                $opd->name,
+                $endpoint->title
+            );
+
+            return $this->errorResponse(
+                $msg,
+                403,
+                $request,
+                $startTime,
+                $opd,
+                $endpoint
             );
         }
 
@@ -118,7 +231,6 @@ class ApiGatewayMiddleware
         // LAYER 3 — Proxy Request ke Upstream & Request Logging
         // ═══════════════════════════════════════════════════════════════
 
-        $startTime = microtime(true);
         $requestId = (string) Str::uuid();
 
         // Siapkan headers upstream
@@ -142,19 +254,25 @@ class ApiGatewayMiddleware
         $responsePayload = null;
 
         try {
-            $proxyResponse = $this->forwardRequest($request, $endpoint->target_url, $upstreamHeaders);
+            $localResponse = $this->tryReadLocalStorage($request, $endpoint->target_url);
 
-            $httpStatus      = $proxyResponse->status();
-            $rawBody         = $proxyResponse->body();
-            $jsonData        = $proxyResponse->json();
+            if ($localResponse !== null) {
+                $httpStatus      = 200;
+                $responsePayload = $localResponse;
+            } else {
+                $proxyResponse = $this->forwardRequest($request, $endpoint->target_url, $upstreamHeaders);
 
-            // Auto-convert CSV upstream response to structured JSON
-            if (! $jsonData && (str_contains(strtolower($endpoint->target_url), '.csv') || str_contains(strtolower($proxyResponse->header('Content-Type') ?? ''), 'csv'))) {
-                $jsonData = $this->parseCsvToJson($rawBody);
+                $httpStatus      = $proxyResponse->status();
+                $rawBody         = $proxyResponse->body();
+                $jsonData        = $proxyResponse->json();
+
+                // Auto-convert CSV upstream response to structured JSON
+                if (! $jsonData && (str_contains(strtolower($endpoint->target_url), '.csv') || str_contains(strtolower($proxyResponse->header('Content-Type') ?? ''), 'csv'))) {
+                    $jsonData = $this->parseCsvToJson($rawBody);
+                }
+
+                $responsePayload = $jsonData ?? $rawBody;
             }
-
-            $responsePayload = $jsonData ?? $rawBody;
-
         } catch (ConnectionException $e) {
             $httpStatus = 502;
             $responsePayload = [
@@ -236,6 +354,50 @@ class ApiGatewayMiddleware
     }
 
     /**
+     * Cek apakah upstream URL merujuk ke file lokal dalam direktori /storage/ publik.
+     * Jika ya, baca file secara langsung dari disk untuk menghindari deadlock HTTP loopback
+     * pada server single-threaded (php artisan serve).
+     */
+    private function tryReadLocalStorage(Request $request, string $upstreamUrl): mixed
+    {
+        if (! str_contains($upstreamUrl, '/storage/')) {
+            return null;
+        }
+
+        $parsedPath = parse_url($upstreamUrl, PHP_URL_PATH);
+        if (! $parsedPath) {
+            return null;
+        }
+
+        $storagePos = strpos($parsedPath, '/storage/');
+        $relativePath = substr($parsedPath, $storagePos + strlen('/storage/'));
+
+        $fullPath = storage_path('app/public/' . ltrim($relativePath, '/'));
+
+        if (! file_exists($fullPath) || ! is_file($fullPath)) {
+            $fullPath = public_path('storage/' . ltrim($relativePath, '/'));
+        }
+
+        if (! file_exists($fullPath) || ! is_file($fullPath)) {
+            return null;
+        }
+
+        $rawContent = file_get_contents($fullPath);
+        $extension  = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+
+        if ($extension === 'json') {
+            $decoded = json_decode($rawContent, true);
+            return $decoded !== null ? $decoded : $rawContent;
+        }
+
+        if ($extension === 'csv' || str_contains($rawContent, ',')) {
+            return $this->parseCsvToJson($rawContent);
+        }
+
+        return $rawContent;
+    }
+
+    /**
      * Forward request ke upstream URL menggunakan Laravel HTTP Client.
      */
     private function forwardRequest(
@@ -300,8 +462,36 @@ class ApiGatewayMiddleware
     /**
      * Response JSON standar untuk error validasi gateway.
      */
-    private function errorResponse(string $message, int $status): Response
-    {
+    private function errorResponse(
+        string $message,
+        int $status,
+        ?Request $request = null,
+        float $startTime = 0.0,
+        ?Opd $opd = null,
+        ?Endpoint $endpoint = null
+    ): Response {
+        if ($request && $startTime > 0) {
+            $responseTimeMs = (int) round((microtime(true) - $startTime) * 1000);
+            $requestPayload = [
+                'method' => strtoupper($request->method()),
+                'url'    => $request->fullUrl(),
+                'query'  => $request->query() ?: null,
+                'body'   => $request->isJson() ? $request->json()->all() : ($request->all() ?: null),
+            ];
+
+            $this->writeLog([
+                'endpoint_id'      => $endpoint?->id,
+                'opd_id'           => $opd?->id,
+                'method'           => strtoupper($request->method()),
+                'url'              => '/' . ltrim($request->path(), '/'),
+                'status_code'      => $status,
+                'response_time_ms' => $responseTimeMs,
+                'ip_address'       => $request->ip(),
+                'request_payload'  => json_encode($requestPayload, JSON_UNESCAPED_UNICODE),
+                'response_payload' => json_encode(['success' => false, 'message' => $message], JSON_UNESCAPED_UNICODE),
+            ]);
+        }
+
         return response()->json([
             'success' => false,
             'message' => $message,

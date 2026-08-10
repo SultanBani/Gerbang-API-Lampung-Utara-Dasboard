@@ -103,7 +103,7 @@ export default function Header({ onToggleSidebar }) {
             {currentTitle}
           </h2>
           <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 block truncate max-w-[200px] sm:max-w-none">
-            Portal Integrasi Data Pemkab Lampung Utara
+            APIGET — Gateway Interoperabilitas Data Kab. Lampung Utara
           </span>
         </div>
       </div>

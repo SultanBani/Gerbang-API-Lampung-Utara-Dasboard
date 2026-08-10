@@ -47,22 +47,58 @@ export default function OpdDashboardPage() {
   const { user } = useAuth()
 
   const [catalogEndpoints, setCatalogEndpoints] = useState([])
-  const [myEndpoints, setMyEndpoints] = useState([])
+  const [myEndpoints, setMyEndpoints]           = useState([])
+  const [incomingRequests, setIncomingRequests] = useState([])
+  const [actionLoadingId, setActionLoadingId]   = useState(null)
+  const [toastMsg, setToastMsg]                 = useState('')
+
+  const showToast = (msg) => {
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(''), 3000)
+  }
 
   const fetchData = useCallback(async () => {
     try {
-      const [catalogRes, myEpRes] = await Promise.allSettled([
+      const [catalogRes, myEpRes, accessRes] = await Promise.allSettled([
         api.get('/api/opd/catalog'),
         api.get('/api/opd/my-endpoints'),
+        api.get('/api/opd/access-requests'),
       ])
       if (catalogRes.status === 'fulfilled') setCatalogEndpoints(catalogRes.value.data?.data || [])
       if (myEpRes.status === 'fulfilled') setMyEndpoints(myEpRes.value.data?.data || [])
+      if (accessRes.status === 'fulfilled') setIncomingRequests(accessRes.value.data?.data?.incoming_requests || [])
     } catch (err) {
       console.error('Failed to fetch OPD data:', err)
     }
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  const handleApprove = async (id) => {
+    setActionLoadingId(id)
+    try {
+      const res = await api.post(`/api/opd/access-requests/${id}/approve`)
+      showToast(res.data?.message || 'Permohonan hak akses berhasil disetujui!')
+      fetchData()
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Gagal menyetujui permohonan.')
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleReject = async (id) => {
+    setActionLoadingId(id)
+    try {
+      const res = await api.post(`/api/opd/access-requests/${id}/reject`)
+      showToast(res.data?.message || 'Permohonan hak akses ditolak.')
+      fetchData()
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Gagal menolak permohonan.')
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -80,7 +116,7 @@ export default function OpdDashboardPage() {
               Selamat datang, {user?.name || 'Pengguna OPD'}
             </h1>
             <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xl">
-              Kelola endpoint API milik instansi Anda dan jelajahi katalog API dari OPD lain. Semua data API bersifat publik dan dapat diakses langsung.
+              Kelola permohonan hak akses API masuk dari OPD lain dan tinjau status perizinan secara terintegrasi.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -95,8 +131,85 @@ export default function OpdDashboardPage() {
       {/* ─── Statistik Cards ─────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <StatCard icon={Shield} value={myEndpoints.length} label="API Milik Sendiri" hint="Endpoint yang Anda kelola" accentColor="indigo" />
-        <StatCard icon={Globe} value={catalogEndpoints.length} label="Katalog Tersedia" hint="Seluruh API publik di gateway" accentColor="blue" />
+        <StatCard icon={Globe} value={incomingRequests.length} label="Permohonan Akses Masuk" hint="Dari OPD lain ke API Anda" accentColor="blue" />
         <StatCard icon={Building2} value={new Set(catalogEndpoints.map(e => e.opd_id)).size} label="OPD Terdaftar" hint="Instansi yang memiliki API" accentColor="emerald" />
+      </div>
+
+      {/* ─── Permohonan Hak Akses Masuk ───────────────────────────── */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-amber-500" />
+            Permohonan Hak Akses Masuk dari OPD Lain ({incomingRequests.length})
+          </h3>
+        </div>
+
+        {incomingRequests.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-bold text-[10px]">
+                  <th className="pb-3">Instansi Pemohon</th>
+                  <th className="pb-3">Endpoint API Ditingkatkan</th>
+                  <th className="pb-3 text-center">Status</th>
+                  <th className="pb-3 font-mono">API Key Diterbitkan</th>
+                  <th className="pb-3 text-right">Aksi Persetujuan</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                {incomingRequests.map(req => (
+                  <tr key={req.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                    <td className="py-3 font-bold text-slate-900 dark:text-slate-100">
+                      {req.requestor_opd?.name || 'OPD Pemohon'}
+                    </td>
+                    <td className="py-3">
+                      <div className="font-bold text-blue-600 dark:text-blue-400">{req.endpoint?.title}</div>
+                      <code className="text-[10px] text-slate-400 font-mono">/{req.endpoint?.slug}</code>
+                    </td>
+                    <td className="py-3 text-center">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' :
+                        req.status === 'pending' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30' :
+                        'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30'
+                      }`}>
+                        {req.status}
+                      </span>
+                    </td>
+                    <td className="py-3 font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                      {req.api_key ? <code>{req.api_key}</code> : '—'}
+                    </td>
+                    <td className="py-3 text-right">
+                      {req.status === 'pending' ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleApprove(req.id)}
+                            disabled={actionLoadingId === req.id}
+                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-bold text-xs shadow cursor-pointer"
+                          >
+                            Setujui
+                          </button>
+                          <button
+                            onClick={() => handleReject(req.id)}
+                            disabled={actionLoadingId === req.id}
+                            className="px-3 py-1 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-lg font-bold text-xs shadow cursor-pointer"
+                          >
+                            Tolak
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] font-semibold text-slate-400">Selesai Ditinjau</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="py-8 text-center text-slate-400 text-xs">
+            Belum ada permohonan hak akses yang masuk dari OPD lain.
+          </div>
+        )}
       </div>
 
       {/* ─── Daftar API Milik Sendiri ─────────────────────── */}
@@ -146,6 +259,12 @@ export default function OpdDashboardPage() {
           </div>
         )}
       </div>
+
+      {toastMsg && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-slate-800 text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-2xl z-[99999] flex items-center gap-2 border border-slate-700">
+          <span>{toastMsg}</span>
+        </div>
+      )}
     </div>
   )
 }

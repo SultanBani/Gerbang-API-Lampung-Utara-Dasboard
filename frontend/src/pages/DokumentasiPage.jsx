@@ -1,199 +1,400 @@
 import React, { useState, useMemo } from 'react'
 import { useApiGateway } from '../context/ApiGatewayContext'
-import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
+import {
+  BookOpen, Code2, Key, ShieldCheck, CheckCircle2, AlertCircle, Copy, Check,
+  Search, FileText, ArrowRight, ExternalLink, Sparkles, Terminal, ChevronDown, ChevronUp, Layers, CheckCircle
+} from 'lucide-react'
+
+const methodColors = {
+  GET: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+  POST: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30',
+  PUT: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
+  DELETE: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30',
+}
+
+const statusCodes = [
+  { code: 200, status: 'OK', desc: 'Request berhasil diproses dan data JSON dikembalikan.', badge: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' },
+  { code: 401, status: 'Unauthorized', desc: 'API Key / Token autentikasi tidak valid atau belum dikirimkan.', badge: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
+  { code: 403, status: 'Forbidden', desc: 'Akses ditolak karena Permohonan Hak Akses belum disetujui OPD pemilik.', badge: 'bg-red-500/10 text-red-600 border-red-500/30' },
+  { code: 404, status: 'Not Found', desc: 'Route API atau Kode OPD yang dituju tidak ditemukan di Gateway.', badge: 'bg-slate-500/10 text-slate-600 border-slate-500/30' },
+  { code: 502, status: 'Bad Gateway', desc: 'Server asal milik OPD tidak merespons atau mengalami timeout.', badge: 'bg-purple-500/10 text-purple-600 border-purple-500/30' },
+]
 
 export default function DokumentasiPage() {
   const { endpoints } = useApiGateway()
+  const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'guide' | 'endpoints' | 'errors'
+  const [searchDoc, setSearchDoc] = useState('')
+  const [expandedId, setExpandedId] = useState(null)
+  const [copiedKey, setCopiedKey] = useState(null)
 
-  const [selectedTag, setSelectedTag] = useState('all')
-  const [expandedDocs, setExpandedDocs] = useState({ 1: true })
-  const [aiQueryInput, setAiQueryInput] = useState('')
+  const copyToClipboard = (text, key) => {
+    navigator.clipboard.writeText(text)
+    setCopiedKey(key)
+    setTimeout(() => setCopiedKey(null), 2000)
+  }
+
+  const getBaseGatewayUrl = () => {
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname
+      if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.')) {
+        return `${window.location.protocol}//${host}:8000/APIGATELU`
+      }
+    }
+    return 'https://ragem-api.lampungutarakab.go.id/APIGATELU'
+  }
+
+  const baseUrl = getBaseGatewayUrl()
 
   const filteredEndpoints = useMemo(() => {
-    if (selectedTag === 'all') {
-      return endpoints
-    }
-    return endpoints.filter(e => e.tag === selectedTag)
-  }, [endpoints, selectedTag])
-
-  const toggleDoc = (id) => {
-    setExpandedDocs(prev => ({ ...prev, [id]: !prev[id] }))
-  }
-
-  const handleAskAiDocs = () => {
-    if (!aiQueryInput) return
-    alert(`Pertanyaan AI Assistant: "${aiQueryInput}"\n\nGunakan Widget AI pada pojok kanan bawah untuk interaksi chat langsung!`)
-    setAiQueryInput('')
-  }
+    if (!searchDoc.trim()) return endpoints
+    const q = searchDoc.toLowerCase()
+    return endpoints.filter(ep =>
+      ep.title?.toLowerCase().includes(q) ||
+      ep.slug?.toLowerCase().includes(q) ||
+      ep.opd?.name?.toLowerCase().includes(q) ||
+      ep.opd?.code?.toLowerCase().includes(q)
+    )
+  }, [endpoints, searchDoc])
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-md dark:shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-slate-900 dark:text-white">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 font-bold text-[10px]">
-              ● OpenAPI Specification 3.0
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">v1.0.0</span>
+
+      {/* ─── Top Header Banner ──────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-slate-900 text-white p-6 sm:p-8 shadow-xl">
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-cyan-300">
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Dokumentasi Resmi Integrasi APIGET v2.4</span>
           </div>
-          <h3 className="font-extrabold text-base">Dokumentasi API Gateway Lampung Utara</h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-            Base URL Server Publik: <code className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono">https://ragem-api.lampungutarakab.go.id/APIGATELU</code>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
+            Panduan & Dokumentasi Integrasi Data APIGET
+          </h1>
+          <p className="text-xs sm:text-sm text-blue-100 max-w-3xl leading-relaxed">
+            Petunjuk lengkap penggunaan Gateway Interoperabilitas Data Kabupaten Lampung Utara untuk <strong>Pengambilan Data (GET)</strong> dan <strong>Penginputan Data (POST)</strong> antar-OPD.
           </p>
-        </div>
 
-        {/* Tag Filter */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-400">Tag:</label>
-          <select
-            value={selectedTag}
-            onChange={e => setSelectedTag(e.target.value)}
-            className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-sm"
-          >
-            <option value="all">Semua Tag Group</option>
-            <option value="Pegawai">Pegawai</option>
-            <option value="Auth">Auth</option>
-            <option value="OPD">OPD</option>
-            <option value="Penduduk">Penduduk</option>
-          </select>
-        </div>
-      </div>
-
-      {/* AI Documentation Assistant Banner */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50 to-white dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-slate-900 border border-blue-200 dark:border-blue-500/30 shadow-sm dark:shadow-xl space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg">
-            🤖
-          </div>
-          <div>
-            <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100">AI Documentation Assistant</h4>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Tanyakan cara menggunakan API, parameter, atau contoh kode langsung ke AI.</p>
-          </div>
-        </div>
-        <div className="flex gap-2 max-w-xl">
-          <input
-            value={aiQueryInput}
-            onChange={e => setAiQueryInput(e.target.value)}
-            onKeyUp={e => e.key === 'Enter' && handleAskAiDocs()}
-            type="text"
-            placeholder='Contoh: "Bagaimana cara mengambil data pegawai SIMPEG?"'
-            className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 shadow-sm"
-          />
-          <button
-            onClick={handleAskAiDocs}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg shadow-blue-600/25 transition-all cursor-pointer flex items-center gap-1"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Tanya AI</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Documentation Endpoints List */}
-      <div className="space-y-4">
-        {filteredEndpoints.map(ep => {
-          const isExpanded = !!expandedDocs[ep.id]
-          return (
-            <div
-              key={ep.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-lg transition-all"
-            >
-              {/* Card Header (Click to expand) */}
-              <div
-                onClick={() => toggleDoc(ep.id)}
-                className="p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors select-none"
+          {/* Quick Base URL Badge */}
+          <div className="pt-2 flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-bold text-slate-300">Base Gateway URL:</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 font-mono text-xs text-cyan-300 font-bold">
+              <span>{baseUrl}</span>
+              <button
+                onClick={() => copyToClipboard(baseUrl, 'baseurl')}
+                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                title="Salin Base URL"
               >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold font-mono border ${
-                      ep.method === 'GET' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' :
-                      ep.method === 'POST' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30' :
-                      ep.method === 'PUT' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30' :
-                      'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30'
-                    }`}
-                  >
-                    {ep.method}
-                  </span>
-                  <code className="font-mono font-bold text-sm text-slate-900 dark:text-slate-100">{ep.url}</code>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    {ep.tag}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <span className="text-xs text-slate-500 dark:text-slate-400 hidden sm:inline">{ep.description}</span>
-                  {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-                </div>
-              </div>
-
-              {/* Card Expanded Content */}
-              {isExpanded && (
-                <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Left: Parameters & Headers */}
-                    <div className="space-y-4">
-                      <div>
-                        <h5 className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider mb-2">📌 Headers Wajib</h5>
-                        <div className="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-3 font-mono text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                          <div>Authorization: Bearer &#123;API_KEY&#125;</div>
-                          <div>Accept: application/json</div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h5 className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider mb-2">📌 Query Parameters</h5>
-                        <table className="w-full text-left text-xs">
-                          <thead>
-                            <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 text-[10px] uppercase font-bold">
-                              <th className="pb-2">Parameter</th>
-                              <th className="pb-2">Tipe</th>
-                              <th className="pb-2">Keterangan</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-200 dark:divide-slate-800/40 text-slate-700 dark:text-slate-300">
-                            <tr>
-                              <td className="py-2 font-mono text-blue-600 dark:text-blue-400">page</td>
-                              <td className="py-2 text-slate-500 dark:text-slate-400 font-mono">integer</td>
-                              <td className="py-2 text-slate-500 dark:text-slate-400">Nomor halaman (default: 1)</td>
-                            </tr>
-                            <tr>
-                              <td className="py-2 font-mono text-blue-600 dark:text-blue-400">per_page</td>
-                              <td className="py-2 text-slate-500 dark:text-slate-400 font-mono">integer</td>
-                              <td className="py-2 text-slate-500 dark:text-slate-400">Jumlah data (max: 100)</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* Right: Response JSON 200 OK */}
-                    <div>
-                      <h5 className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider mb-2">✅ Response 200 OK</h5>
-                      <pre className="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-4 font-mono text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed overflow-x-auto">
-                        <code>{`{\n  "success": true,\n  "message": "Request berhasil diproses",\n  "data": [\n    {\n      "id": 1,\n      "nama": "Ahmad Budi S.",\n      "opd": "BKPSDM"\n    }\n  ]\n}`}</code>
-                      </pre>
-                    </div>
-                  </div>
-
-                  {/* Code Snippets Tab */}
-                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
-                    <h5 className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">💻 Contoh Kode Implementasi Klien</h5>
-                    <div className="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-4 font-mono text-xs text-cyan-700 dark:text-cyan-300 leading-relaxed overflow-x-auto">
-                      <div className="text-slate-500 dark:text-slate-400">// Example in PHP Laravel (Http Client)</div>
-                      <div className="text-slate-800 dark:text-slate-300 mt-1">
-                        $response = Http::withToken('<span className="text-amber-600 dark:text-amber-300">API_KEY_ANDA</span>')<br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;-&gt;get('<span className="text-emerald-600 dark:text-emerald-300">https://api.lampungutarakab.go.id{ep.url}</span>');<br />
-                        $data = $response-&gt;json();
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+                {copiedKey === 'baseurl' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Navigation Tabs ─────────────────────────────────── */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-1 overflow-x-auto text-xs font-bold">
+        {[
+          { id: 'overview', label: '📌 Ringkasan Sistem', icon: BookOpen },
+          { id: 'guide', label: '🚀 Cara Menggunakan (Alur GET & POST)', icon: ArrowRight },
+          { id: 'endpoints', label: `🌐 Daftar Service API (${endpoints.length})`, icon: Layers },
+          { id: 'errors', label: '⚠️ Format Respons & Status HTTP', icon: AlertCircle },
+        ].map(tab => {
+          const Icon = tab.icon
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                isActive
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
           )
         })}
       </div>
+
+      {/* ─── TAB 1: RINGKASAN SISTEM (OVERVIEW) ────────────────────── */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Card 1: Apa itu APIGET */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                Apa itu APIGET Lampung Utara?
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <strong>APIGET</strong> (Gateway Interoperabilitas Data) adalah platform resmi Kabupaten Lampung Utara yang memungkinkan seluruh Organisasi Perangkat Daerah (OPD) untuk saling <strong>berbagi pakai data</strong> secara aman, terpusat, dan cepat tanpa perlu membangun koneksi jaringan terpisah.
+              </p>
+            </div>
+
+            {/* Card 2: 2 Fungsi Utama */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                <Code2 className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                Dua Fungsi Utama APIGET
+              </h3>
+              <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-mono font-bold text-[10px]">GET</span>
+                  <span><strong>Pengambilan Data</strong>: Mengambil dataset resmi (JSON/CSV) milik OPD lain untuk diintegrasikan ke aplikasi internal.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 font-mono font-bold text-[10px]">POST</span>
+                  <span><strong>Penginputan Data</strong>: Mengirimkan atau mengunggah data baru ke server OPD produsen secara otomatis.</span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+
+          {/* Format Autentikasi Header */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <Key className="w-4 h-4 text-amber-500" />
+              Format Autentikasi Header API Key
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              Setiap panggilan request ke Gateway wajib menyertakan <strong>API Key</strong> yang sudah disetujui pada HTTP Request Header atau Query Parameter:
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-slate-900 text-white font-mono text-xs space-y-2 border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Metode 1: HTTP Header (Direkomendasikan)</span>
+                <code className="text-cyan-400 block">X-API-KEY: gkp_disdukcapil_x89a23b...</code>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-900 text-white font-mono text-xs space-y-2 border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Metode 2: Query Parameter (Untuk Browser)</span>
+                <code className="text-emerald-400 block">?api_key=gkp_disdukcapil_x89a23b...</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── TAB 2: CARA MENGGUNAKAN (ALUR GET & POST) ─────────────── */}
+      {activeTab === 'guide' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          
+          {/* Section: Alur Pengambilan Data (GET) */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 font-mono font-bold text-xs">GET</span>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                Alur Pengambilan Data (Membaca Data OPD Lain)
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</span>
+                <h4 className="font-extrabold text-slate-900 dark:text-white">Cari di Katalog API</h4>
+                <p className="text-slate-500 leading-relaxed">Buka menu <strong>Katalog API</strong>, lalu temukan data yang dibutuhkan (misal: PAD BPKAD / Data Penduduk Dukcapil).</p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">2</span>
+                <h4 className="font-extrabold text-slate-900 dark:text-white">Minta Hak Akses</h4>
+                <p className="text-slate-500 leading-relaxed">Klik tombol <strong>"🔑 Minta Hak Akses"</strong>. Setelah disetujui OPD pemilik, salin <strong>API Key</strong> resmi Anda.</p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">3</span>
+                <h4 className="font-extrabold text-slate-900 dark:text-white">Eksekusi / Panggil API</h4>
+                <p className="text-slate-500 leading-relaxed">Gunakan <strong>API Tester</strong> atau pasang kodingan cURL/JS di aplikasi Anda untuk langsung menerima data JSON.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Alur Penginputan Data (POST) */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <span className="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 font-mono font-bold text-xs">POST</span>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                Alur Penginputan & Pengunggahan Data (OPD Produsen)
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">1</span>
+                <h4 className="font-extrabold text-slate-900 dark:text-white">Buka Menu "Input & Kelola Data"</h4>
+                <p className="text-slate-500 leading-relaxed">Pilih menu <strong>Input & Kelola API Saya</strong> di navigasi kiri, lalu klik <strong>"Tambah / Upload Data Baru"</strong>.</p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">2</span>
+                <h4 className="font-extrabold text-slate-900 dark:text-white">Unggah File / Target URL</h4>
+                <p className="text-slate-500 leading-relaxed">Unggah file dataset CSV/PDF/JSON milik OPD Anda atau masukkan URL server internal.</p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">3</span>
+                <h4 className="font-extrabold text-slate-900 dark:text-white">Publikasikan ke Katalog</h4>
+                <p className="text-slate-500 leading-relaxed">Setelah disimpan, API Anda otomatis aktif dan siap dibuka untuk permohonan akses dari OPD lain.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* ─── TAB 3: DAFTAR SERVICE API AKTIF ───────────────────────── */}
+      {activeTab === 'endpoints' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          
+          {/* Search Bar */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              value={searchDoc}
+              onChange={e => setSearchDoc(e.target.value)}
+              placeholder="Cari nama endpoint, OPD, atau route..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-sm"
+            />
+          </div>
+
+          {/* Endpoints List */}
+          {filteredEndpoints.length > 0 ? (
+            <div className="space-y-3">
+              {filteredEndpoints.map(ep => {
+                const isExpanded = expandedId === ep.id
+                const gatewayRoute = `${baseUrl}/${ep.opd?.code || 'opd'}/${ep.slug}`
+
+                return (
+                  <div
+                    key={ep.id}
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm transition-all"
+                  >
+                    {/* Header bar */}
+                    <div
+                      onClick={() => setExpandedId(isExpanded ? null : ep.id)}
+                      className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors select-none"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-bold text-slate-900 dark:text-white">{ep.title}</span>
+                          <span className="text-[10px] text-slate-400 font-bold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                            {ep.opd?.name || 'OPD'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {(ep.method_permissions || ['GET']).map(m => (
+                            <span key={m} className={`text-[10px] font-mono font-extrabold px-2 py-0.5 rounded border ${methodColors[m] || 'bg-slate-100 text-slate-600'}`}>
+                              {m}
+                            </span>
+                          ))}
+                          <code className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 break-all">
+                            /{ep.opd?.code || 'opd'}/{ep.slug}
+                          </code>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                        <span className="text-[11px] font-bold text-blue-500 hover:underline">
+                          {isExpanded ? 'Sembunyikan Kode' : 'Lihat Contoh Kode'}
+                        </span>
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                      </div>
+                    </div>
+
+                    {/* Expanded Code & Specs */}
+                    {isExpanded && (
+                      <div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 space-y-4">
+                        <div className="space-y-1 font-mono text-xs">
+                          <span className="text-[10px] font-sans font-bold text-slate-400 uppercase">Gateway Public Route URL:</span>
+                          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-blue-400">
+                            <span className="truncate flex-1">{gatewayRoute}</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); copyToClipboard(gatewayRoute, `route-${ep.id}`) }}
+                              className="text-slate-400 hover:text-white font-sans text-[11px] font-bold shrink-0 cursor-pointer flex items-center gap-1"
+                            >
+                              {copiedKey === `route-${ep.id}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                              <span>{copiedKey === `route-${ep.id}` ? 'Tersalin' : 'Salin'}</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* cURL Integration Code Sample */}
+                        <div className="space-y-1 font-mono text-xs">
+                          <div className="flex items-center justify-between text-[10px] font-sans font-bold text-slate-400 uppercase">
+                            <span>Contoh Kode Integrasi (cURL):</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const curlCode = `curl -X GET "${gatewayRoute}" \\\n  -H "X-API-KEY: API_KEY_ANDA"`
+                                copyToClipboard(curlCode, `curl-${ep.id}`)
+                              }}
+                              className="text-blue-500 hover:underline cursor-pointer flex items-center gap-1"
+                            >
+                              {copiedKey === `curl-${ep.id}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                              <span>{copiedKey === `curl-${ep.id}` ? 'Tersalin' : 'Salin cURL'}</span>
+                            </button>
+                          </div>
+                          <pre className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-cyan-300 overflow-x-auto leading-relaxed text-[11px]">
+                            <code>{`curl -X GET "${gatewayRoute}" \\\n  -H "X-API-KEY: API_KEY_ANDA"`}</code>
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="py-12 text-center text-slate-400 text-xs">
+              Tidak ada service API yang cocok dengan kata kunci pencarian.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── TAB 4: FORMAT RESPONS & STATUS HTTP ────────────────────── */}
+      {activeTab === 'errors' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-purple-500" />
+              Tabel Kode Status HTTP & Diagnostik Error
+            </h3>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase font-bold text-[10px]">
+                    <th className="pb-3">Kode Status</th>
+                    <th className="pb-3">Status Name</th>
+                    <th className="pb-3">Keterangan & Solusi Diagnostik</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                  {statusCodes.map(s => (
+                    <tr key={s.code} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3 font-mono font-black text-sm">
+                        <span className={`px-2.5 py-1 rounded-lg border ${s.badge}`}>{s.code}</span>
+                      </td>
+                      <td className="py-3 font-bold text-slate-900 dark:text-slate-100">{s.status}</td>
+                      <td className="py-3 text-slate-600 dark:text-slate-300">{s.desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

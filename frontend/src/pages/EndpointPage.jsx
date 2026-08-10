@@ -169,7 +169,7 @@ export default function EndpointPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">OPD Pemilik *</label>
                   <select value={newForm.opd_id} onChange={e => setNewForm(p => ({ ...p, opd_id: e.target.value }))} required className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200">
@@ -185,7 +185,7 @@ export default function EndpointPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">URL Slug *</label>
                   <input value={newForm.slug} onChange={e => setNewForm(p => ({ ...p, slug: e.target.value }))} required type="text" placeholder="penduduk-nik" className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-slate-200" />

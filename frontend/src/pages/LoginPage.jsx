@@ -84,18 +84,16 @@ export default function LoginPage() {
               />
             </div>
 
-            <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/90 border border-blue-200/90 text-blue-700 text-[11px] font-extrabold tracking-wide mb-2 shadow-xs">
                 <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-
+                <span>Portal Interoperabilitas Data</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
-                GERBANG API
+                APIGET
               </h1>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1.5">
-                Lampung Utara
+                Kabupaten Lampung Utara
               </p>
-            </div>
           </div>
 
           {/* Alert Message */}

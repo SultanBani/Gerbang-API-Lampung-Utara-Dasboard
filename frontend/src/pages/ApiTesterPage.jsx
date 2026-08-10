@@ -17,6 +17,7 @@ const METHOD_COLORS = {
 }
 
 // Preset Collection Endpoints (Lampung Utara Gateway API - Fallback)
+// Preset Collection Endpoints (Lampung Utara Gateway API - Fallback)
 const PRESET_COLLECTIONS = [
   {
     category: 'Keuangan (BPKAD)',
@@ -24,7 +25,7 @@ const PRESET_COLLECTIONS = [
       {
         name: 'PAD Lampung Utara (2023-2024)',
         method: 'GET',
-        url: '/jumlah-pendapatan-asli-daerah-pad-tahun-2023-2024-kab-lampung-utara',
+        url: '/bpkad/jumlah-pendapatan-asli-daerah-pad-tahun-2023-2024-kab-lampung-utara',
         desc: 'Dataset PAD Resmi Lampung Utara dalam format CSV/JSON',
         params: [],
         headers: [],
@@ -33,7 +34,7 @@ const PRESET_COLLECTIONS = [
       {
         name: 'Realisasi APBD Daerah',
         method: 'GET',
-        url: '/keuangan/apbd',
+        url: '/bpkad/apbd',
         desc: 'Data realisasi pendapatan & belanja APBD Lampura',
         params: [],
         headers: [],
@@ -47,7 +48,7 @@ const PRESET_COLLECTIONS = [
       {
         name: 'Validasi NIK Penduduk',
         method: 'GET',
-        url: '/dukcapil/penduduk',
+        url: '/disdukcapil/penduduk',
         desc: 'Verifikasi status kependudukan warga berbasis NIK',
         params: [{ key: 'nik', value: '1803011508900001', active: true }],
         headers: [],
@@ -56,7 +57,7 @@ const PRESET_COLLECTIONS = [
       {
         name: 'Pencarian Data Kartu Keluarga',
         method: 'GET',
-        url: '/dukcapil/keluarga',
+        url: '/disdukcapil/keluarga',
         desc: 'Pencarian data KK kependudukan',
         params: [],
         headers: [],
@@ -70,7 +71,7 @@ const PRESET_COLLECTIONS = [
       {
         name: 'Profil ASN / Pegawai',
         method: 'GET',
-        url: '/kepegawaian/v1/data',
+        url: '/bkd/profil-asn',
         desc: 'Data profil kepegawaian ASN berbasis NIP',
         params: [{ key: 'nip', value: '198506122010011005', active: true }],
         headers: [],
@@ -84,7 +85,7 @@ const PRESET_COLLECTIONS = [
       {
         name: 'Program Kerja RKPD',
         method: 'GET',
-        url: '/perencanaan/program',
+        url: '/bappeda/program-rkpd',
         desc: 'Daftar program unggulan pembangunan daerah 2026',
         params: [],
         headers: [],
@@ -100,6 +101,8 @@ export default function ApiTesterPage() {
   const endpoints = context.endpoints || []
   const fetchOpds = context.fetchOpds || (() => {})
   const fetchEndpoints = context.fetchEndpoints || (() => {})
+  const fetchLogs = context.fetchLogs || (() => {})
+  const fetchStats = context.fetchStats || (() => {})
 
   // Catalog Endpoints from backend API
   const [catalogEndpoints, setCatalogEndpoints] = useState([])
@@ -123,6 +126,7 @@ export default function ApiTesterPage() {
     const groups = {}
     catalogEndpoints.forEach(item => {
       const category = item.opd_name || item.opd?.name || 'OPD Terdaftar'
+      const opdCode = item.opd?.code || 'opd'
       if (!groups[category]) {
         groups[category] = []
       }
@@ -135,7 +139,8 @@ export default function ApiTesterPage() {
       }
 
       const methods = rawMethods && rawMethods.length > 0 ? rawMethods : ['GET']
-      const formattedSlug = item.slug ? (item.slug.startsWith('/') ? item.slug : `/${item.slug}`) : `/${item.id}`
+      const formattedSlug = item.slug ? (item.slug.startsWith('/') ? item.slug.substring(1) : item.slug) : item.id
+      const fullEndpointUrl = `/${opdCode}/${formattedSlug}`
 
       methods.forEach(m => {
         const apiKey = item.user_api_key || item.api_key || ''
@@ -143,7 +148,7 @@ export default function ApiTesterPage() {
           id: `${item.id}-${m}`,
           name: item.title,
           method: m,
-          url: formattedSlug,
+          url: fullEndpointUrl,
           desc: item.target_url || item.description || `Endpoint ${item.title}`,
           apiKey: apiKey,
           params: [],
@@ -166,24 +171,24 @@ export default function ApiTesterPage() {
   const apiKeys = useMemo(() => {
     if (!opds || opds.length === 0) {
       return [
-        { id: 1, appId: 1, application_id: 1, appName: 'SIPKD Keuangan BPKAD', opd: 'bpkad', key: 'gkp_bappeda_key_2026_x89a', status: 'active' },
+        { id: 1, appId: 1, application_id: 1, appName: 'SIPKD Keuangan BPKAD', opd: 'bpkad', key: 'gkp_bpkad_key_2026_x89a', status: 'active' },
         { id: 2, appId: 2, application_id: 2, appName: 'SIAK Integrasi Dukcapil', opd: 'disdukcapil', key: 'gkp_disdukcapil_key_2026_a1b2', status: 'active' }
       ]
     }
-    return applications.map((app, idx) => ({
-      id: app.id || idx + 1,
-      appId: app.id || idx + 1,
-      application_id: app.id || idx + 1,
-      appName: app.name || `Aplikasi OPD #${idx + 1}`,
-      opd: app.code || 'opd',
-      key: `gkp_${(app.code || 'opd').toLowerCase()}_key_2026_x89a`,
+    return opds.map((opdItem, idx) => ({
+      id: opdItem.id || idx + 1,
+      appId: opdItem.id || idx + 1,
+      application_id: opdItem.id || idx + 1,
+      appName: opdItem.name || `OPD #${idx + 1}`,
+      opd: opdItem.code || 'opd',
+      key: opdItem.api_key || `gkp_${(opdItem.code || 'opd').toLowerCase()}_key_2026_x89a`,
       status: 'active'
     }))
   }, [opds])
 
   // Request State
   const [requestMethod, setRequestMethod] = useState('GET')
-  const [requestUrl, setRequestUrl]       = useState('/jumlah-pendapatan-asli-daerah-pad-tahun-2023-2024-kab-lampung-utara')
+  const [requestUrl, setRequestUrl]       = useState('/bpkad/jumlah-pendapatan-asli-daerah-pad-tahun-2023-2024-kab-lampung-utara')
   const [activeReqTab, setActiveReqTab]   = useState('params') // 'params' | 'headers' | 'auth' | 'body'
 
   // Dynamic Query Params Table
@@ -240,6 +245,173 @@ export default function ApiTesterPage() {
     return requestUrl.includes('?') ? `${requestUrl}&${queryString}` : `${requestUrl}?${queryString}`
   }, [requestUrl, queryParams])
 
+  // SPLP Code Generator State & Engine
+  const [selectedLang, setSelectedLang] = useState('curl')
+  const [copiedCode, setCopiedCode]     = useState(false)
+
+  const clientTargetUrl = useMemo(() => {
+    const host = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? `${window.location.protocol}//${window.location.hostname}:8000/APIGATELU`
+      : 'https://ragem-api.lampungutarakab.go.id/APIGATELU'
+
+    let cleanPath = fullTargetUrl
+    if (cleanPath.includes('/APIGATELU/')) {
+      cleanPath = cleanPath.substring(cleanPath.indexOf('/APIGATELU/') + '/APIGATELU/'.length)
+    } else if (cleanPath.startsWith('/')) {
+      cleanPath = cleanPath.substring(1)
+    }
+
+    return `${host}/${cleanPath}`
+  }, [fullTargetUrl])
+
+  const generatedCodeSnippet = useMemo(() => {
+    const keyToUse = currentKey?.key || 'gkp_bpkad_key_2026_x89a'
+    const headersList = [
+      { key: 'X-API-KEY', value: keyToUse },
+      { key: 'Accept', value: 'application/json' }
+    ]
+
+    customHeaders.forEach(h => {
+      if (h.active && h.key.trim()) {
+        headersList.push({ key: h.key.trim(), value: h.value.trim() })
+      }
+    })
+
+    const isBodyAllowed = ['POST', 'PUT', 'PATCH'].includes(requestMethod)
+    const formattedBody = isBodyAllowed && requestBody.trim() ? requestBody.trim() : ''
+
+    switch (selectedLang) {
+      case 'curl': {
+        let code = `curl -X ${requestMethod} "${clientTargetUrl}"`
+        headersList.forEach(h => {
+          code += ` \\\n  -H "${h.key}: ${h.value}"`
+        })
+        if (formattedBody) {
+          code += ` \\\n  -H "Content-Type: application/json"`
+          code += ` \\\n  -d '${formattedBody}'`
+        }
+        return code
+      }
+
+      case 'js_fetch': {
+        const headerObj = {}
+        headersList.forEach(h => { headerObj[h.key] = h.value })
+        if (formattedBody) headerObj['Content-Type'] = 'application/json'
+
+        let code = `fetch("${clientTargetUrl}", {\n`
+        code += `  method: "${requestMethod}",\n`
+        code += `  headers: ${JSON.stringify(headerObj, null, 4)},\n`
+        if (formattedBody) {
+          code += `  body: JSON.stringify(${formattedBody})\n`
+        } else {
+          code = code.replace(/,\n$/, '\n')
+        }
+        code += `})\n`
+        code += `.then(response => response.json())\n`
+        code += `.then(data => console.log("Hasil Data API:", data))\n`
+        code += `.catch(error => console.error("Error Fetch API:", error));`
+        return code
+      }
+
+      case 'js_axios': {
+        const headerObj = {}
+        headersList.forEach(h => { headerObj[h.key] = h.value })
+        if (formattedBody) headerObj['Content-Type'] = 'application/json'
+
+        let code = `import axios from 'axios';\n\n`
+        code += `axios({\n`
+        code += `  method: '${requestMethod.toLowerCase()}',\n`
+        code += `  url: '${clientTargetUrl}',\n`
+        code += `  headers: ${JSON.stringify(headerObj, null, 4)},\n`
+        if (formattedBody) {
+          code += `  data: ${formattedBody}\n`
+        } else {
+          code = code.replace(/,\n$/, '\n')
+        }
+        code += `})\n`
+        code += `.then(response => console.log("Data Response:", response.data))\n`
+        code += `.catch(error => console.error("Error Axios:", error));`
+        return code
+      }
+
+      case 'php_laravel': {
+        let code = `use Illuminate\\Support\\Facades\\Http;\n\n`
+        code += `$response = Http::withHeaders([\n`
+        headersList.forEach(h => {
+          code += `    '${h.key}' => '${h.value}',\n`
+        })
+        if (formattedBody) {
+          code += `    'Content-Type' => 'application/json',\n`
+        }
+        code += `])`
+        if (requestMethod === 'GET') {
+          code += `->get('${clientTargetUrl}');\n\n`
+        } else if (formattedBody) {
+          code += `->withBody('${formattedBody.replace(/'/g, "\\'")}', 'application/json')->${requestMethod.toLowerCase()}('${clientTargetUrl}');\n\n`
+        } else {
+          code += `->${requestMethod.toLowerCase()}('${clientTargetUrl}');\n\n`
+        }
+        code += `$data = $response->json();\n`
+        code += `// Ambil dan gunakan data hasil API\n`
+        code += `print_r($data);`
+        return code
+      }
+
+      case 'php_curl': {
+        let code = `<?php\n\n$curl = curl_init();\n\n`
+        code += `curl_setopt_array($curl, array(\n`
+        code += `  CURLOPT_URL => '${clientTargetUrl}',\n`
+        code += `  CURLOPT_RETURNTRANSFER => true,\n`
+        code += `  CURLOPT_CUSTOMREQUEST => '${requestMethod}',\n`
+        if (formattedBody) {
+          code += `  CURLOPT_POSTFIELDS => '${formattedBody.replace(/'/g, "\\'")}',\n`
+        }
+        code += `  CURLOPT_HTTPHEADER => array(\n`
+        headersList.forEach(h => {
+          code += `    '${h.key}: ${h.value}',\n`
+        })
+        if (formattedBody) {
+          code += `    'Content-Type: application/json',\n`
+        }
+        code += `  ),\n`
+        code += `));\n\n`
+        code += `$response = curl_exec($curl);\n`
+        code += `curl_close($curl);\n\n`
+        code += `$data = json_decode($response, true);\n`
+        code += `print_r($data);`
+        return code
+      }
+
+      case 'python': {
+        const headerObj = {}
+        headersList.forEach(h => { headerObj[h.key] = h.value })
+        if (formattedBody) headerObj['Content-Type'] = 'application/json'
+
+        let code = `import requests\n\n`
+        code += `url = "${clientTargetUrl}"\n`
+        code += `headers = ${JSON.stringify(headerObj, null, 4)}\n`
+        if (formattedBody) {
+          code += `payload = ${formattedBody}\n\n`
+          code += `response = requests.${requestMethod.toLowerCase()}(url, headers=headers, json=payload)\n`
+        } else {
+          code += `\nresponse = requests.${requestMethod.toLowerCase()}(url, headers=headers)\n`
+        }
+        code += `data = response.json()\n`
+        code += `print(data)`
+        return code
+      }
+
+      default:
+        return ''
+    }
+  }, [selectedLang, clientTargetUrl, requestMethod, customHeaders, requestBody, currentKey])
+
+  const handleCopySnippet = () => {
+    navigator.clipboard.writeText(generatedCodeSnippet)
+    setCopiedCode(true)
+    setTimeout(() => setCopiedCode(false), 2000)
+  }
+
   // Core API Request Execution Engine
   const executeSend = async (method = requestMethod, url = requestUrl, params = queryParams, headersExtra = customHeaders, bodyStr = requestBody) => {
     setLoading(true)
@@ -256,7 +428,12 @@ export default function ApiTesterPage() {
       targetPath = targetPath.includes('?') ? `${targetPath}&${qStr}` : `${targetPath}?${qStr}`
     }
 
-    const path = targetPath.startsWith('/') ? targetPath.substring(1) : targetPath
+    let path = targetPath
+    if (path.includes('/APIGATELU/')) {
+      path = path.substring(path.indexOf('/APIGATELU/') + '/APIGATELU/'.length)
+    } else if (path.startsWith('/')) {
+      path = path.substring(1)
+    }
 
     // Build headers
     const apiKeyHeader = (headersExtra || []).find(h => h.key.toLowerCase() === 'x-api-key' && h.active)?.value
@@ -330,6 +507,8 @@ export default function ApiTesterPage() {
       }
     } finally {
       setLoading(false)
+      if (fetchLogs) fetchLogs({ page: 1, per_page: 15 })
+      if (fetchStats) fetchStats()
     }
   }
 
@@ -389,12 +568,12 @@ export default function ApiTesterPage() {
           </div>
           <div>
             <h2 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              API Workbench & Tester
-              <span className="text-[10px] font-mono font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-md border border-blue-500/20">
-                Postman Style
+              APIGET Workbench & Tester
+              <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                Pengambilan & Penginputan Data
               </span>
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Pengujian request HTTP & proxy gateway secara langsung di lingkungan lokal</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Pengujian langsung pengambilan data (GET) dan penginputan data (POST) antar-OPD</p>
           </div>
         </div>
 
@@ -671,46 +850,50 @@ export default function ApiTesterPage() {
 
                 <div className="space-y-2">
                   {queryParams.map((param, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={param.active}
-                        onChange={e => {
-                          const updated = [...queryParams]
-                          updated[index].active = e.target.checked
-                          setQueryParams(updated)
-                        }}
-                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Key (misal: page)"
-                        value={param.key}
-                        onChange={e => {
-                          const updated = [...queryParams]
-                          updated[index].key = e.target.value
-                          setQueryParams(updated)
-                        }}
-                        className="w-1/3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                      />
-                      <span className="text-slate-400">=</span>
-                      <input
-                        type="text"
-                        placeholder="Value (misal: 1)"
-                        value={param.value}
-                        onChange={e => {
-                          const updated = [...queryParams]
-                          updated[index].value = e.target.value
-                          setQueryParams(updated)
-                        }}
-                        className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                      />
-                      <button
-                        onClick={() => setQueryParams(prev => prev.filter((_, i) => i !== index))}
-                        className="text-slate-400 hover:text-red-500 p-1.5 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={param.active}
+                          onChange={e => {
+                            const updated = [...queryParams]
+                            updated[index].active = e.target.checked
+                            setQueryParams(updated)
+                          }}
+                          className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Key (misal: page)"
+                          value={param.key}
+                          onChange={e => {
+                            const updated = [...queryParams]
+                            updated[index].key = e.target.value
+                            setQueryParams(updated)
+                          }}
+                          className="w-full sm:w-1/3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 text-xs font-mono"
+                        />
+                      </div>
+                      <span className="hidden sm:inline text-slate-400 font-mono">=</span>
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          type="text"
+                          placeholder="Value (misal: 1)"
+                          value={param.value}
+                          onChange={e => {
+                            const updated = [...queryParams]
+                            updated[index].value = e.target.value
+                            setQueryParams(updated)
+                          }}
+                          className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 text-xs font-mono"
+                        />
+                        <button
+                          onClick={() => setQueryParams(prev => prev.filter((_, i) => i !== index))}
+                          className="text-slate-400 hover:text-red-500 p-1.5 transition-colors cursor-pointer shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -974,6 +1157,58 @@ export default function ApiTesterPage() {
                 )}
               </div>
             )}
+          </div>
+
+          {/* SECTION 4: SPLP INTEGRATION CODE GENERATOR */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm dark:shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 gap-3">
+              <div>
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Code2 className="w-4 h-4 text-emerald-500" />
+                  Kodingan Integrasi Klien
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Salin potongan kode di bawah ini ke kodingan aplikasi Anda untuk mengambil data secara langsung via API
+                </p>
+              </div>
+
+              <button
+                onClick={handleCopySnippet}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs transition-all shadow-md shadow-blue-600/20 cursor-pointer shrink-0"
+              >
+                {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedCode ? 'Kodingan Tersalin!' : 'Salin Kodingan'}</span>
+              </button>
+            </div>
+
+            {/* Language Selection Tabs */}
+            <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2 overflow-x-auto text-xs pb-1">
+              {[
+                { id: 'curl',        label: 'cURL (Bash)' },
+                { id: 'js_fetch',    label: 'JavaScript (Fetch)' },
+                { id: 'js_axios',    label: 'JavaScript (Axios)' },
+                { id: 'php_laravel', label: 'PHP (Laravel Http)' },
+                { id: 'php_curl',    label: 'PHP (Native cURL)' },
+                { id: 'python',     label: 'Python (Requests)' },
+              ].map(lang => (
+                <button
+                  key={lang.id}
+                  onClick={() => setSelectedLang(lang.id)}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    selectedLang === lang.id
+                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30'
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Generated Snippet Display */}
+            <pre className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-4 font-mono text-xs text-cyan-300 overflow-x-auto leading-relaxed max-h-[320px] shadow-inner select-all">
+              <code>{generatedCodeSnippet}</code>
+            </pre>
           </div>
         </div>
       </div>

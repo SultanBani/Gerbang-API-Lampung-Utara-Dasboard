@@ -21,7 +21,7 @@ const api = axios.create({
  * Base URL: /gateway
  */
 export const gatewayApi = axios.create({
-  baseURL: `/gateway`,
+  baseURL: `/APIGATELU`,
   timeout: 30000,
 })
 

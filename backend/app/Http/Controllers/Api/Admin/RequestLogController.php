@@ -14,7 +14,6 @@ class RequestLogController extends Controller
         $query = RequestLog::with([
             'endpoint:id,opd_id,title,slug',
             'opd:id,name,code',
-            'accessRequest:id,endpoint_id,requestor_opd_id,status',
         ])->latest();
 
         if ($request->filled('status_code')) {
@@ -50,6 +49,8 @@ class RequestLogController extends Controller
 
         if ($request->filled('opd_id')) {
             $query->where('opd_id', (int) $request->opd_id);
+        } elseif ($request->filled('application_id')) {
+            $query->where('opd_id', (int) $request->application_id);
         }
 
         $perPage = min((int) $request->get('per_page', 15), 100);
@@ -73,7 +74,6 @@ class RequestLogController extends Controller
         $log = RequestLog::with([
             'endpoint:id,opd_id,title,slug,target_url',
             'opd:id,name,code',
-            'accessRequest',
         ])->findOrFail($id);
 
         $requestPayload  = $log->request_payload

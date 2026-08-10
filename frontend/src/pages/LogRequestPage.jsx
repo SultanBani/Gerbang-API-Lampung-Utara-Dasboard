@@ -30,12 +30,21 @@ export default function LogRequestPage() {
   const loadLogs = useCallback(() => {
     const params = { page, per_page: 15 }
     if (searchQuery) params.search = searchQuery
-    if (filterApp)   params.application_id = filterApp
+    if (filterApp) {
+      params.opd_id = filterApp
+      params.application_id = filterApp
+    }
     if (filterStatus) params.status_code = filterStatus
     fetchLogs(params)
   }, [page, searchQuery, filterApp, filterStatus, fetchLogs])
 
-  useEffect(() => { loadLogs() }, [loadLogs])
+  useEffect(() => {
+    loadLogs()
+    const interval = setInterval(() => {
+      loadLogs()
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [loadLogs])
 
   const logItems = logs?.data ?? []
   const meta     = { currentPage: logs?.current_page ?? 1, lastPage: logs?.last_page ?? 1, total: logs?.total ?? 0 }

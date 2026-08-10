@@ -41,7 +41,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Login berhasil. Selamat datang di Gerbang API Kabupaten Lampung Utara.',
+            'message' => 'Login berhasil. Selamat datang di Portal APIGET Kabupaten Lampung Utara.',
             'data' => [
                 'token' => $token,
                 'user'  => [

@@ -12,16 +12,29 @@ class OpdController extends Controller
     public function catalog(Request $request)
     {
         $user = $request->user();
-
-        $endpoints = Endpoint::with('opd')
-            ->where('is_active', true)
-            ->get();
-
         $userOpdId = $user ? $user->opd_id : null;
 
-        // Tandai endpoint milik OPD sendiri
+        $endpoints = Endpoint::with(['opd', 'accessRequests' => function ($q) use ($userOpdId) {
+            if ($userOpdId) {
+                $q->where('requestor_opd_id', $userOpdId);
+            }
+        }])
+        ->where('is_active', true)
+        ->get();
+
         $endpoints->transform(function ($ep) use ($userOpdId) {
             $ep->is_owner = $userOpdId && ((int)$userOpdId === (int)$ep->opd_id);
+            
+            // Ambil permohonan akses OPD ini jika ada
+            $userReq = $ep->accessRequests->first();
+            $ep->user_access_request = $userReq ? [
+                'id'         => $userReq->id,
+                'status'     => $userReq->status,
+                'api_key'    => $userReq->status === 'approved' ? $userReq->api_key : null,
+                'expires_at' => $userReq->expires_at,
+            ] : null;
+
+            unset($ep->accessRequests);
             return $ep;
         });
 

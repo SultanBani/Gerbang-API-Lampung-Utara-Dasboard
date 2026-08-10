@@ -78,6 +78,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/my-endpoints', [\App\Http\Controllers\Api\OpdController::class, 'storeEndpoint']);
         Route::put('/my-endpoints/{id}', [\App\Http\Controllers\Api\OpdController::class, 'updateEndpoint']);
         Route::delete('/my-endpoints/{id}', [\App\Http\Controllers\Api\OpdController::class, 'destroyEndpoint']);
+
+        // Access Request Management (Permohonan & Persetujuan Hak Akses API)
+        Route::get('/access-requests', [\App\Http\Controllers\Api\AccessRequestController::class, 'index']);
+        Route::post('/access-requests', [\App\Http\Controllers\Api\AccessRequestController::class, 'store']);
+        Route::post('/access-requests/{id}/approve', [\App\Http\Controllers\Api\AccessRequestController::class, 'approve']);
+        Route::post('/access-requests/{id}/reject', [\App\Http\Controllers\Api\AccessRequestController::class, 'reject']);
     });
 });
 

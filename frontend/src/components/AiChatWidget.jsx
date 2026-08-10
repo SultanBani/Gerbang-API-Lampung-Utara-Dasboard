@@ -10,7 +10,7 @@ export default function AiChatWidget() {
   const [messages, setMessages] = useState([
     {
       sender: 'ai',
-      text: 'Halo! Saya Asisten Integrasi Gerbang API Lampung Utara. Ada yang bisa saya bantu terkait integrasi API, pemecahan masalah HTTP error, atau perizinan OPD?',
+      text: 'Halo! Saya Asisten Integrasi APIGET Kabupaten Lampung Utara. Ada yang bisa saya bantu terkait permohonan hak akses API, pengambilan data (GET), atau penginputan data (POST)?',
       time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     }
   ])
