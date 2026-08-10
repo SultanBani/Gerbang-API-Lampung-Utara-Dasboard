@@ -25,7 +25,7 @@ const getGatewayBaseUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.')) {
-      return `${window.location.protocol}//${host}:8000/APIGATELU`
+      return `${window.location.protocol}//localhost:8000/APIGATELU`
     }
   }
   return 'https://ragem-api.lampungutarakab.go.id/APIGATELU'

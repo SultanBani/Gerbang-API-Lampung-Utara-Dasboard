@@ -152,7 +152,7 @@ export default function ApiTesterPage() {
           desc: item.target_url || item.description || `Endpoint ${item.title}`,
           apiKey: apiKey,
           params: [],
-          headers: apiKey ? [{ key: 'X-API-KEY', value: apiKey, active: true }] : [],
+          headers: [],
           body: ''
         })
       })
@@ -518,9 +518,7 @@ export default function ApiTesterPage() {
     setRequestUrl(item.url)
     const p = item.params || []
     const keyToUse = item.apiKey || currentKey?.key || 'gkp_bappeda_key_2026_x89a'
-    const h = item.headers && item.headers.length > 0 ? item.headers : [
-      { key: 'X-API-KEY', value: keyToUse, active: true }
-    ]
+    const h = item.headers && item.headers.length > 0 ? item.headers : []
     const b = item.body || ''
     setQueryParams(p)
     setCustomHeaders(h)
