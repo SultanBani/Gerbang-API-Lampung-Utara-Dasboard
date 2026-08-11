@@ -5,20 +5,25 @@ import {
   Building2, Globe, X, Loader2, CheckCircle, Search, ShieldCheck, Info, ExternalLink, Copy, Check, KeyRound, Lock, Clock, Sparkles
 } from 'lucide-react'
 
-const getFullGatewayUrl = (opdCode, slug, apiKey = null) => {
-  let url = ''
+// URL bersih tanpa token (untuk ditampilkan ke user)
+const getCleanGatewayUrl = (opdCode, slug) => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.')) {
-      url = `${window.location.protocol}//localhost:8000/APIGATELU/${opdCode}/${slug}`
+      return `${window.location.protocol}//${host}:8000/APIGATELU/${opdCode}/${slug}`
     }
   }
-  if (!url) {
-    url = `https://ragem-api.lampungutarakab.go.id/APIGATELU/${opdCode}/${slug}`
-  }
-  if (apiKey) {
-    url += `?api_key=${apiKey}`
-  }
+  return `https://ragem-api.lampungutarakab.go.id/APIGATELU/${opdCode}/${slug}`
+}
+
+// URL dengan token otentikasi (untuk link yang diklik / buka di tab baru)
+const getFullGatewayUrl = (opdCode, slug, apiKey = null) => {
+  let url = getCleanGatewayUrl(opdCode, slug)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('gkp_token') : null
+  const params = []
+  if (apiKey) params.push(`api_key=${apiKey}`)
+  if (token) params.push(`_token=${token}`)
+  if (params.length) url += `?${params.join('&')}`
   return url
 }
 
@@ -323,11 +328,11 @@ export default function OpdCatalogPage() {
                     className="font-mono font-bold text-blue-600 dark:text-blue-400 hover:text-blue-500 hover:underline break-all text-[11px] flex items-center gap-1.5 flex-1"
                     title="Buka langsung di browser"
                   >
-                    <span>{getFullGatewayUrl(detailEndpoint.opd?.code, detailEndpoint.slug, detailEndpoint.user_access_request?.api_key)}</span>
+                    <span>{getCleanGatewayUrl(detailEndpoint.opd?.code, detailEndpoint.slug)}</span>
                     <ExternalLink className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                   </a>
                   <button
-                    onClick={() => copyUrl(getFullGatewayUrl(detailEndpoint.opd?.code, detailEndpoint.slug, detailEndpoint.user_access_request?.api_key), `detail-${detailEndpoint.id}`)}
+                    onClick={() => copyUrl(getCleanGatewayUrl(detailEndpoint.opd?.code, detailEndpoint.slug), `detail-${detailEndpoint.id}`)}
                     className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-all cursor-pointer shrink-0"
                     title="Salin URL"
                   >

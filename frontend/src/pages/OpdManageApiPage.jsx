@@ -21,15 +21,23 @@ const methodColor = {
   DELETE: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30',
 }
 
-const getFullGatewayUrl = (opdCode, slug, token) => {
-  let url = `https://ragem-api.lampungutarakab.go.id/APIGATELU/${opdCode}/${slug}`
+// URL bersih tanpa token (untuk ditampilkan ke user)
+const getCleanGatewayUrl = (opdCode, slug) => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.')) {
-      url = `${window.location.protocol}//${host}:8000/APIGATELU/${opdCode}/${slug}`
+      return `${window.location.protocol}//${host}:8000/APIGATELU/${opdCode}/${slug}`
     }
   }
-  return token ? `${url}?_token=${token}` : url
+  return `https://ragem-api.lampungutarakab.go.id/APIGATELU/${opdCode}/${slug}`
+}
+
+// URL dengan token otentikasi (untuk link yang diklik / buka di tab baru)
+const getAuthGatewayUrl = (opdCode, slug) => {
+  let url = getCleanGatewayUrl(opdCode, slug)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('gkp_token') : null
+  if (token) url += `?_token=${token}`
+  return url
 }
 
 export default function OpdManageApiPage() {
@@ -458,7 +466,8 @@ export default function OpdManageApiPage() {
             {myEndpoints.length > 0 ? (
               <div className="grid grid-cols-1 gap-4">
                 {myEndpoints.map(ep => {
-                  const gatewayUrl = getFullGatewayUrl(ep.opd?.code || 'opd', ep.slug, typeof window !== 'undefined' ? localStorage.getItem('gkp_token') : null)
+                  const cleanUrl = getCleanGatewayUrl(ep.opd?.code || 'opd', ep.slug)
+                  const authUrl = getAuthGatewayUrl(ep.opd?.code || 'opd', ep.slug)
                   const isUploadedFile = ep.target_url?.includes('/storage/')
 
                   return (
@@ -521,7 +530,7 @@ export default function OpdManageApiPage() {
                           <div className="flex items-center justify-between text-[10px] font-sans font-bold text-slate-500">
                             <span>GATEWAY ROUTE URL (Output JSON)</span>
                             <button
-                              onClick={() => copyText(gatewayUrl, `url-${ep.id}`)}
+                              onClick={() => copyText(cleanUrl, `url-${ep.id}`)}
                               className="text-blue-500 hover:underline flex items-center gap-1 cursor-pointer font-bold"
                             >
                               {copiedId === `url-${ep.id}` ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
@@ -529,13 +538,13 @@ export default function OpdManageApiPage() {
                             </button>
                           </div>
                           <a
-                            href={gatewayUrl}
+                            href={authUrl}
                             target="_blank"
                             rel="noreferrer"
                             className="text-blue-600 dark:text-blue-400 hover:text-blue-500 hover:underline font-bold text-[11px] break-all flex items-center gap-1 truncate"
                             title="Buka langsung di Chrome"
                           >
-                            <span className="truncate">{gatewayUrl}</span>
+                            <span className="truncate">{cleanUrl}</span>
                             <ExternalLink className="w-3.5 h-3.5 shrink-0 text-blue-500" />
                           </a>
                         </div>

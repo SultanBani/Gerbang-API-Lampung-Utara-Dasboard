@@ -146,16 +146,23 @@ class ApiGatewayMiddleware
         $isAuthorized = false;
         $authErrorMessage = null;
 
-        // Dukung Bearer token via query string (_token) untuk bypass buka di tab baru
-        if ($request->query('_token') && !$request->bearerToken()) {
-            $request->headers->set('Authorization', 'Bearer ' . $request->query('_token'));
-        }
+        // ── Owner Bypass: Cek Bearer token (dari header ATAU query _token) ──
+        // Ini memungkinkan pemilik API membuka data miliknya sendiri
+        // langsung di browser tanpa perlu API Key khusus.
+        $bearerToken = $request->bearerToken() ?? $request->query('_token');
 
-        // Bypass khusus untuk Pemilik API (OPD Owner) atau Admin yang sedang login di Dashboard
-        if (\Illuminate\Support\Facades\Auth::guard('sanctum')->check()) {
-            $user = \Illuminate\Support\Facades\Auth::guard('sanctum')->user();
-            if ($user && ($user->role === 'admin' || $user->opd_id === $opd->id)) {
-                $isAuthorized = true;
+        if ($bearerToken) {
+            try {
+                $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($bearerToken);
+                if ($accessToken) {
+                    $tokenUser = $accessToken->tokenable;
+                    if ($tokenUser && ($tokenUser->role === 'admin' || $tokenUser->opd_id === $opd->id)) {
+                        $isAuthorized = true;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Token tidak valid, lanjutkan ke pengecekan API Key biasa
+                Log::debug('[ApiGateway] Owner bypass token check failed', ['error' => $e->getMessage()]);
             }
         }
 
