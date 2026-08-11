@@ -1080,13 +1080,46 @@ export default function ApiTesterPage() {
 
                 {activeResTab === 'pretty' && (
                   <pre className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-4 font-mono text-xs text-emerald-400 overflow-x-auto leading-relaxed max-h-[360px] shadow-inner">
-                    <code>{JSON.stringify(responseResult.data, null, 2)}</code>
+                    <code>
+                      {(() => {
+                        let dataToDisplay = responseResult.data;
+                        let isTruncated = false;
+                        
+                        // Jika data adalah array raksasa, potong untuk mencegah browser crash
+                        if (Array.isArray(dataToDisplay) && dataToDisplay.length > 50) {
+                          dataToDisplay = [...dataToDisplay.slice(0, 50), `... [TAMPILAN DIPOTONG: Menampilkan 50 dari ${dataToDisplay.length} baris. Salin payload untuk melihat keseluruhan] ...`];
+                          isTruncated = true;
+                        }
+                        
+                        let str = JSON.stringify(dataToDisplay, null, 2);
+                        if (!isTruncated && str.length > 50000) {
+                           str = str.substring(0, 50000) + '\n\n... [TAMPILAN DIPOTONG: Data terlalu besar] ...';
+                        }
+                        return str;
+                      })()}
+                    </code>
                   </pre>
                 )}
 
                 {activeResTab === 'raw' && (
                   <pre className="bg-slate-900 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed max-h-[360px] whitespace-pre-wrap shadow-inner">
-                    <code>{typeof responseResult.data === 'object' ? JSON.stringify(responseResult.data) : String(responseResult.data)}</code>
+                    <code>
+                      {(() => {
+                        let dataToDisplay = responseResult.data;
+                        let isTruncated = false;
+                        
+                        if (Array.isArray(dataToDisplay) && dataToDisplay.length > 50) {
+                          dataToDisplay = [...dataToDisplay.slice(0, 50), `... [TAMPILAN DIPOTONG: Menampilkan 50 dari ${dataToDisplay.length} baris. Salin payload untuk melihat keseluruhan] ...`];
+                          isTruncated = true;
+                        }
+                        
+                        let str = typeof dataToDisplay === 'object' ? JSON.stringify(dataToDisplay) : String(dataToDisplay);
+                        if (!isTruncated && str.length > 50000) {
+                           str = str.substring(0, 50000) + '\n\n... [TAMPILAN DIPOTONG: Data terlalu besar] ...';
+                        }
+                        return str;
+                      })()}
+                    </code>
                   </pre>
                 )}
 
