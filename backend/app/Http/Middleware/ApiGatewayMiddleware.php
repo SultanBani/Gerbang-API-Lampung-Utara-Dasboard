@@ -253,18 +253,55 @@ class ApiGatewayMiddleware
                 $httpStatus      = 200;
                 $responsePayload = $localResponse;
             } else {
-                $proxyResponse = $this->forwardRequest($request, $endpoint->target_url, $upstreamHeaders);
+                // ── Deteksi Self-Loopback (Anti-Deadlock) ──
+                // php artisan serve berjalan single-threaded.
+                // Jika target_url mengarah ke server ini sendiri (localhost / 127.0.0.1),
+                // forward HTTP akan menyebabkan DEADLOCK (server menunggu dirinya sendiri).
+                $parsedHost = parse_url($endpoint->target_url, PHP_URL_HOST);
+                $parsedPort = parse_url($endpoint->target_url, PHP_URL_PORT);
+                $serverPort = $request->getPort();
+                $isLoopback = in_array($parsedHost, ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true)
+                    && ($parsedPort == $serverPort || $parsedPort === null);
 
-                $httpStatus      = $proxyResponse->status();
-                $rawBody         = $proxyResponse->body();
-                $jsonData        = $proxyResponse->json();
+                if ($isLoopback) {
+                    // Coba baca file lokal dari path URL jika ada
+                    $urlPath = parse_url($endpoint->target_url, PHP_URL_PATH) ?? '';
+                    $localPath = public_path(ltrim($urlPath, '/'));
+                    
+                    if (file_exists($localPath) && is_file($localPath)) {
+                        $rawContent = file_get_contents($localPath);
+                        $ext = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
+                        
+                        if ($ext === 'json') {
+                            $responsePayload = json_decode($rawContent, true) ?? $rawContent;
+                        } elseif ($ext === 'csv') {
+                            $responsePayload = $this->parseCsvToJson($rawContent);
+                        } else {
+                            $responsePayload = $rawContent;
+                        }
+                        $httpStatus = 200;
+                    } else {
+                        $httpStatus = 502;
+                        $responsePayload = [
+                            'error'   => 'Bad Gateway: Target URL mengarah ke server lokal yang sama (loopback). File tidak ditemukan di disk.',
+                            'details' => sprintf('Target "%s" tidak dapat dijangkau tanpa menyebabkan deadlock pada server single-threaded. Pastikan file tersedia di: %s', $endpoint->target_url, $localPath ?? 'N/A'),
+                            'solusi'  => 'Gunakan "Upload File (CSV/JSON)" saat membuat endpoint, atau arahkan target_url ke server eksternal.',
+                        ];
+                    }
+                } else {
+                    $proxyResponse = $this->forwardRequest($request, $endpoint->target_url, $upstreamHeaders);
 
-                // Auto-convert CSV upstream response to structured JSON
-                if (! $jsonData && (str_contains(strtolower($endpoint->target_url), '.csv') || str_contains(strtolower($proxyResponse->header('Content-Type') ?? ''), 'csv'))) {
-                    $jsonData = $this->parseCsvToJson($rawBody);
+                    $httpStatus      = $proxyResponse->status();
+                    $rawBody         = $proxyResponse->body();
+                    $jsonData        = $proxyResponse->json();
+
+                    // Auto-convert CSV upstream response to structured JSON
+                    if (! $jsonData && (str_contains(strtolower($endpoint->target_url), '.csv') || str_contains(strtolower($proxyResponse->header('Content-Type') ?? ''), 'csv'))) {
+                        $jsonData = $this->parseCsvToJson($rawBody);
+                    }
+
+                    $responsePayload = $jsonData ?? $rawBody;
                 }
-
-                $responsePayload = $jsonData ?? $rawBody;
             }
         } catch (ConnectionException $e) {
             $httpStatus = 502;
