@@ -78,15 +78,15 @@ export default function LoginPage() {
             <img
               src="/logo.png"
               alt="Gerbang API Logo"
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain shrink-0"
+              className="h-20 sm:h-24 w-auto object-contain shrink-0"
             />
 
             <div className="flex flex-col items-start text-left space-y-1.5">
-              <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none pt-0.5">
+              <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tighter leading-none pt-0.5">
                 APIGATE
               </h1>
               
-              <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest pt-0.5">
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] pt-1">
                 Kabupaten Lampung Utara
               </p>
             </div>
