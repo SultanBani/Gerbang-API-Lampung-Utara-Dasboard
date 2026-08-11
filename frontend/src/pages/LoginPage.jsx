@@ -74,26 +74,22 @@ export default function LoginPage() {
         <div className="bg-white/90 backdrop-blur-3xl border border-white/80 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_60px_-15px_rgba(37,99,235,0.18)] space-y-7 relative">
 
           {/* Top Header & Logo */}
-          <div className="text-center space-y-3">
-            <div className="inline-flex relative group mx-auto mb-1">
-              <div className="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-3xl blur-md opacity-35 group-hover:opacity-65 transition duration-300"></div>
-              <img
-                src="/logo.png"
-                alt="Gerbang API Logo"
-                className="relative w-20 h-20 rounded-2xl object-cover shadow-xl border-2 border-white bg-white p-1"
-              />
-            </div>
+          <div className="flex items-center justify-center gap-5 sm:gap-6">
+            <img
+              src="/logo.png"
+              alt="Gerbang API Logo"
+              className="w-20 h-20 sm:w-24 sm:h-24 object-contain shrink-0"
+            />
 
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/90 border border-blue-200/90 text-blue-700 text-[11px] font-extrabold tracking-wide mb-2 shadow-xs">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                <span>Portal Interoperabilitas Data</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+            <div className="flex flex-col items-start text-left space-y-1.5">
+              <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none pt-0.5">
                 APIGATE
               </h1>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1.5">
+              
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest pt-0.5">
                 Kabupaten Lampung Utara
               </p>
+            </div>
           </div>
 
           {/* Alert Message */}
