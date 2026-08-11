@@ -337,6 +337,15 @@ class ApiGatewayMiddleware
         $responseTimeMs = (int) round((microtime(true) - $startTime) * 1000);
 
         // Simpan log ke request_logs
+        $encodedResponse = is_array($responsePayload) 
+            ? json_encode($responsePayload, JSON_UNESCAPED_UNICODE) 
+            : (string) $responsePayload;
+        
+        // Cegah error DB (kolom TEXT limit) dengan memotong payload log jika sangat besar (> 10000 karakter)
+        if (strlen($encodedResponse) > 10000) {
+            $encodedResponse = substr($encodedResponse, 0, 10000) . "\n\n... [LOG DIPOTONG: PAYLOAD TERLALU BESAR (" . strlen($encodedResponse) . " bytes)] ...";
+        }
+
         $this->writeLog([
             'endpoint_id'       => $endpoint->id,
             'opd_id'            => $opd->id,
@@ -346,9 +355,7 @@ class ApiGatewayMiddleware
             'response_time_ms'  => $responseTimeMs,
             'ip_address'        => $request->ip(),
             'request_payload'   => json_encode($requestPayload, JSON_UNESCAPED_UNICODE),
-            'response_payload'  => is_array($responsePayload)
-                ? json_encode($responsePayload, JSON_UNESCAPED_UNICODE)
-                : (string) $responsePayload,
+            'response_payload'  => $encodedResponse,
         ]);
 
         // Kembalikan response ke klien
