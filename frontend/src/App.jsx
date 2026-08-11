@@ -7,6 +7,8 @@ import AiChatWidget from './components/AiChatWidget'
 import ProtectedRoute from './components/ProtectedRoute'
 
 import LoginPage from './pages/LoginPage'
+import LandingPage from './pages/LandingPage'
+import PanduanPage from './pages/PanduanPage'
 import DashboardPage from './pages/DashboardPage'
 import EndpointPage from './pages/EndpointPage'
 import LogRequestPage from './pages/LogRequestPage'
@@ -23,10 +25,16 @@ export default function App() {
 
   return (
     <Routes>
-      {/* Route Login Publik */}
+      {/* ── Landing Page — selalu tampil ── */}
+      <Route path="/" element={<LandingPage />} />
+
+      {/* ── Panduan Page — publik ── */}
+      <Route path="/panduan" element={<PanduanPage />} />
+
+      {/* ── Route Login Publik — selalu tampil ── */}
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Main Layout Protected Routes */}
+      {/* ── Protected Main App Layout ── */}
       <Route
         path="/*"
         element={
@@ -34,24 +42,16 @@ export default function App() {
             <Navigate to="/login" replace />
           ) : (
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased flex transition-colors duration-300 relative overflow-hidden">
-              {/* Sidebar Component with Mobile Drawer */}
               <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-              {/* Main Content Layout */}
               <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-                {/* Top Header */}
                 <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
-                {/* Main Page Content */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
                   <Routes>
-                    {/* Default Home Redirect */}
-                    <Route
-                      path="/"
-                      element={<Navigate to={isAdmin ? "/dashboard" : "/portal-opd"} replace />}
-                    />
+                    <Route path="/" element={<Navigate to={isAdmin ? '/dashboard' : '/portal-opd'} replace />} />
 
-                    {/* Admin Only Routes */}
+                    {/* Admin Only */}
                     <Route element={<ProtectedRoute requireAdmin={true} />}>
                       <Route path="/dashboard" element={<DashboardPage />} />
                       <Route path="/users" element={<UserManagementPage />} />
@@ -66,20 +66,16 @@ export default function App() {
                       <Route path="/portal-opd/manage" element={<OpdManageApiPage />} />
                     </Route>
 
-                    {/* Shared Routes */}
+                    {/* Shared */}
                     <Route path="/tester" element={<ApiTesterPage />} />
                     <Route path="/dokumentasi" element={<DokumentasiPage />} />
 
-                    {/* Fallback Catch-all Route */}
-                    <Route
-                      path="*"
-                      element={<Navigate to={isAdmin ? "/dashboard" : "/portal-opd"} replace />}
-                    />
+                    {/* Fallback */}
+                    <Route path="*" element={<Navigate to={isAdmin ? '/dashboard' : '/portal-opd'} replace />} />
                   </Routes>
                 </main>
               </div>
 
-              {/* Sleek Enterprise Floating AI Assistant Widget */}
               <AiChatWidget />
             </div>
           )

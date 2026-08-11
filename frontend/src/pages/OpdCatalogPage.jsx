@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import {
-  Building2, Globe, X, Loader2, CheckCircle, Search, ShieldCheck, Info, ExternalLink, Copy, Check, KeyRound, Lock, Clock, Sparkles
+  Building2, Globe, X, Loader2, CheckCircle, Search, ShieldCheck, Info, ExternalLink, Copy, Check, KeyRound, Lock, Clock, Sparkles, Terminal
 } from 'lucide-react'
 
 // URL bersih tanpa token (untuk ditampilkan ke user)
@@ -35,7 +35,152 @@ const methodColor = {
   DELETE: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30',
 }
 
+// ─── CodeSnippetPanel Component ───────────────────────────────────────────────
+function CodeSnippetPanel({ endpoint }) {
+  const [activeTab, setActiveTab] = useState('curl')
+  const [copied, setCopied] = useState(false)
+
+  const gatewayUrl = getCleanGatewayUrl(endpoint.opd?.code, endpoint.slug)
+  const apiKey = endpoint.user_access_request?.api_key || 'API_KEY_ANDA'
+
+  const snippets = {
+    curl: `curl -X GET "${gatewayUrl}" \\
+  -H "X-API-KEY: ${apiKey}" \\
+  -H "Accept: application/json"`,
+
+    php: `<?php
+// Integrasi APIGATE menggunakan PHP cURL
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "${gatewayUrl}");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "X-API-KEY: ${apiKey}",
+    "Accept: application/json"
+]);
+
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($httpCode === 200) {
+    $data = json_decode($response, true);
+    print_r($data); // Gunakan $data sesuai kebutuhan
+} else {
+    echo "Error: " . $response;
+}`,
+
+    laravel: `<?php
+// Integrasi APIGATE menggunakan Laravel HTTP Client
+use Illuminate\\Support\\Facades\\Http;
+
+$response = Http::withHeaders([
+    'X-API-KEY' => '${apiKey}',
+    'Accept'    => 'application/json',
+])->get('${gatewayUrl}');
+
+if ($response->successful()) {
+    $data = $response->json();
+    // Gunakan $data sesuai kebutuhan aplikasi Anda
+    return response()->json($data);
+}
+
+return response()->json([
+    'error' => $response->json()['message'] ?? 'Gagal mengambil data'
+], $response->status());`,
+
+    javascript: `// Integrasi APIGATE menggunakan JavaScript (Fetch API)
+const response = await fetch("${gatewayUrl}", {
+  method: "GET",
+  headers: {
+    "X-API-KEY": "${apiKey}",
+    "Accept": "application/json"
+  }
+});
+
+if (response.ok) {
+  const data = await response.json();
+  console.log("Data dari APIGATE:", data);
+} else {
+  console.error("Error:", response.status, response.statusText);
+}`,
+
+    python: `# Integrasi APIGATE menggunakan Python (urllib)
+import json, urllib.request
+
+url = "${gatewayUrl}"
+req = urllib.request.Request(url)
+req.add_header("X-API-KEY", "${apiKey}")
+req.add_header("Accept", "application/json")
+
+with urllib.request.urlopen(req) as res:
+    data = json.loads(res.read().decode("utf-8"))
+    print(data)  # Gunakan data sesuai kebutuhan`,
+  }
+
+  const tabs = [
+    { id: 'curl', label: 'cURL' },
+    { id: 'php', label: 'PHP' },
+    { id: 'laravel', label: 'Laravel' },
+    { id: 'javascript', label: 'JavaScript' },
+    { id: 'python', label: 'Python' },
+  ]
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(snippets[activeTab])
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="space-y-2">
+      {/* Section Header */}
+      <div className="flex items-center gap-2">
+        <Terminal className="w-3.5 h-3.5 text-indigo-500" />
+        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          Kode Integrasi
+        </span>
+      </div>
+
+      {/* Language Tab Selector */}
+      <div className="flex gap-1 flex-wrap">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border ${
+              activeTab === tab.id
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Code Block + Copy Button */}
+      <div className="relative group">
+        <pre className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-cyan-300 text-[11px] overflow-x-auto leading-relaxed max-h-52 font-mono whitespace-pre-wrap break-words">
+          <code>{snippets[activeTab]}</code>
+        </pre>
+        <button
+          onClick={handleCopy}
+          className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] font-bold transition-all cursor-pointer border border-slate-600 shadow-sm"
+          title="Salin Kodingan"
+        >
+          {copied ? (
+            <><Check className="w-3 h-3 text-emerald-400" /><span className="text-emerald-400">Tersalin!</span></>
+          ) : (
+            <><Copy className="w-3 h-3" /><span>Salin</span></>
+          )}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function OpdCatalogPage() {
+
   const { user } = useAuth()
   const [catalogEndpoints, setCatalogEndpoints] = useState([])
   const [loading, setLoading] = useState(true)
@@ -354,13 +499,8 @@ export default function OpdCatalogPage() {
               </div>
             </div>
 
-            {/* Example JSON Payload */}
-            <div className="space-y-1.5 font-mono text-xs">
-              <span className="text-[10px] font-sans font-bold text-slate-500 uppercase">Skema Response JSON:</span>
-              <pre className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 text-[11px] overflow-x-auto leading-relaxed max-h-40">
-                <code>{`{\n  "status": "success",\n  "dataset": "${detailEndpoint.title}",\n  "opd": "${detailEndpoint.opd?.name || 'OPD'}",\n  "total_records": 5,\n  "data": [ ... ]\n}`}</code>
-              </pre>
-            </div>
+            {/* Code Snippets Section */}
+            <CodeSnippetPanel endpoint={detailEndpoint} />
 
             {/* Modal Footer */}
             <div className="flex gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">

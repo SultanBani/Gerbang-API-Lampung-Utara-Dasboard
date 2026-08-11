@@ -572,7 +572,7 @@ class ApiGatewayMiddleware
         return [
             'Access-Control-Allow-Origin'  => '*',
             'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers' => 'Content-Type, Accept, Authorization',
+            'Access-Control-Allow-Headers' => 'Content-Type, Accept, Authorization, X-API-KEY, X-Client-ID, X-Secret-Key, X-Requested-With, Origin',
         ];
     }
 }

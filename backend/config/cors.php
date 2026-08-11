@@ -16,28 +16,11 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        'http://localhost:5174',
-        'http://127.0.0.1:5174',
-        'http://localhost:3000',
-    ],
+    'allowed_origins' => ['*'],
 
-    'allowed_origins_patterns' => [
-        '#^http://(localhost|127\.0\.0\.1)(:\d+)?$#',
-    ],
+    'allowed_origins_patterns' => [],
 
-    'allowed_headers' => [
-        'Content-Type',
-        'Authorization',
-        'X-Client-ID',
-        'X-Secret-Key',
-        'X-API-KEY',
-        'Accept',
-        'X-Requested-With',
-        'Origin',
-    ],
+    'allowed_headers' => ['*'],
 
     'exposed_headers' => [
         'X-Request-ID',
@@ -45,6 +28,6 @@ return [
 
     'max_age' => 86400,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];

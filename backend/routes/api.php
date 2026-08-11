@@ -30,6 +30,14 @@ Route::prefix('api/auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
+Route::get('api/public/stats', function () {
+    return response()->json([
+        'success' => true,
+        'total_opds' => \App\Models\Opd::count(),
+        'total_endpoints' => \App\Models\Endpoint::count(),
+    ]);
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 // [2] PROTECTED — Routes yang membutuhkan Sanctum token
 // ─────────────────────────────────────────────────────────────────────────

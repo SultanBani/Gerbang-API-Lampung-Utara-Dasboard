@@ -82,11 +82,11 @@ export default function LoginPage() {
             />
 
             <div className="flex flex-col items-start text-left space-y-1.5">
-              <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tighter leading-none pt-0.5">
+              <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tighter leading-none pt-0.5">
                 APIGATE
               </h1>
               
-              <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] pt-1">
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em] pt-1">
                 Kabupaten Lampung Utara
               </p>
             </div>
