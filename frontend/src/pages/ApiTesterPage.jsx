@@ -537,7 +537,7 @@ export default function ApiTesterPage() {
           </div>
           <div>
             <h2 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              APIGET Workbench & Tester
+              APIGATE Workbench & Tester
               <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/30">
                 Pengambilan & Penginputan Data
               </span>

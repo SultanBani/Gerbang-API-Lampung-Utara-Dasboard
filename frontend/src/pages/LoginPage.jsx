@@ -89,7 +89,7 @@ export default function LoginPage() {
                 <span>Portal Interoperabilitas Data</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
-                APIGET
+                APIGATE
               </h1>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1.5">
                 Kabupaten Lampung Utara

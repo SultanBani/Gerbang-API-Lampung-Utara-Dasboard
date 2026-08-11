@@ -95,7 +95,7 @@ export default function OpdCatalogPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-gradient-to-r from-blue-600 via-indigo-600 to-slate-900 rounded-2xl text-white shadow-lg">
         <div className="space-y-1">
           <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
-            <Globe className="w-5 h-5 text-cyan-300" /> Katalog Layanan Data APIGET
+            <Globe className="w-5 h-5 text-cyan-300" /> Katalog Layanan Data APIGATE
           </h2>
           <p className="text-xs text-blue-100 font-medium">
             Temukan layanan Pengambilan Data (GET) dan Penginputan Data (POST) dari seluruh OPD Kabupaten Lampung Utara.
@@ -352,26 +352,6 @@ export default function OpdCatalogPage() {
                   </span>
                 ))}
               </div>
-            </div>
-
-            {/* Target URL */}
-            <div className="space-y-1.5 font-mono text-xs">
-              <span className="text-[10px] font-sans font-bold text-slate-500 uppercase">Target Upstream Service:</span>
-              {detailEndpoint.target_url?.startsWith('http') ? (
-                <a
-                  href={detailEndpoint.target_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-blue-400 hover:underline text-[11px] flex items-center justify-between group truncate"
-                >
-                  <span className="truncate">{detailEndpoint.target_url}</span>
-                  <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100" />
-                </a>
-              ) : (
-                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-[11px] truncate">
-                  {detailEndpoint.target_url || 'Target internal service URL'}
-                </div>
-              )}
             </div>
 
             {/* Example JSON Payload */}

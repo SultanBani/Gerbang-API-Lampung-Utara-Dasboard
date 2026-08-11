@@ -64,10 +64,10 @@ export default function DokumentasiPage() {
         <div className="relative z-10 space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-cyan-300">
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Dokumentasi Resmi Integrasi APIGET v2.4</span>
+            <span>Dokumentasi Resmi Integrasi APIGATE v2.4</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
-            Panduan & Dokumentasi Integrasi Data APIGET
+            Panduan & Dokumentasi Integrasi Data APIGATE
           </h1>
           <p className="text-xs sm:text-sm text-blue-100 max-w-3xl leading-relaxed">
             Petunjuk lengkap penggunaan Gateway Interoperabilitas Data Kabupaten Lampung Utara untuk <strong>Pengambilan Data (GET)</strong> dan <strong>Penginputan Data (POST)</strong> antar-OPD.
@@ -128,10 +128,10 @@ export default function DokumentasiPage() {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                Apa itu APIGET Lampung Utara?
+                Apa itu APIGATE Lampung Utara?
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                <strong>APIGET</strong> (Gateway Interoperabilitas Data) adalah platform resmi Kabupaten Lampung Utara yang memungkinkan seluruh Organisasi Perangkat Daerah (OPD) untuk saling <strong>berbagi pakai data</strong> secara aman, terpusat, dan cepat tanpa perlu membangun koneksi jaringan terpisah.
+                <strong>APIGATE</strong> (Gateway Interoperabilitas Data) adalah platform resmi Kabupaten Lampung Utara yang memungkinkan seluruh Organisasi Perangkat Daerah (OPD) untuk saling <strong>berbagi pakai data</strong> secara aman, terpusat, dan cepat tanpa perlu membangun koneksi jaringan terpisah.
               </p>
             </div>
 
@@ -141,7 +141,7 @@ export default function DokumentasiPage() {
                 <Code2 className="w-5 h-5" />
               </div>
               <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                Dua Fungsi Utama APIGET
+                Dua Fungsi Utama APIGATE
               </h3>
               <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-2">
                 <li className="flex items-start gap-2">
