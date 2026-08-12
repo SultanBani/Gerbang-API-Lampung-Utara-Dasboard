@@ -1,35 +1,36 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowLeft, KeyRound, Database, Code2, Send, ShieldCheck, HelpCircle } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
+import { ArrowRight, ArrowLeft, KeyRound, Database, Code2, Send, ShieldCheck, HelpCircle, Sun, Moon, Menu, X } from 'lucide-react'
 
 const steps = [
   {
     number: '01',
-    icon: <ShieldCheck size={20} className="text-blue-600 group-hover:scale-110 transition-transform" />,
+    icon: <ShieldCheck size={20} className="text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />,
     title: 'Daftar Akun',
     desc: 'Hubungi admin untuk mendaftarkan akun OPD Anda.',
   },
   {
     number: '02',
-    icon: <KeyRound size={20} className="text-blue-600 group-hover:scale-110 transition-transform" />,
+    icon: <KeyRound size={20} className="text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />,
     title: 'Login Portal',
     desc: 'Masuk menggunakan kredensial OPD yang diberikan.',
   },
   {
     number: '03',
-    icon: <Database size={20} className="text-blue-600 group-hover:scale-110 transition-transform" />,
+    icon: <Database size={20} className="text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />,
     title: 'Pilih Dataset',
     desc: 'Cari data sektoral yang dibutuhkan di Katalog API.',
   },
   {
     number: '04',
-    icon: <Send size={20} className="text-blue-600 group-hover:scale-110 transition-transform" />,
+    icon: <Send size={20} className="text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />,
     title: 'Minta Akses',
     desc: 'Ajukan permohonan akses ke OPD pemilik data.',
   },
   {
     number: '05',
-    icon: <Code2 size={20} className="text-blue-600 group-hover:scale-110 transition-transform" />,
+    icon: <Code2 size={20} className="text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />,
     title: 'Salin Kode',
     desc: 'Terapkan kodingan integrasi siap pakai di sistem Anda.',
   },
@@ -56,10 +57,12 @@ const faqs = [
 
 export default function PanduanPage() {
   const navigate = useNavigate()
+  const { isDark, toggleTheme } = useTheme()
   const [scrolled, setScrolled] = useState(false)
   const [revealSection, setRevealSection] = useState(false)
   const [faqVisible, setFaqVisible] = useState(false)
   const [activeFaqIndex, setActiveFaqIndex] = useState(null)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -106,8 +109,8 @@ export default function PanduanPage() {
   }, [])
 
   return (
-    <div className="min-h-screen text-slate-800 relative overflow-hidden"
-      style={{ background: '#f5f7fa', fontFamily: "'Segoe UI', 'Inter', sans-serif" }}>
+    <div className="min-h-screen text-slate-800 dark:text-slate-200 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-500"
+      style={{ fontFamily: "'Segoe UI', 'Inter', sans-serif" }}>
 
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fadeInUp {
@@ -130,7 +133,9 @@ export default function PanduanPage() {
         .hover-lift:hover {
           transform: translateY(-4px);
           box-shadow: 0 12px 30px rgba(30, 58, 138, 0.08);
-          border-color: #3b82f6 !important;
+        }
+        .dark .hover-lift:hover {
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
         }
         .stagger-step {
           opacity: 0;
@@ -144,75 +149,101 @@ export default function PanduanPage() {
       `}} />
 
       {/* Background Decorative Blur Blobs */}
-      <div className="absolute top-0 right-0 w-[450px] h-[450px] rounded-full bg-blue-600/5 blur-[120px] pointer-events-none -mr-40 -mt-20"></div>
-      <div className="absolute top-[400px] left-0 w-[400px] h-[400px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none -ml-40"></div>
+      <div className="absolute top-0 right-0 w-[450px] h-[450px] rounded-full bg-blue-600/5 dark:bg-blue-500/10 blur-[120px] pointer-events-none -mr-40 -mt-20"></div>
+      <div className="absolute top-[400px] left-0 w-[400px] h-[400px] rounded-full bg-indigo-500/5 dark:bg-indigo-400/8 blur-[100px] pointer-events-none -ml-40"></div>
 
       {/* ── Navbar ── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 animate-slide-down ${scrolled ? 'backdrop-blur-md shadow-lg border-b border-indigo-500/20' : 'border-b border-indigo-500/10'}`} style={{ background: 'linear-gradient(to right, #2563eb, #4f46e5)', transition: 'all 0.3s' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => navigate('/')} className="cursor-pointer flex items-center hover:opacity-85 transition-opacity bg-white rounded-lg px-2.5 py-1 shadow-sm border-none text-left">
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 animate-slide-down ${scrolled ? 'backdrop-blur-md shadow-lg border-b border-blue-500/20' : 'border-b border-blue-500/10'}`} style={{ background: isDark ? 'linear-gradient(to right, #1e293b, #0f172a)' : 'linear-gradient(to right, #2563eb, #4f46e5)' }}>
+        <div className="max-w-5xl mx-auto px-6 py-3.5 flex items-center justify-between">
+          <button onClick={() => navigate('/')} className="cursor-pointer flex items-center hover:opacity-85 transition-opacity bg-white dark:bg-slate-800 rounded-lg px-2.5 py-1 shadow-sm border-none text-left">
             <img src="/logo_apiget.png" alt="APIGATE Logo" className="h-8 w-auto object-contain" />
           </button>
-          <div style={{ display: 'flex', gap: 32, fontSize: 13, fontWeight: 600 }}>
-            <button onClick={() => navigate('/')} className="text-blue-100 hover:text-white transition-colors bg-transparent border-none cursor-pointer font-semibold text-xs sm:text-sm">Beranda</button>
-            <button onClick={() => navigate('/panduan')} className="text-white border-b-2 border-white pb-0.5 transition-all bg-transparent border-none cursor-pointer font-semibold text-xs sm:text-sm">Panduan</button>
+          <div className="hidden md:flex items-center gap-8 text-xs sm:text-sm font-semibold">
+            <button onClick={() => navigate('/')} className="text-blue-100 dark:text-slate-300 hover:text-white transition-colors bg-transparent border-none cursor-pointer font-semibold text-xs sm:text-sm">Beranda</button>
+            <button onClick={() => navigate('/panduan')} className="text-white border-b-2 border-white pb-0.5 transition-all bg-transparent border-t-0 border-l-0 border-r-0 cursor-pointer font-semibold text-xs sm:text-sm">Panduan</button>
           </div>
-          <button onClick={() => navigate('/login')}
-            style={{ background: '#fff', color: '#2563eb', fontWeight: 800, fontSize: 13, padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-            Login <ArrowRight size={14} />
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="bg-white/20 hover:bg-white/30 dark:bg-slate-700/60 dark:hover:bg-slate-600/80 text-white p-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
+              title={isDark ? 'Mode Terang' : 'Mode Gelap'}
+            >
+              {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-blue-100" />}
+            </button>
+
+            <button onClick={() => navigate('/login')}
+              className="bg-white hover:bg-slate-100 dark:bg-blue-600 dark:hover:bg-blue-500 text-blue-900 dark:text-white font-extrabold px-5 py-2.5 rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md shadow-blue-950/20 cursor-pointer active:scale-95 border-none">
+              Login <ArrowRight size={14} />
+            </button>
+
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="md:hidden p-2 text-blue-100 hover:text-white cursor-pointer rounded-lg hover:bg-blue-900/40 dark:hover:bg-slate-700/60 transition-colors"
+            >
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {menuOpen && (
+          <div className="md:hidden bg-blue-900 dark:bg-slate-800 border-t border-blue-800 dark:border-slate-700 px-6 py-4 space-y-3 shadow-lg text-sm font-semibold text-white">
+            <button onClick={() => { navigate('/'); setMenuOpen(false); }} className="block text-left w-full text-blue-200 dark:text-slate-300 hover:text-white py-1 bg-transparent border-none font-semibold">Beranda</button>
+            <button onClick={() => { navigate('/panduan'); setMenuOpen(false); }} className="block text-left w-full text-white py-1 bg-transparent border-none font-semibold">Panduan</button>
+          </div>
+        )}
       </nav>
 
       {/* Navbar offset */}
       <div className="h-16"></div>
 
       {/* ── Page Header (Gradient & Less Plain) ── */}
-      <div className="relative border-b border-slate-200/80 overflow-hidden animate-fade-in-up" style={{ background: 'linear-gradient(135deg, #0f172a, #1e3a8a)', padding: '48px 24px' }}>
+      <div className="relative border-b border-slate-200/80 dark:border-slate-800 overflow-hidden animate-fade-in-up py-12 sm:py-16 px-6" style={{ background: isDark ? 'linear-gradient(135deg, #0f172a, #1e293b)' : 'linear-gradient(135deg, #0f172a, #1e3a8a)' }}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.06),transparent_50%)]"></div>
-        <div style={{ maxWidth: 900, margin: '0 auto' }} className="relative z-10">
+        <div className="max-w-5xl mx-auto relative z-10">
           <button onClick={() => navigate('/')} className="flex items-center gap-2 text-xs text-blue-200 hover:text-white bg-transparent border-none cursor-pointer mb-4 font-bold transition-colors">
             <ArrowLeft size={14} /> Kembali ke Beranda
           </button>
-          <h1 className="text-2xl font-black text-white leading-tight mb-2">Panduan Penggunaan</h1>
-          <p className="text-xs text-blue-100/90 leading-relaxed max-w-xl">
+          <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-3">Panduan Penggunaan</h1>
+          <p className="text-xs sm:text-sm text-blue-100/90 dark:text-slate-400 leading-relaxed max-w-xl">
             Langkah cepat mengintegrasikan data sektoral antar OPD Kabupaten Lampung Utara menggunakan APIGATE.
           </p>
         </div>
       </div>
 
       {/* ── Steps Section (Horizontal Side-by-Side Grid) ── */}
-      <section id="steps-section" style={{ padding: '48px 24px', maxWidth: 900, margin: '0 auto' }}>
+      <section id="steps-section" className="py-12 px-6 max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20 flex items-center justify-center">
-            <Database size={16} className="text-blue-700" />
+          <div className="p-1.5 bg-blue-500/10 dark:bg-blue-500/15 rounded-lg border border-blue-500/20 dark:border-blue-500/30 flex items-center justify-center">
+            <Database size={16} className="text-blue-700 dark:text-blue-400" />
           </div>
-          <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider leading-none m-0">Alur Integrasi Cepat</h2>
+          <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider leading-none m-0">Alur Integrasi Cepat</h2>
         </div>
 
-        {/* Horizontal Step Cards (flex-col on mobile, flex-row on desktop) */}
+        {/* Horizontal Step Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
           {steps.map((step, i) => (
             <div
               key={i}
-              className={`stagger-step group bg-white border border-slate-200/80 rounded-2xl p-5 hover-lift cursor-default shadow-sm text-center flex flex-col items-center justify-between ${
+              className={`stagger-step group bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 hover-lift cursor-default shadow-sm text-center flex flex-col items-center justify-between ${
                 revealSection ? 'reveal' : ''
               }`}
               style={{ transitionDelay: `${i * 120}ms` }}
             >
               {/* Step indicator circle */}
-              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 group-hover:bg-blue-600 group-hover:border-blue-600 flex items-center justify-center mb-3.5 transition-all duration-300">
-                <span className="text-xs font-black text-blue-700 group-hover:text-white transition-colors">{step.number}</span>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 group-hover:bg-blue-600 group-hover:border-blue-600 dark:group-hover:bg-blue-600 dark:group-hover:border-blue-600 flex items-center justify-center mb-3.5 transition-all duration-300">
+                <span className="text-xs font-black text-blue-700 dark:text-blue-300 group-hover:text-white transition-colors">{step.number}</span>
               </div>
 
               {/* Title & Short Desc */}
               <div className="space-y-1.5 flex-1 flex flex-col justify-center">
-                <h3 className="text-xs font-extrabold text-slate-900 leading-tight m-0">{step.title}</h3>
-                <p className="text-[11px] text-slate-500 leading-relaxed m-0">{step.desc}</p>
+                <h3 className="text-xs font-extrabold text-slate-900 dark:text-white leading-tight m-0">{step.title}</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed m-0">{step.desc}</p>
               </div>
 
               {/* Icon marker at bottom */}
-              <div className="mt-4 pt-3.5 border-t border-slate-100 w-full flex justify-center text-blue-600">
+              <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 w-full flex justify-center text-blue-600 dark:text-blue-400">
                 {step.icon}
               </div>
             </div>
@@ -220,14 +251,14 @@ export default function PanduanPage() {
         </div>
       </section>
 
-      {/* ── Code Example Section (Fade-in on scroll) ── */}
-      <section style={{ padding: '0 24px 48px', maxWidth: 900, margin: '0 auto' }}>
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover-lift shadow-sm">
+      {/* ── Code Example Section ── */}
+      <section className="px-6 pb-12 max-w-5xl mx-auto">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 hover-lift shadow-sm">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-blue-600"></div>
-            <h2 className="text-xs font-extrabold text-slate-900 leading-none m-0">Contoh Kode Integrasi (Laravel)</h2>
+            <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+            <h2 className="text-xs font-extrabold text-slate-900 dark:text-white leading-none m-0">Contoh Kode Integrasi (Laravel)</h2>
           </div>
-          <pre className="bg-slate-900 text-sky-300 rounded-xl p-4 text-[11px] font-mono leading-relaxed overflow-x-auto border border-slate-800 shadow-inner max-h-[180px]">{`<?php
+          <pre className="bg-slate-900 dark:bg-slate-950 text-sky-300 rounded-xl p-4 text-[11px] font-mono leading-relaxed overflow-x-auto border border-slate-800 dark:border-slate-700 shadow-inner max-h-[180px]">{`<?php
 use Illuminate\\Support\\Facades\\Http;
 
 $response = Http::withHeaders([
@@ -243,13 +274,12 @@ if ($response->successful()) {
       </section>
 
       {/* ── FAQ Section (Collapsible Accordion) ── */}
-      <section id="faq-section" style={{ padding: '0 24px 64px', maxWidth: 900, margin: '0 auto' }}
-        className={`transition-all duration-1000 transform ${faqVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+      <section id="faq-section" className={`px-6 pb-16 max-w-5xl mx-auto transition-all duration-1000 transform ${faqVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-1.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20 flex items-center justify-center">
-            <HelpCircle size={16} className="text-emerald-700" />
+          <div className="p-1.5 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-lg border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-center">
+            <HelpCircle size={16} className="text-emerald-700 dark:text-emerald-400" />
           </div>
-          <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider leading-none m-0">Pertanyaan Umum</h2>
+          <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider leading-none m-0">Pertanyaan Umum</h2>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -258,13 +288,13 @@ if ($response->successful()) {
             return (
               <div
                 key={i}
-                className="group bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm cursor-pointer hover-lift"
+                className="group bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm cursor-pointer hover-lift"
                 onClick={() => setActiveFaqIndex(isOpen ? null : i)}
               >
                 {/* Header (Question + Toggle button) */}
                 <div className="w-full px-5 py-4 flex items-center justify-between text-left select-none">
-                  <p className="text-xs sm:text-sm font-extrabold text-slate-900 m-0 flex items-center gap-2">
-                    <span className="text-emerald-500 shrink-0">❓</span>
+                  <p className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white m-0 flex items-center gap-2">
+                    <span className="text-emerald-500 dark:text-emerald-400 shrink-0">❓</span>
                     <span>{faq.q}</span>
                   </p>
                   <svg
@@ -272,7 +302,7 @@ if ($response->successful()) {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2.5"
-                    className={`w-4 h-4 text-slate-400 transition-transform duration-350 shrink-0 ${isOpen ? 'rotate-180 text-blue-600' : ''}`}
+                    className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-350 shrink-0 ${isOpen ? 'rotate-180 text-blue-600 dark:text-blue-400' : ''}`}
                   >
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
@@ -283,10 +313,11 @@ if ($response->successful()) {
                   className="transition-all duration-350 ease-in-out overflow-hidden"
                   style={{
                     maxHeight: isOpen ? '120px' : '0',
-                    borderTop: isOpen ? '1px solid #f1f5f9' : '0px solid transparent'
+                    borderTop: isOpen ? '1px solid' : '0px solid transparent',
+                    borderTopColor: isOpen ? (isDark ? '#1e293b' : '#f1f5f9') : 'transparent'
                   }}
                 >
-                  <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed p-5 m-0 bg-slate-50/50">
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed p-5 m-0 bg-slate-50/50 dark:bg-slate-800/50">
                     {faq.a}
                   </p>
                 </div>
@@ -296,16 +327,16 @@ if ($response->successful()) {
         </div>
       </section>
 
-      {/* ── CTA Footer (Government Blue Background) ── */}
-      <section style={{ background: 'linear-gradient(to right, #2563eb, #4f46e5)', padding: '48px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }} className="border-t border-indigo-500/20">
+      {/* ── CTA Footer ── */}
+      <section className="py-12 sm:py-16 px-6 text-center relative overflow-hidden border-t border-blue-500/20 dark:border-slate-800" style={{ background: isDark ? 'linear-gradient(to right, #1e293b, #0f172a)' : 'linear-gradient(to right, #2563eb, #4f46e5)' }}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.06),transparent_60%)]"></div>
         <div className="relative z-10 max-w-xl mx-auto space-y-4">
           <h2 className="text-lg font-black text-white leading-tight">Siap Memulai Integrasi?</h2>
-          <p className="text-xs text-blue-100/90 leading-relaxed">
+          <p className="text-xs text-blue-100/90 dark:text-slate-400 leading-relaxed">
             Masuk menggunakan akun OPD Anda untuk membuka Katalog Layanan dan mulai mengajukan perizinan akses.
           </p>
           <button onClick={() => navigate('/login')}
-            className="inline-flex items-center gap-2 bg-white text-indigo-600 font-extrabold px-6 py-3.5 rounded-xl text-xs hover:bg-slate-50 transition-all shadow-lg shadow-blue-950/20 active:scale-95 cursor-pointer">
+            className="inline-flex items-center gap-2 bg-white dark:bg-blue-600 text-indigo-600 dark:text-white font-extrabold px-6 py-3.5 rounded-xl text-xs hover:bg-slate-50 dark:hover:bg-blue-500 transition-all shadow-lg shadow-blue-950/20 active:scale-95 cursor-pointer border-none">
             Masuk ke APIGATE <ArrowRight size={14} />
           </button>
         </div>

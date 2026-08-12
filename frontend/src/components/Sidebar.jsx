@@ -89,16 +89,12 @@ export default function Sidebar({ isOpen, onClose }) {
       <div>
         {/* Brand Logo Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <img
-              src="/logo.png"
-              alt="Gerbang API Logo"
-              className="w-10 h-10 rounded-xl object-cover shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-0.5"
+              src="/logo_apiget.png"
+              alt="APIGATE Lampung Utara"
+              className="h-9 w-auto object-contain rounded-lg bg-white dark:bg-slate-800 px-2 py-1 shadow-sm border border-slate-200 dark:border-slate-700"
             />
-            <div>
-              <h1 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 tracking-tight leading-none">APIGATE</h1>
-              <span className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 tracking-wider uppercase block mt-1">Lampung Utara</span>
-            </div>
           </div>
           {onClose && (
             <button
