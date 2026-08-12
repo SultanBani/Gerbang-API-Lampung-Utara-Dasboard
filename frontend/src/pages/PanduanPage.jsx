@@ -153,38 +153,38 @@ export default function PanduanPage() {
       <div className="absolute top-[400px] left-0 w-[400px] h-[400px] rounded-full bg-indigo-500/5 dark:bg-indigo-400/8 blur-[100px] pointer-events-none -ml-40"></div>
 
       {/* ── Navbar ── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 animate-slide-down ${scrolled ? 'backdrop-blur-md shadow-lg border-b border-blue-500/20' : 'border-b border-blue-500/10'}`} style={{ background: isDark ? 'linear-gradient(to right, #1e293b, #0f172a)' : 'linear-gradient(to right, #2563eb, #4f46e5)' }}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 animate-slide-down ${scrolled ? 'backdrop-blur-md shadow-lg border-b border-slate-200 dark:border-slate-800/80 bg-white/90 dark:bg-transparent' : 'border-b border-slate-100/50 dark:border-slate-800/40 bg-white/60 dark:bg-transparent'}`} style={{ background: isDark ? 'linear-gradient(to right, #1e293b, #0f172a)' : '' }}>
         <div className="max-w-5xl mx-auto px-6 py-3.5 flex items-center justify-between">
           <button onClick={() => navigate('/')} className="cursor-pointer flex items-center gap-2 hover:opacity-85 transition-opacity border-none text-left bg-transparent">
             <img src="/favicon_apigate.png" alt="APIGATE Icon" className="w-9 h-9 object-contain" />
-            <div className="w-px h-7 bg-white/30 shrink-0"></div>
+            <div className="w-px h-7 bg-slate-300 dark:bg-white/30 shrink-0"></div>
             <div className="leading-none">
-              <span className="text-[15px] font-black tracking-tight leading-none text-white">APIG<span className="text-amber-400">A</span>TE</span>
-              <div className="mt-0.5"><span className="text-[7px] font-extrabold text-blue-200 dark:text-slate-400 tracking-[0.15em] uppercase">Lampung Utara</span></div>
+              <span className="text-[15px] font-black tracking-tight leading-none text-slate-900 dark:text-white">APIG<span className="text-amber-500 dark:text-amber-400">A</span>TE</span>
+              <div className="mt-0.5"><span className="text-[7px] font-extrabold text-blue-600 dark:text-slate-400 tracking-[0.15em] uppercase">Lampung Utara</span></div>
             </div>
           </button>
           <div className="hidden md:flex items-center gap-8 text-xs sm:text-sm font-semibold">
-            <button onClick={() => navigate('/')} className="text-blue-100 dark:text-slate-300 hover:text-white transition-colors bg-transparent border-none cursor-pointer font-semibold text-xs sm:text-sm">Beranda</button>
-            <button onClick={() => navigate('/panduan')} className="text-white border-b-2 border-white pb-0.5 transition-all bg-transparent border-t-0 border-l-0 border-r-0 cursor-pointer font-semibold text-xs sm:text-sm">Panduan</button>
+            <button onClick={() => navigate('/')} className="text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-white transition-colors bg-transparent border-none cursor-pointer font-semibold text-xs sm:text-sm">Beranda</button>
+            <button onClick={() => navigate('/panduan')} className="text-blue-700 dark:text-white border-b-2 border-blue-700 dark:border-white pb-0.5 transition-all bg-transparent border-t-0 border-l-0 border-r-0 cursor-pointer font-semibold text-xs sm:text-sm">Panduan</button>
           </div>
           <div className="flex items-center gap-3">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="bg-white/20 hover:bg-white/30 dark:bg-slate-700/60 dark:hover:bg-slate-600/80 text-white p-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
+              className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700/60 dark:hover:bg-slate-600/80 text-slate-700 dark:text-white p-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
               title={isDark ? 'Mode Terang' : 'Mode Gelap'}
             >
-              {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-blue-100" />}
+              {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-blue-600" />}
             </button>
 
             <button onClick={() => navigate('/login')}
-              className="bg-white hover:bg-slate-100 dark:bg-blue-600 dark:hover:bg-blue-500 text-blue-900 dark:text-white font-extrabold px-5 py-2.5 rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md shadow-blue-950/20 cursor-pointer active:scale-95 border-none">
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-extrabold px-5 py-2.5 rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md shadow-blue-600/20 cursor-pointer active:scale-95 border-none">
               Login <ArrowRight size={14} />
             </button>
 
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 text-blue-100 hover:text-white cursor-pointer rounded-lg hover:bg-blue-900/40 dark:hover:bg-slate-700/60 transition-colors"
+              className="md:hidden p-2 text-slate-600 dark:text-blue-100 hover:text-slate-900 dark:hover:text-white cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors"
             >
               {menuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -193,9 +193,9 @@ export default function PanduanPage() {
 
         {/* Mobile Navigation Drawer */}
         {menuOpen && (
-          <div className="md:hidden bg-blue-900 dark:bg-slate-800 border-t border-blue-800 dark:border-slate-700 px-6 py-4 space-y-3 shadow-lg text-sm font-semibold text-white">
-            <button onClick={() => { navigate('/'); setMenuOpen(false); }} className="block text-left w-full text-blue-200 dark:text-slate-300 hover:text-white py-1 bg-transparent border-none font-semibold">Beranda</button>
-            <button onClick={() => { navigate('/panduan'); setMenuOpen(false); }} className="block text-left w-full text-white py-1 bg-transparent border-none font-semibold">Panduan</button>
+          <div className="md:hidden bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-6 py-4 space-y-3 shadow-lg text-sm font-semibold">
+            <button onClick={() => { navigate('/'); setMenuOpen(false); }} className="block text-left w-full text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-white py-1 bg-transparent border-none font-semibold">Beranda</button>
+            <button onClick={() => { navigate('/panduan'); setMenuOpen(false); }} className="block text-left w-full text-blue-700 dark:text-white py-1 bg-transparent border-none font-semibold">Panduan</button>
           </div>
         )}
       </nav>
@@ -204,14 +204,14 @@ export default function PanduanPage() {
       <div className="h-16"></div>
 
       {/* ── Page Header (Gradient & Less Plain) ── */}
-      <div className="relative border-b border-slate-200/80 dark:border-slate-800 overflow-hidden animate-fade-in-up py-12 sm:py-16 px-6" style={{ background: isDark ? 'linear-gradient(135deg, #0f172a, #1e293b)' : 'linear-gradient(135deg, #0f172a, #1e3a8a)' }}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.06),transparent_50%)]"></div>
+      <div className="relative border-b border-slate-200/80 dark:border-slate-800 overflow-hidden animate-fade-in-up py-12 sm:py-16 px-6 bg-gradient-to-br from-blue-50 via-slate-50 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.06),transparent_50%)]"></div>
         <div className="max-w-5xl mx-auto relative z-10">
-          <button onClick={() => navigate('/')} className="flex items-center gap-2 text-xs text-blue-200 hover:text-white bg-transparent border-none cursor-pointer mb-4 font-bold transition-colors">
+          <button onClick={() => navigate('/')} className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-200 hover:text-blue-800 dark:hover:text-white bg-transparent border-none cursor-pointer mb-4 font-bold transition-colors">
             <ArrowLeft size={14} /> Kembali ke Beranda
           </button>
-          <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-3">Panduan Penggunaan</h1>
-          <p className="text-xs sm:text-sm text-blue-100/90 dark:text-slate-400 leading-relaxed max-w-xl">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight mb-3">Panduan Penggunaan</h1>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl">
             Langkah cepat mengintegrasikan data sektoral antar OPD Kabupaten Lampung Utara menggunakan APIGATE.
           </p>
         </div>

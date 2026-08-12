@@ -273,22 +273,22 @@ export default function LandingPage() {
       `}} />
 
       {/* ══════════════════ NAVBAR ══════════════════ */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 animate-slide-down ${scrolled ? 'backdrop-blur-md shadow-lg border-b border-blue-500/20' : 'border-b border-blue-500/10'}`} style={{ background: isDark ? 'linear-gradient(to right, #1e293b, #0f172a)' : 'linear-gradient(to right, #2563eb, #4f46e5)' }}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 animate-slide-down ${scrolled ? 'backdrop-blur-md shadow-lg border-b border-slate-200 dark:border-slate-800/80 bg-white/90 dark:bg-transparent' : 'border-b border-slate-100/50 dark:border-slate-800/40 bg-white/60 dark:bg-transparent'}`} style={{ background: isDark ? 'linear-gradient(to right, #1e293b, #0f172a)' : '' }}>
         <div className="max-w-5xl mx-auto px-6 py-3.5 flex items-center justify-between">
           {/* Logo — matching sidebar style */}
           <div onClick={() => navigate('/')} className="cursor-pointer flex items-center gap-2 hover:opacity-85 transition-opacity">
             <img src="/favicon_apigate.png" alt="APIGATE Icon" className="w-9 h-9 object-contain" />
-            <div className="w-px h-7 bg-white/30 shrink-0"></div>
+            <div className="w-px h-7 bg-slate-300 dark:bg-white/30 shrink-0"></div>
             <div className="leading-none">
-              <span className="text-[15px] font-black tracking-tight leading-none text-white">APIG<span className="text-amber-400">A</span>TE</span>
-              <div className="mt-0.5"><span className="text-[7px] font-extrabold text-blue-200 dark:text-slate-400 tracking-[0.15em] uppercase">Lampung Utara</span></div>
+              <span className="text-[15px] font-black tracking-tight leading-none text-slate-900 dark:text-white">APIG<span className="text-amber-500 dark:text-amber-400">A</span>TE</span>
+              <div className="mt-0.5"><span className="text-[7px] font-extrabold text-blue-600 dark:text-slate-400 tracking-[0.15em] uppercase">Lampung Utara</span></div>
             </div>
           </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8 text-xs sm:text-sm font-semibold">
-            <a href="#beranda" className="text-white border-b-2 border-white pb-0.5 transition-all">Beranda</a>
-            <button onClick={() => navigate('/panduan')} className="text-blue-100 dark:text-slate-300 hover:text-white transition-colors bg-transparent border-none cursor-pointer font-semibold text-xs sm:text-sm">Panduan</button>
+            <a href="#beranda" className="text-blue-700 dark:text-white border-b-2 border-blue-700 dark:border-white pb-0.5 transition-all">Beranda</a>
+            <button onClick={() => navigate('/panduan')} className="text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-white transition-colors bg-transparent border-none cursor-pointer font-semibold text-xs sm:text-sm">Panduan</button>
           </div>
 
           {/* Action Buttons */}
@@ -296,21 +296,21 @@ export default function LandingPage() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="bg-white/20 hover:bg-white/30 dark:bg-slate-700/60 dark:hover:bg-slate-600/80 text-white p-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
+              className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700/60 dark:hover:bg-slate-600/80 text-slate-700 dark:text-white p-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
               title={isDark ? 'Mode Terang' : 'Mode Gelap'}
             >
-              {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-blue-100" />}
+              {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-blue-600" />}
             </button>
 
             <button
               onClick={() => navigate(loginDest)}
-              className="bg-white hover:bg-slate-100 dark:bg-blue-600 dark:hover:bg-blue-500 text-blue-900 dark:text-white font-extrabold px-5 py-2.5 rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md shadow-blue-950/20 cursor-pointer active:scale-95"
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-extrabold px-5 py-2.5 rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md shadow-blue-600/20 cursor-pointer active:scale-95 border-none"
             >
               {loginLabel} <ArrowRight size={14} />
             </button>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 text-blue-100 hover:text-white cursor-pointer rounded-lg hover:bg-blue-900/40 dark:hover:bg-slate-700/60 transition-colors"
+              className="md:hidden p-2 text-slate-600 dark:text-blue-100 hover:text-slate-900 dark:hover:text-white cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors"
             >
               {menuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -319,9 +319,9 @@ export default function LandingPage() {
 
         {/* Mobile Navigation Drawer */}
         {menuOpen && (
-          <div className="md:hidden bg-blue-900 dark:bg-slate-800 border-t border-blue-800 dark:border-slate-700 px-6 py-4 space-y-3 shadow-lg text-sm font-semibold text-white">
-            <a href="#beranda" onClick={() => setMenuOpen(false)} className="block text-white py-1">Beranda</a>
-            <button onClick={() => { navigate('/panduan'); setMenuOpen(false); }} className="block text-left w-full text-blue-200 dark:text-slate-300 hover:text-white py-1 bg-transparent border-none font-semibold">Panduan</button>
+          <div className="md:hidden bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-6 py-4 space-y-3 shadow-lg text-sm font-semibold">
+            <a href="#beranda" onClick={() => setMenuOpen(false)} className="block text-blue-700 dark:text-white py-1">Beranda</a>
+            <button onClick={() => { navigate('/panduan'); setMenuOpen(false); }} className="block text-left w-full text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-white py-1 bg-transparent border-none font-semibold">Panduan</button>
           </div>
         )}
       </nav>
