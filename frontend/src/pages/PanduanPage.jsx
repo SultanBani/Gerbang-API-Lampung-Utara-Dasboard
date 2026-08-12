@@ -332,20 +332,6 @@ if ($response->successful()) {
         </div>
       </section>
 
-      {/* ── CTA Footer ── */}
-      <section className="py-12 sm:py-16 px-6 text-center relative overflow-hidden border-t border-blue-500/20 dark:border-slate-800" style={{ background: isDark ? 'linear-gradient(to right, #1e293b, #0f172a)' : 'linear-gradient(to right, #2563eb, #4f46e5)' }}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.06),transparent_60%)]"></div>
-        <div className="relative z-10 max-w-xl mx-auto space-y-4">
-          <h2 className="text-lg font-black text-white leading-tight">Siap Memulai Integrasi?</h2>
-          <p className="text-xs text-blue-100/90 dark:text-slate-400 leading-relaxed">
-            Masuk menggunakan akun OPD Anda untuk membuka Katalog Layanan dan mulai mengajukan perizinan akses.
-          </p>
-          <button onClick={() => navigate('/login')}
-            className="inline-flex items-center gap-2 bg-white dark:bg-blue-600 text-indigo-600 dark:text-white font-extrabold px-6 py-3.5 rounded-xl text-xs hover:bg-slate-50 dark:hover:bg-blue-500 transition-all shadow-lg shadow-blue-950/20 active:scale-95 cursor-pointer border-none">
-            Masuk ke APIGATE <ArrowRight size={14} />
-          </button>
-        </div>
-      </section>
 
       {/* ══════════════════ MUTED FOOTER ══════════════════ */}
       <footer className="py-12 px-6 border-t border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 transition-colors duration-500">
