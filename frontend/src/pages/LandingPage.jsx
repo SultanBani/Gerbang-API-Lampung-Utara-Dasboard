@@ -275,9 +275,14 @@ export default function LandingPage() {
       {/* ══════════════════ NAVBAR ══════════════════ */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 animate-slide-down ${scrolled ? 'backdrop-blur-md shadow-lg border-b border-blue-500/20' : 'border-b border-blue-500/10'}`} style={{ background: isDark ? 'linear-gradient(to right, #1e293b, #0f172a)' : 'linear-gradient(to right, #2563eb, #4f46e5)' }}>
         <div className="max-w-5xl mx-auto px-6 py-3.5 flex items-center justify-between">
-          {/* Logo */}
-          <div onClick={() => navigate('/')} className="cursor-pointer flex items-center hover:opacity-85 transition-opacity bg-white dark:bg-slate-800 rounded-lg px-2.5 py-1 shadow-sm">
-            <img src="/logo_apiget.png" alt="APIGATE Logo" className="h-8 w-auto object-contain" />
+          {/* Logo — matching sidebar style */}
+          <div onClick={() => navigate('/')} className="cursor-pointer flex items-center gap-2 hover:opacity-85 transition-opacity">
+            <img src="/favicon_apigate.png" alt="APIGATE Icon" className="w-9 h-9 object-contain" />
+            <div className="w-px h-7 bg-white/30 shrink-0"></div>
+            <div className="leading-none">
+              <span className="text-[15px] font-black tracking-tight leading-none text-white">APIG<span className="text-amber-400">A</span>TE</span>
+              <div className="mt-0.5"><span className="text-[7px] font-extrabold text-blue-200 dark:text-slate-400 tracking-[0.15em] uppercase">Lampung Utara</span></div>
+            </div>
           </div>
 
           {/* Desktop Nav */}
@@ -505,31 +510,32 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══════════════════ PREMIUM FOOTER ══════════════════ */}
-      <footer className="py-16 px-6 text-slate-200 relative overflow-hidden" style={{ background: isDark ? 'linear-gradient(to right, #1e293b, #0f172a)' : 'linear-gradient(to right, #2563eb, #4f46e5)' }}>
-        {/* Subtle white/light glow decoration */}
-        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] rounded-full bg-white/5 blur-[80px] pointer-events-none"></div>
+      {/* ══════════════════ MUTED FOOTER ══════════════════ */}
+      <footer className="py-12 px-6 border-t border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 transition-colors duration-500">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
 
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 relative z-10">
-
-          {/* Column 1 - Brand description */}
+          {/* Column 1 - APIGATE Brand */}
           <div className="space-y-4">
-            <div className="flex items-center">
-              <img src="/logo_apiget.png" alt="APIGATE Logo" className="h-10 w-auto object-contain bg-white dark:bg-slate-800 rounded-lg p-1" />
+            <div className="flex items-center gap-2">
+              <img src="/favicon_apigate.png" alt="APIGATE Icon" className="w-9 h-9 object-contain" />
+              <div className="leading-none">
+                <span className="text-[15px] font-black tracking-tight text-slate-800 dark:text-slate-100">APIG<span className="text-amber-500">A</span>TE</span>
+                <div className="mt-0.5"><span className="text-[7px] font-extrabold text-blue-700 dark:text-blue-400 tracking-[0.15em] uppercase">Lampung Utara</span></div>
+              </div>
             </div>
-            <p className="text-xs text-blue-100 dark:text-slate-400 leading-relaxed">
-              Portal Data Resmi Pemerintah Kabupaten Lampung Utara. Menyediakan akses terbuka ke data pemerintahan untuk mendorong transparansi dan interoperabilitas lintas instansi.
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Portal Data Resmi Pemerintah Kabupaten Lampung Utara. Menyediakan akses terbuka ke data pemerintahan untuk mendorong transparansi dan inovasi publik.
             </p>
-            <p className="text-[10px] text-blue-200 dark:text-slate-500">© 2024 Pemerintah Kabupaten Lampung Utara. All Rights Reserved.</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500">© 2026 Dinas Komunikasi dan Informatika Kabupaten Lampung Utara. All Rights Reserved.</p>
           </div>
 
           {/* Column 2 - Quick Links */}
           <div className="space-y-4">
-            <div className="text-xs font-bold text-white dark:text-slate-200 uppercase tracking-wider">Tautan Penting</div>
+            <div className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Tautan Penting</div>
             <ul className="space-y-2.5 text-xs">
               {['Kebijakan Privasi', 'Syarat & Ketentuan', 'Keamanan Informasi', 'Peta Situs'].map(link => (
                 <li key={link}>
-                  <a href="#" className="text-blue-100 dark:text-slate-400 hover:text-white dark:hover:text-white transition-colors decoration-transparent">
+                  <a href="#" className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors decoration-transparent">
                     {link}
                   </a>
                 </li>
@@ -539,27 +545,35 @@ export default function LandingPage() {
 
           {/* Column 3 - Contact details */}
           <div className="space-y-4">
-            <div className="text-xs font-bold text-white dark:text-slate-200 uppercase tracking-wider">Kontak Kami</div>
+            <div className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Kontak Kami</div>
             <ul className="space-y-3 text-xs">
-              <li className="flex items-start gap-2.5 text-blue-100 dark:text-slate-400">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4 mt-0.5 shrink-0 text-blue-200 dark:text-slate-500">
+              <li className="flex items-start gap-2.5 text-slate-500 dark:text-slate-400">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4 mt-0.5 shrink-0 text-slate-400 dark:text-slate-500">
                   <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
                 </svg>
                 <span>Jl. Jend. Sudirman No.1, Kotabumi</span>
               </li>
-              <li className="flex items-center gap-2.5 text-blue-100 dark:text-slate-400">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4 shrink-0 text-blue-200 dark:text-slate-500">
+              <li className="flex items-center gap-2.5 text-slate-500 dark:text-slate-400">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4 shrink-0 text-slate-400 dark:text-slate-500">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />
                 </svg>
                 <span>info@lampungutarakab.go.id</span>
               </li>
-              <li className="flex items-center gap-2.5 text-blue-100 dark:text-slate-400">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4 shrink-0 text-blue-200 dark:text-slate-500">
+              <li className="flex items-center gap-2.5 text-slate-500 dark:text-slate-400">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4 shrink-0 text-slate-400 dark:text-slate-500">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.06 6.06l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.01z" />
                 </svg>
                 <span>(0724) 123456</span>
               </li>
             </ul>
+          </div>
+
+          {/* Column 4 - Diskominfo Logo */}
+          <div className="space-y-4">
+            <div className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Dikelola Oleh</div>
+            <div className="flex items-center">
+              <img src="/logo_diskominfo.png" alt="Diskominfo Lampung Utara" className="h-14 w-auto object-contain shrink-0" />
+            </div>
           </div>
         </div>
       </footer>
