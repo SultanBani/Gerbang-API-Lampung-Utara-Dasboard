@@ -60,26 +60,26 @@ export default function DokumentasiPage() {
     <div className="space-y-6">
 
       {/* ─── Top Header Banner ──────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-slate-900 text-white p-6 sm:p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-600 via-blue-700 to-blue-900 p-6 sm:p-8 shadow-lg border border-blue-500/30">
         <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-cyan-300">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-cyan-100">
             <span>Dokumentasi Resmi Integrasi APIGATE v2.4</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
             Panduan & Dokumentasi Integrasi Data APIGATE
           </h1>
-          <p className="text-xs sm:text-sm text-blue-100 max-w-3xl leading-relaxed">
-            Petunjuk lengkap penggunaan Gateway Interoperabilitas Data Kabupaten Lampung Utara untuk <strong>Pengambilan Data (GET)</strong> dan <strong>Penginputan Data (POST)</strong> antar-OPD.
+          <p className="text-xs sm:text-sm text-cyan-50 max-w-3xl leading-relaxed">
+            Petunjuk lengkap penggunaan Gateway Interoperabilitas Data Kabupaten Lampung Utara untuk <strong className="text-white">Pengambilan Data (GET)</strong> dan <strong className="text-white">Penginputan Data (POST)</strong> antar-OPD.
           </p>
 
           {/* Quick Base URL Badge */}
           <div className="pt-2 flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-slate-300">Base Gateway URL:</span>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 font-mono text-xs text-cyan-300 font-bold">
+            <span className="text-xs font-bold text-cyan-200">Base Gateway URL:</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/60 border border-blue-800/50 font-mono text-xs text-cyan-100 font-bold">
               <span>{baseUrl}</span>
               <button
                 onClick={() => copyToClipboard(baseUrl, 'baseurl')}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="text-cyan-300 hover:text-white transition-colors cursor-pointer"
                 title="Salin Base URL"
               >
                 {copiedKey === 'baseurl' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -111,10 +111,10 @@ export default function DokumentasiPage() {
       {/* ─── Navigation Tabs ─────────────────────────────────── */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-1 overflow-x-auto text-xs font-bold">
         {[
-          { id: 'overview', label: '📌 Ringkasan Sistem' },
-          { id: 'guide', label: '🚀 Cara Menggunakan (Alur GET & POST)' },
-          { id: 'endpoints', label: `🌐 Daftar Service API (${endpoints.length})` },
-          { id: 'errors', label: '⚠️ Format Respons & Status HTTP' },
+          { id: 'overview', label: 'Ringkasan Sistem' },
+          { id: 'guide', label: 'Cara Menggunakan (Alur GET & POST)' },
+          { id: 'endpoints', label: `Daftar Service API (${endpoints.length})` },
+          { id: 'errors', label: 'Format Respons & Status HTTP' },
         ].map(tab => {
           const isActive = activeTab === tab.id
           return (

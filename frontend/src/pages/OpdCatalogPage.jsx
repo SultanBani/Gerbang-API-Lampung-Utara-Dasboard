@@ -237,17 +237,21 @@ export default function OpdCatalogPage() {
   return (
     <div className="space-y-6">
       {/* User-Friendly Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-gradient-to-r from-blue-600 via-indigo-600 to-slate-900 rounded-2xl text-white shadow-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-gradient-to-r from-cyan-600 via-blue-700 to-blue-900 rounded-2xl shadow-lg border border-blue-500/30">
         <div className="space-y-1">
-          <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
-            <Globe className="w-5 h-5 text-cyan-300" /> Katalog Layanan Data APIGATE
+          <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+            <div className="p-2 bg-white/10 rounded-lg text-cyan-100">
+               <Globe className="w-5 h-5" />
+            </div>
+            Katalog Layanan Data APIGATE
           </h2>
-          <p className="text-xs text-blue-100 font-medium">
+          <p className="text-xs text-cyan-50 font-medium">
             Temukan layanan Pengambilan Data (GET) dan Penginputan Data (POST) dari seluruh OPD Kabupaten Lampung Utara.
           </p>
         </div>
-        <span className="self-start sm:self-center text-xs font-extrabold text-emerald-300 bg-emerald-500/20 border border-emerald-400/30 px-3 py-1.5 rounded-full shrink-0">
-          ✓ Interoperabilitas Aktif
+        <span className="self-start sm:self-center text-xs font-extrabold text-emerald-300 bg-emerald-500/20 border border-emerald-400/30 px-3 py-1.5 rounded-full shrink-0 flex items-center gap-1.5">
+          <CheckCircle className="w-3.5 h-3.5" />
+          Interoperabilitas Aktif
         </span>
       </div>
 
