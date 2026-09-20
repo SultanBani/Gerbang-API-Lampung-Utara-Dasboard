@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 | 2. /api/auth/me & logout  → Protected (auth:sanctum)
 | 3. /api/admin/*           → Protected Admin (auth:sanctum + role admin)
 | 4. /api/opd/*             → Protected OPD (auth:sanctum)
-| 5. /ragem-api/{opd}/{slug}→ Public Gateway Proxy (tanpa API Key)
+| 5. /APIGATELU/{opd}/{slug}→ Public Gateway Proxy (tanpa API Key)
 |
 */
 
@@ -99,11 +99,11 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// [5] GATEWAY PROXY — /ragem-api/{opd_code}/{endpoint_slug}
+// [5] GATEWAY PROXY — /APIGATELU/{opd_code}/{endpoint_slug}
 //     Public Gateway: Semua data API bersifat publik.
 //     ApiGatewayMiddleware hanya memvalidasi OPD, endpoint, dan HTTP method.
 // ─────────────────────────────────────────────────────────────────────────
-Route::get('/ragem-api/health', function () {
+Route::get('/APIGATELU/health', function () {
     return response()->json([
         'success' => true,
         'service' => 'Gerbang API Lampung Utara',
@@ -113,6 +113,8 @@ Route::get('/ragem-api/health', function () {
     ]);
 })->name('gateway.health');
 
-Route::any('/ragem-api/{opd_code}/{endpoint_slug}', [GatewayController::class, 'handle'])
+Route::any('/APIGATELU/{opd_code}/{endpoint_slug}', [GatewayController::class, 'handle'])
     ->middleware('api.gateway')
     ->name('gateway.proxy');
+
+

@@ -220,9 +220,13 @@ export default function ApiTesterPage() {
   const [copiedCode, setCopiedCode]     = useState(false)
 
   const clientTargetUrl = useMemo(() => {
-    const host = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-      ? `${window.location.protocol}//${window.location.hostname}:8000/APIGATELU`
-      : 'https://ragem-api.lampungutarakab.go.id/APIGATELU'
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+    const isProduction = hostname === 'ragem-api.lampungutarakab.go.id'
+      || hostname.endsWith('.lampungutarakab.go.id')
+
+    const host = isProduction
+      ? 'https://ragem-api.lampungutarakab.go.id/APIGATELU'
+      : `http://localhost:8000/APIGATELU`
 
     let cleanPath = fullTargetUrl
     if (cleanPath.includes('/APIGATELU/')) {
@@ -439,7 +443,7 @@ export default function ApiTesterPage() {
 
       const res = await gatewayApi.request({
         method:  method,
-        url:     `/${path}`,
+        url:     path,
         data:    bodyData,
         headers: reqHeaders,
       })
